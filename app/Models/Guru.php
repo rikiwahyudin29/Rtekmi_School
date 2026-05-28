@@ -38,4 +38,9 @@ class Guru extends Model
     {
         return $this->hasMany(Ekskul::class, 'guru_id', 'id');
     }
+
+    public function presensi()
+    {
+        return $this->hasMany(Presensi::class, 'user_id')->where('role', 'guru');
+    }
 }

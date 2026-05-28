@@ -45,4 +45,19 @@ class Siswa extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    public function kelulusan()
+    {
+        return $this->hasOne(Kelulusan::class, 'siswa_id');
+    }
+
+    public function nilaiSiswa()
+    {
+        return $this->hasMany(NilaiSiswa::class, 'siswa_id');
+    }
+
+    public function presensi()
+    {
+        return $this->hasMany(Presensi::class, 'user_id')->where('role', 'siswa');
+    }
 }

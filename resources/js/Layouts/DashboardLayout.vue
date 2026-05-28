@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 
 // Props
@@ -11,6 +11,7 @@ const web = computed(() => page.props.web_settings || {});
 const isDarkMode = ref(false);
 const isSidebarOpen = ref(true);
 const currentTheme = computed(() => page.props.theme || 'theme-green');
+const sidebarScrollArea = ref(null);
 
 // Initialize Theme
 onMounted(() => {
@@ -80,6 +81,34 @@ onMounted(() => {
         }
     };
     checkActive(menuItems.value);
+
+    // Auto scroll to active item (wait for dropdown transition)
+    setTimeout(() => {
+        if (sidebarScrollArea.value) {
+            const activeEl = sidebarScrollArea.value.querySelector('.text-primary-700.font-bold, .text-primary-600.font-bold');
+            if (activeEl) {
+                const containerTop = sidebarScrollArea.value.scrollTop;
+                const containerBottom = containerTop + sidebarScrollArea.value.clientHeight;
+                
+                // Get absolute offset top relative to the scroll container
+                let elTop = activeEl.offsetTop;
+                let currentEl = activeEl.offsetParent;
+                while (currentEl && currentEl !== sidebarScrollArea.value) {
+                    elTop += currentEl.offsetTop;
+                    currentEl = currentEl.offsetParent;
+                }
+                
+                const elBottom = elTop + activeEl.clientHeight;
+
+                if (elTop < containerTop || elBottom > containerBottom) {
+                    sidebarScrollArea.value.scrollTo({
+                        top: Math.max(0, elTop - 100),
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+    }, 350);
 });
 
 // Dynamic Menu based on Role
@@ -147,10 +176,10 @@ const menuItems = computed(() => {
                 { name: 'Monitoring Peserta', icon: 'fas fa-users-viewfinder', route: '#', active: false },
                 { name: 'Administrasi Nilai', icon: 'fas fa-file-signature', route: '#', active: false },
             ]},
-            { name: 'Kelulusan & SKL', icon: 'fas fa-user-graduate', route: '#', active: false, children: [
-                { name: 'Setting Kelulusan', icon: 'fas fa-cogs', route: '#', active: false },
-                { name: 'Manajemen Nilai', icon: 'fas fa-star', route: '#', active: false },
-                { name: 'Siswa Kelas 12', icon: 'fas fa-users', route: '#', active: false },
+            { name: 'Kelulusan & SKL', icon: 'fas fa-user-graduate', route: '#', active: route().current('admin.kelulusan.*'), children: [
+                { name: 'Siswa Kelas 12', icon: 'fas fa-users', route: 'admin.kelulusan.index', active: route().current('admin.kelulusan.index') },
+                { name: 'Manajemen Nilai', icon: 'fas fa-star', route: 'admin.kelulusan.nilai', active: route().current('admin.kelulusan.nilai') || route().current('admin.kelulusan.input_nilai') || route().current('admin.kelulusan.detail_nilai') },
+                { name: 'Setting Kelulusan', icon: 'fas fa-cogs', route: 'admin.kelulusan.setting', active: route().current('admin.kelulusan.setting') },
             ]}
         );
     }
@@ -170,16 +199,14 @@ const menuItems = computed(() => {
                 { name: 'Data Alumni', icon: 'fas fa-graduation-cap', route: '#', active: false },
                 { name: 'Tracer Study', icon: 'fas fa-search-location', route: '#', active: false }
             ]},
-            { name: 'Presensi & Disiplin', icon: 'fas fa-fingerprint', route: '#', active: false, children: [
-                { name: 'Scanner (QR/RFID)', icon: 'fas fa-qrcode', route: '#', active: false },
-                { name: 'Laporan Kehadiran', icon: 'fas fa-clipboard-user', route: '#', active: false },
-                { name: 'Data Izin/Sakit', icon: 'fas fa-envelope-open-text', route: '#', active: false },
-                { name: 'Setting Jam', icon: 'fas fa-user-clock', route: '#', active: false },
-                { name: 'Harian Guru', icon: 'fas fa-chalkboard-teacher', route: '#', active: false },
-                { name: 'Matrix Guru', icon: 'fas fa-table', route: '#', active: false },
-                { name: 'Kartu Guru & Siswa', icon: 'fas fa-id-card', route: '#', active: false },
-                { name: 'Rekap Kehadiran', icon: 'fas fa-calendar-check', route: '#', active: false },
-                { name: 'Hari Libur', icon: 'fas fa-umbrella-beach', route: '#', active: false },
+            { name: 'Presensi & Disiplin', icon: 'fas fa-fingerprint', route: '#', active: route().current('admin.presensi.*'), children: [
+                { name: 'Scanner (QR/RFID)', icon: 'fas fa-qrcode', route: 'admin.presensi.scanner', active: route().current('admin.presensi.scanner') },
+                { name: 'Laporan Kehadiran', icon: 'fas fa-clipboard-user', route: 'admin.presensi.laporan', active: route().current('admin.presensi.laporan') },
+                { name: 'Data Izin/Sakit', icon: 'fas fa-envelope-open-text', route: 'admin.presensi.izin', active: route().current('admin.presensi.izin') },
+                { name: 'Rekap Kehadiran', icon: 'fas fa-calendar-check', route: 'admin.presensi.rekap', active: route().current('admin.presensi.rekap') },
+                { name: 'Setting Jam & QR', icon: 'fas fa-user-clock', route: 'admin.presensi.setting_jam', active: route().current('admin.presensi.setting_jam') },
+                { name: 'Hari Libur', icon: 'fas fa-calendar-times', route: 'admin.presensi.hari_libur.index', active: route().current('admin.presensi.hari_libur.*') },
+                { name: 'Kartu Pelajar & Guru', icon: 'fas fa-id-card', route: 'admin.presensi.kartu.index', active: route().current('admin.presensi.kartu.*') },
             ]},
             { name: 'Tugas Piket', icon: 'fas fa-shield-alt', route: '#', active: false, children: [
                 { name: 'Monitoring Piket', icon: 'fas fa-eye', route: '#', active: false },
@@ -210,10 +237,11 @@ const menuItems = computed(() => {
                 { name: 'Master DU/DI', icon: 'fas fa-building', route: '#', active: false },
                 { name: 'Mapping Siswa & Guru', icon: 'fas fa-project-diagram', route: '#', active: false },
             ]},
-            { name: 'Surat & E-Office', icon: 'fas fa-envelope-open-text', route: '#', active: false, children: [
-                { name: 'Surat Masuk & Disposisi', icon: 'fas fa-inbox', route: '#', active: false },
-                { name: 'Surat Keluar', icon: 'fas fa-paper-plane', route: '#', active: false },
-                { name: 'E-Arsip Surat', icon: 'fas fa-archive', route: '#', active: false },
+            { name: 'Surat & E-Office', icon: 'fas fa-envelope-open-text', route: '#', active: route().current('admin.surat.*'), children: [
+                { name: 'Template Surat', icon: 'fas fa-magic', route: 'admin.surat.template.index', active: route().current('admin.surat.template.*') },
+                { name: 'Surat Masuk', icon: 'fas fa-inbox', route: 'admin.surat.masuk.index', active: route().current('admin.surat.masuk.*') },
+                { name: 'Surat Keluar', icon: 'fas fa-paper-plane', route: 'admin.surat.keluar.index', active: route().current('admin.surat.keluar.*') },
+                { name: 'E-Arsip Surat', icon: 'fas fa-archive', route: 'admin.surat.arsip.index', active: route().current('admin.surat.arsip.*') },
             ]},
             { name: 'Buku Tamu', icon: 'fas fa-address-book', route: '#', active: false }
         );
@@ -269,11 +297,11 @@ const menuItems = computed(() => {
     if (isSuperAdmin || isGuru) {
         menus.push(
             { isHeader: true, name: 'Area Akademik Guru' },
-            { name: 'Layanan Guru', icon: 'fas fa-user-tie', route: '#', active: false, children: [
-                { name: 'Absen Sekarang', icon: 'fas fa-user-clock', route: '#', active: false },
-                { name: 'Absensi Saya', icon: 'fas fa-clipboard-user', route: '#', active: false },
-                { name: 'Rekap Bulanan', icon: 'fas fa-calendar-check', route: '#', active: false },
-                { name: 'Ajukan Izin/Dinas', icon: 'fas fa-envelope-open-text', route: '#', active: false },
+            { name: 'Layanan Guru', icon: 'fas fa-user-tie', route: '#', active: route().current('guru.presensi.*'), children: [
+                { name: 'Absen Sekarang', icon: 'fas fa-user-clock', route: 'guru.presensi.absen_harian', active: route().current('guru.presensi.absen_harian') },
+                { name: 'Absensi Saya', icon: 'fas fa-clipboard-user', route: 'guru.presensi.index', active: route().current('guru.presensi.index') },
+                { name: 'Rekap Bulanan', icon: 'fas fa-calendar-check', route: 'guru.presensi.rekap', active: route().current('guru.presensi.rekap') },
+                { name: 'Ajukan Izin/Dinas', icon: 'fas fa-envelope-open-text', route: 'guru.presensi.izin', active: route().current('guru.presensi.izin') },
                 { name: 'Kotak Disposisi', icon: 'fas fa-inbox', route: '#', active: false },
             ]},
             { name: 'E-Learning (KBM)', icon: 'fas fa-laptop', route: '#', active: false, children: [
@@ -315,10 +343,11 @@ const menuItems = computed(() => {
             { name: 'Kedisiplinan Saya', icon: 'fas fa-user-shield', route: '#', active: false },
             { name: 'Keuangan Saya', icon: 'fas fa-wallet', route: '#', active: false },
             { name: 'Buku Tabungan', icon: 'fas fa-piggy-bank', route: '#', active: false },
-            { name: 'Presensi', icon: 'fas fa-user-clock', route: '#', active: false, children: [
-                { name: 'Absen Datang/Pulang', route: '#', active: false },
-                { name: 'Riwayat Absen', route: '#', active: false },
-                { name: 'Ajukan Izin/Sakit', route: '#', active: false },
+            { name: 'Presensi', icon: 'fas fa-user-clock', route: '#', active: route().current('siswa.presensi.*'), children: [
+                { name: 'Absen Datang/Pulang', route: 'siswa.presensi.absen_harian', active: route().current('siswa.presensi.absen_harian') },
+                { name: 'Riwayat Absen', route: 'siswa.presensi.index', active: route().current('siswa.presensi.index') },
+                { name: 'Rekap Kehadiran', route: 'siswa.presensi.rekap', active: route().current('siswa.presensi.rekap') },
+                { name: 'Ajukan Izin/Sakit', route: 'siswa.presensi.izin', active: route().current('siswa.presensi.izin') },
             ]},
         ];
     }
@@ -345,7 +374,7 @@ const menuItems = computed(() => {
             </div>
 
             <!-- Scrollable Menu -->
-            <div class="flex-1 overflow-y-auto py-6 px-5 space-y-8 no-scrollbar">
+            <div ref="sidebarScrollArea" class="flex-1 overflow-y-auto py-6 px-5 space-y-8 no-scrollbar">
                 
                 <!-- Dynamic Menu Rendering -->
                 <div>

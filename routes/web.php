@@ -63,7 +63,9 @@ Route::get('/test-jadwal-kelas/{id}', function ($id) {
 });
 
 // Public Routes
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
+Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
 Route::get('/debug-siswa', function() {
     $user = \Illuminate\Support\Facades\Auth::user();
     if (!$user) return 'Not logged in';
@@ -143,7 +145,72 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('jadwal-pelajaran/cetak', [JadwalPelajaranController::class, 'cetak'])->name('jadwal-pelajaran.cetak');
             Route::resource('jadwal-pelajaran', JadwalPelajaranController::class)->except(['create', 'edit', 'show']);
         });
-        
+
+        // Admin Presensi Group
+        Route::prefix('presensi')->name('presensi.')->group(function () {
+            Route::get('scanner', [\App\Http\Controllers\Admin\PresensiController::class, 'scanner'])->name('scanner');
+            Route::post('proses-scan', [\App\Http\Controllers\Admin\PresensiController::class, 'prosesScan'])->name('proses_scan');
+            Route::get('/hari_libur', [\App\Http\Controllers\Admin\HariLiburController::class, 'index'])->name('hari_libur.index');
+            Route::post('/hari_libur', [\App\Http\Controllers\Admin\HariLiburController::class, 'store'])->name('hari_libur.store');
+            Route::delete('/hari_libur/{id}', [\App\Http\Controllers\Admin\HariLiburController::class, 'destroy'])->name('hari_libur.destroy');
+            Route::get('/kartu', [\App\Http\Controllers\Admin\KartuController::class, 'index'])->name('kartu.index');
+            Route::get('/kartu/cetak-siswa', [\App\Http\Controllers\Admin\KartuController::class, 'cetakSiswa'])->name('kartu.cetak_siswa');
+            Route::get('/kartu/cetak-guru', [\App\Http\Controllers\Admin\KartuController::class, 'cetakGuru'])->name('kartu.cetak_guru');
+            Route::post('/kartu/simpan-uid', [\App\Http\Controllers\Admin\KartuController::class, 'simpanUid'])->name('kartu.simpan_uid');
+            Route::get('izin', [\App\Http\Controllers\Admin\PresensiController::class, 'izin'])->name('izin');
+            Route::post('simpan-izin', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanIzin'])->name('simpan_izin');
+            Route::delete('hapus-izin/{id}', [\App\Http\Controllers\Admin\PresensiController::class, 'hapusIzin'])->name('hapus_izin');
+            Route::get('verifikasi/{id}/{status}', [\App\Http\Controllers\Admin\PresensiController::class, 'verifikasi'])->name('verifikasi');
+            Route::get('get-siswa/{id_kelas}', [\App\Http\Controllers\Admin\PresensiController::class, 'getSiswaByKelas'])->name('get_siswa_by_kelas');
+            
+            Route::get('laporan', [\App\Http\Controllers\Admin\PresensiController::class, 'laporan'])->name('laporan');
+            Route::get('cetak-harian', [\App\Http\Controllers\Admin\PresensiController::class, 'cetakHarian'])->name('cetak_harian');
+            Route::get('cetak-harian-guru', [\App\Http\Controllers\Admin\PresensiController::class, 'cetakHarianGuru'])->name('cetak_harian_guru');
+            
+            Route::get('rekap', [\App\Http\Controllers\Admin\PresensiController::class, 'rekap'])->name('rekap');
+            Route::get('cetak-rekap', [\App\Http\Controllers\Admin\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
+            Route::get('cetak-matrix', [\App\Http\Controllers\Admin\PresensiController::class, 'cetakMatrix'])->name('cetak_matrix');
+            Route::get('cetak-matrix-guru', [\App\Http\Controllers\Admin\PresensiController::class, 'cetakMatrixGuru'])->name('cetak_matrix_guru');
+            
+            Route::get('setting-jam', [\App\Http\Controllers\Admin\JamPresensiController::class, 'index'])->name('setting_jam');
+            Route::post('setting-jam', [\App\Http\Controllers\Admin\JamPresensiController::class, 'update'])->name('setting_jam.update');
+        });
+
+        // Admin Surat & E-Office Group
+        Route::prefix('surat')->name('surat.')->group(function () {
+            // Template Surat
+            Route::post('template/bulk-destroy', [\App\Http\Controllers\Admin\Surat\TemplateSuratController::class, 'bulkDestroy'])->name('template.bulk-destroy');
+            Route::resource('template', \App\Http\Controllers\Admin\Surat\TemplateSuratController::class)->except(['create', 'show', 'edit']);
+            
+            // Surat Keluar
+            Route::post('keluar/bulk-destroy', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'bulkDestroy'])->name('keluar.bulk-destroy');
+            Route::get('keluar/{id}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetak'])->name('keluar.cetak');
+            Route::resource('keluar', \App\Http\Controllers\Admin\Surat\SuratKeluarController::class)->except(['create', 'show', 'edit', 'update']);
+            
+            // Surat Masuk
+            Route::post('masuk/bulk-destroy', [\App\Http\Controllers\Admin\Surat\SuratMasukController::class, 'bulkDestroy'])->name('masuk.bulk-destroy');
+            Route::post('masuk/disposisi', [\App\Http\Controllers\Admin\Surat\SuratMasukController::class, 'disposisi'])->name('masuk.disposisi');
+            Route::resource('masuk', \App\Http\Controllers\Admin\Surat\SuratMasukController::class)->except(['create', 'show', 'edit', 'update']);
+            
+            // E-Arsip
+            Route::get('arsip', [\App\Http\Controllers\Admin\Surat\EArsipController::class, 'index'])->name('arsip.index');
+        });
+        // Admin Kelulusan & SKL Group
+        Route::prefix('kelulusan')->name('kelulusan.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\KelulusanController::class, 'index'])->name('index');
+            Route::post('/simpan-massal', [\App\Http\Controllers\Admin\KelulusanController::class, 'simpanMassal'])->name('simpan_massal');
+            Route::get('/setting', [\App\Http\Controllers\Admin\KelulusanController::class, 'setting'])->name('setting');
+            Route::post('/setting', [\App\Http\Controllers\Admin\KelulusanController::class, 'simpanSetting'])->name('setting.simpan');
+            Route::get('/nilai', [\App\Http\Controllers\Admin\KelulusanController::class, 'nilai'])->name('nilai');
+            Route::get('/nilai/{id}/detail', [\App\Http\Controllers\Admin\KelulusanController::class, 'detailNilai'])->name('detail_nilai');
+            Route::get('/nilai/{id}/input', [\App\Http\Controllers\Admin\KelulusanController::class, 'inputNilai'])->name('input_nilai');
+            Route::post('/nilai/simpan', [\App\Http\Controllers\Admin\KelulusanController::class, 'simpanNilai'])->name('simpan_nilai');
+            Route::get('/download-template', [\App\Http\Controllers\Admin\KelulusanController::class, 'downloadTemplate'])->name('download_template');
+            Route::post('/import', [\App\Http\Controllers\Admin\KelulusanController::class, 'importNilai'])->name('import');
+            Route::get('/cetak-transkrip/{id}', [\App\Http\Controllers\Admin\KelulusanController::class, 'cetakTranskrip'])->name('cetak_transkrip');
+            Route::get('/cetak-skl/{id}', [\App\Http\Controllers\Admin\KelulusanController::class, 'cetakSkl'])->name('cetak_skl');
+        });
+
         // Roles is inside the admin prefix, making the route name 'admin.roles.index'
         Route::resource('roles', RoleController::class);
         
@@ -220,6 +287,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pelanggaran', [\App\Http\Controllers\Siswa\UjianController::class, 'catatPelanggaran'])->name('pelanggaran');
         Route::get('/{id}/locked', [\App\Http\Controllers\Siswa\UjianController::class, 'locked'])->name('locked');
     });
+
+    // Siswa Presensi Group
+    Route::prefix('siswa/presensi')->name('siswa.presensi.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Siswa\PresensiController::class, 'index'])->name('index');
+        Route::get('/absen-harian', [\App\Http\Controllers\Siswa\PresensiController::class, 'absenHarian'])->name('absen_harian');
+        Route::post('/submit-absen', [\App\Http\Controllers\Siswa\PresensiController::class, 'submitAbsen'])->name('submit_absen');
+        Route::get('/izin', [\App\Http\Controllers\Siswa\PresensiController::class, 'izin'])->name('izin');
+        Route::post('/ajukan', [\App\Http\Controllers\Siswa\PresensiController::class, 'ajukan'])->name('ajukan');
+        Route::get('/rekap', [\App\Http\Controllers\Siswa\PresensiController::class, 'rekap'])->name('rekap');
+        Route::get('/cetak-rekap', [\App\Http\Controllers\Siswa\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
+    });
+
+    // Guru Presensi Group
+    Route::prefix('guru/presensi')->name('guru.presensi.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\PresensiController::class, 'index'])->name('index');
+        Route::get('/absen-harian', [\App\Http\Controllers\Guru\PresensiController::class, 'absenHarian'])->name('absen_harian');
+        Route::post('/submit-absen', [\App\Http\Controllers\Guru\PresensiController::class, 'submitAbsen'])->name('submit_absen');
+        Route::get('/izin', [\App\Http\Controllers\Guru\PresensiController::class, 'izin'])->name('izin');
+        Route::post('/ajukan', [\App\Http\Controllers\Guru\PresensiController::class, 'ajukan'])->name('ajukan');
+        Route::get('/rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'rekap'])->name('rekap');
+        Route::get('/cetak-rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
+    });
 });
 
 Route::get('/test-jadwal-kelas/{id}', function ($id) {
@@ -253,6 +342,10 @@ Route::get('/test-jadwal-kelas/{id}', function ($id) {
 // Load standard Auth routes (Login, Register, etc.)
 require __DIR__.'/auth.php';
 
+// Public Surat Verification
+Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
+Route::get('/cetak-surat/{id}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetak'])->name('surat.cetak')->middleware('auth');
+
 // ==========================================
 // ROUTE KHUSUS API (UNTUK FLUTTER MOBILE)
 // ==========================================
@@ -260,6 +353,18 @@ Route::prefix('api')->name('api.')->group(function () {
     // Auth Login API
     Route::post('login', [\App\Http\Controllers\Api\AuthApiController::class, 'login']);
 
+    // PRESENSI API (SISWA)
+    Route::post('presensi/submit', [\App\Http\Controllers\Api\PresensiApiController::class, 'submitAbsen']);
+    Route::get('presensi/setting', [\App\Http\Controllers\Api\PresensiApiController::class, 'getSetting']);
+    Route::get('presensi/riwayat', [\App\Http\Controllers\Api\PresensiApiController::class, 'getRiwayat']);
+    Route::get('presensi/rekap', [\App\Http\Controllers\Api\PresensiApiController::class, 'getRekap']);
+    Route::post('presensi/ajukan_izin', [\App\Http\Controllers\Api\PresensiApiController::class, 'ajukanIzin']);
+
+    // PRESENSI GURU API
+    Route::get('presensi-guru/status', [\App\Http\Controllers\Api\PresensiGuruApiController::class, 'statusAbsenHariIni']);
+    Route::post('presensi-guru/submit', [\App\Http\Controllers\Api\PresensiGuruApiController::class, 'submitAbsen']);
+    Route::get('presensi-guru/rekap', [\App\Http\Controllers\Api\PresensiGuruApiController::class, 'getRekap']);
+    Route::post('presensi-guru/izin', [\App\Http\Controllers\Api\PresensiGuruApiController::class, 'submitIzin']);
     // Ujian API
     Route::prefix('ujian')->name('ujian.')->group(function () {
         Route::get('jadwal', [\App\Http\Controllers\Api\UjianApiController::class, 'getJadwal']);
