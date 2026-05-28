@@ -63,9 +63,7 @@ Route::get('/test-jadwal-kelas/{id}', function ($id) {
 });
 
 // Public Routes
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', [HomeController::class, 'index']);
 Route::get('/debug-siswa', function() {
     $user = \Illuminate\Support\Facades\Auth::user();
     if (!$user) return 'Not logged in';
