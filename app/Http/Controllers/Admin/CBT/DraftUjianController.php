@@ -34,10 +34,10 @@ class DraftUjianController extends Controller
 
         foreach ($drafts as $draft) {
             $draft->count_pg = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 1)->count();
-            $draft->count_pgmulti = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 2)->count();
-            $draft->count_menjodohkan = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 3)->count();
-            $draft->count_isian = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 4)->count();
-            $draft->count_esai = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 5)->count();
+            $draft->count_esai = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 2)->count();
+            $draft->count_pgmulti = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 3)->count();
+            $draft->count_menjodohkan = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 4)->count();
+            $draft->count_isian = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 5)->count();
             $draft->count_bs = SoalData::where('bank_id', $draft->bank_soal_id)->where('jenis_soal', 6)->count();
         }
 

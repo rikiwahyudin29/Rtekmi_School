@@ -364,9 +364,9 @@ class BankSoalController extends Controller
                 
                 if (empty($pertanyaan)) continue;
 
-                // Map CI4 Tipe ke Laravel Tipe (1=PG, 2=PG Kompleks, 3=Menjodohkan, 4=Isian)
+                // Map CI4 Tipe ke Laravel Tipe (1=PG, 2=Esai, 3=PG Kompleks, 4=Menjodohkan, 5=Isian Singkat, 6=Benar/Salah)
                 $jenis_soal = 1; // Default PG
-                if ($tipeRaw == 'ESSAY') $jenis_soal = 4; // Map essay to isian singkat untuk skarang
+                if ($tipeRaw == 'ESSAY') $jenis_soal = 2; // Map essay to Esai
 
                 // 1. Simpan Soal
                 $soal = \App\Models\SoalData::create([
@@ -635,9 +635,9 @@ class BankSoalController extends Controller
 
         // Map ke integer
         $jenis_soal = 1;
-        if ($tipe == 'PG_KOMPLEKS') $jenis_soal = 2;
-        if ($tipe == 'MENJODOHKAN') $jenis_soal = 3;
-        if ($tipe == 'ISIAN_SINGKAT') $jenis_soal = 4;
+        if ($tipe == 'PG_KOMPLEKS') $jenis_soal = 3;
+        if ($tipe == 'MENJODOHKAN') $jenis_soal = 4;
+        if ($tipe == 'ISIAN_SINGKAT') $jenis_soal = 5;
 
         $soal = \App\Models\SoalData::create([
             'bank_id'      => $idBank,
