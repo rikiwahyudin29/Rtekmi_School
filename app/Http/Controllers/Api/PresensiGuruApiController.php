@@ -127,37 +127,52 @@ class PresensiGuruApiController extends Controller
     // 4. API SUBMIT IZIN GURU (BARU)
     public function submitIzin(Request $request)
     {
-        $id_user    = $request->input('id_user');
-        $id_guru    = $this->getRealGuruID($id_user);
-        $tanggal    = $request->input('tanggal');
-        $status     = $request->input('status'); // Izin / Sakit
-        $keterangan = $request->input('keterangan');
+        try {
+            $id_user    = $request->input('id_user');
+            $id_guru    = $this->getRealGuruID($id_user);
+            $tanggal    = $request->input('tanggal');
+            $status     = $request->input('status'); // Izin / Sakit
+            $keterangan = $request->input('keterangan');
 
-        $cek = DB::table('tbl_presensi')->where(['user_id' => $id_guru, 'tanggal' => $tanggal])->count();
-        if ($cek > 0) return response()->json(['status' => false, 'message' => 'Anda sudah memiliki riwayat absen/izin di tanggal ini.'], 400);
+            $cek = DB::table('tbl_presensi')->where(['user_id' => $id_guru, 'tanggal' => $tanggal])->count();
+            if ($cek > 0) return response()->json(['status' => false, 'message' => 'Anda sudah memiliki riwayat absen/izin di tanggal ini.'], 400);
 
-        // Upload berkas dari Kamera HP (Format Base64 dari Android)
-        $base64Image = $request->input('bukti');
-        $namaFile = null;
-        
-        if (!empty($base64Image)) {
-            $image_base64 = base64_decode($base64Image);
-            $namaFile = uniqid() . '.jpg';
-            // Pastikan folder ini writable (bisa ditulis)
-            file_put_contents(public_path('uploads/surat_izin/') . $namaFile, $image_base64);
+            // Upload berkas dari Kamera HP (Format Base64 dari Android)
+            $base64Image = $request->input('bukti');
+            $namaFile = null;
+            
+            if (!empty($base64Image)) {
+                $image_base64 = base64_decode($base64Image);
+                $namaFile = uniqid() . '.jpg';
+                // Pastikan folder ini writable (bisa ditulis)
+                $path = public_path('uploads/surat_izin/');
+                if (!is_dir($path)) {
+                    @mkdir($path, 0777, true);
+                }
+                @file_put_contents($path . $namaFile, $image_base64);
+            }
+
+            // Normalisasi status ke huruf kapital depan (karena Strict Mode DB)
+            if ($status) {
+                $status = ucfirst(strtolower(trim($status))); // izin -> Izin, sakit -> Sakit
+            }
+
+            DB::table('tbl_presensi')->insert([
+                'user_id' => $id_guru,
+                'role' => 'guru',
+                'tanggal' => $tanggal,
+                'status_kehadiran' => $status,
+                'keterangan' => $keterangan,
+                'bukti_izin' => $namaFile,
+                'metode' => 'Online',
+                'status_verifikasi' => 'Pending',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            return response()->json(['status' => true, 'message' => 'Pengajuan izin berhasil dikirim.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => 'Server Error: ' . $e->getMessage()], 500);
         }
-
-        DB::table('tbl_presensi')->insert([
-            'user_id' => $id_guru,
-            'role' => 'guru',
-            'tanggal' => $tanggal,
-            'status_kehadiran' => $status,
-            'keterangan' => $keterangan,
-            'bukti_izin' => $namaFile,
-            'metode' => 'Online',
-            'status_verifikasi' => 'Pending'
-        ]);
-
-        return response()->json(['status' => true, 'message' => 'Pengajuan izin berhasil dikirim.'], 200);
     }
 }

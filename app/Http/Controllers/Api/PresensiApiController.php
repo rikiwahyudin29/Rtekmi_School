@@ -166,37 +166,50 @@ class PresensiApiController extends Controller
     // ==========================================
     public function ajukanIzin(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $tgl  = $request->input('tanggal');
-        $st   = $request->input('status'); 
-        $ket  = $request->input('keterangan');
-        $foto_base64 = $request->input('file_bukti');
+        try {
+            $nisn = $request->input('nisn');
+            $tgl  = $request->input('tanggal');
+            $st   = $request->input('status');
+            $ket  = $request->input('keterangan');
+            $foto_base64 = $request->input('file_bukti');
 
-        $id_siswa = $this->getRealSiswaID($nisn);
-        if (!$id_siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
+            $id_siswa = $this->getRealSiswaID($nisn);
+            if (!$id_siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
 
-        $cek = DB::table('tbl_presensi')->where(['user_id' => $id_siswa, 'tanggal' => $tgl])->count();
-        if ($cek > 0) return response()->json(['status' => false, 'message' => 'Sudah ada data presensi pada tanggal tersebut.'], 400);
+            $cek = DB::table('tbl_presensi')->where(['user_id' => $id_siswa, 'tanggal' => $tgl])->count();
+            if ($cek > 0) return response()->json(['status' => false, 'message' => 'Sudah ada data presensi pada tanggal tersebut.'], 400);
 
-        $nama_file = '';
-        if (!empty($foto_base64)) {
-            $nama_file = 'izin_' . date('Ymd_His') . '_' . $id_siswa . '.jpg';
-            $path = public_path('uploads/surat_izin/');
-            if (!is_dir($path)) mkdir($path, 0777, true);
-            file_put_contents($path . $nama_file, base64_decode($foto_base64));
+            $nama_file = '';
+            if (!empty($foto_base64)) {
+                $nama_file = 'izin_' . date('Ymd_His') . '_' . $id_siswa . '.jpg';
+                $path = public_path('uploads/surat_izin/');
+                if (!is_dir($path)) {
+                    @mkdir($path, 0777, true);
+                }
+                @file_put_contents($path . $nama_file, base64_decode($foto_base64));
+            }
+
+            // Normalisasi status ke huruf kapital depan (karena Strict Mode DB)
+            if ($st) {
+                $st = ucfirst(strtolower(trim($st))); // izin -> Izin, sakit -> Sakit
+            }
+
+            DB::table('tbl_presensi')->insert([
+                'user_id'           => $id_siswa,
+                'role'              => 'siswa',
+                'tanggal'           => $tgl,
+                'status_kehadiran'  => $st,
+                'keterangan'        => $ket,
+                'bukti_izin'        => $nama_file,
+                'metode'            => 'Online',
+                'status_verifikasi' => 'Pending',
+                'created_at'        => date('Y-m-d H:i:s'),
+                'updated_at'        => date('Y-m-d H:i:s')
+            ]);
+
+            return response()->json(['status' => true, 'message' => 'Pengajuan berhasil dikirim! Menunggu verifikasi admin.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => 'Server Error: ' . $e->getMessage()], 500);
         }
-
-        DB::table('tbl_presensi')->insert([
-            'user_id'           => $id_siswa,
-            'role'              => 'siswa',
-            'tanggal'           => $tgl,
-            'status_kehadiran'  => $st,
-            'keterangan'        => $ket,
-            'bukti_izin'        => $nama_file,
-            'metode'            => 'Online',
-            'status_verifikasi' => 'Pending'
-        ]);
-
-        return response()->json(['status' => true, 'message' => 'Pengajuan berhasil dikirim! Menunggu verifikasi admin.'], 200);
     }
 }
