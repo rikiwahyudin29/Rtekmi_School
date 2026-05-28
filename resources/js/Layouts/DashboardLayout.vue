@@ -357,10 +357,17 @@ const menuItems = computed(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#f4f6f8] dark:bg-gray-900 transition-colors duration-300 font-sans flex items-start text-gray-800 dark:text-gray-100 p-4 lg:p-6 gap-6">
+    <div class="min-h-screen bg-[#f4f6f8] dark:bg-gray-900 transition-colors duration-300 font-sans flex items-start text-gray-800 dark:text-gray-100 p-4 lg:p-6 gap-6 relative">
         
+        <!-- Mobile Overlay -->
+        <div v-if="isSidebarOpen" @click="isSidebarOpen = false" class="md:hidden fixed inset-0 bg-gray-900/50 dark:bg-black/50 z-40 backdrop-blur-sm transition-opacity rounded-3xl m-4"></div>
+
         <!-- Sidebar (Detached & Sticky) -->
-        <aside class="w-64 bg-white dark:bg-gray-800 rounded-3xl flex-shrink-0 hidden md:flex flex-col shadow-sm transition-colors duration-300 border border-gray-100 dark:border-gray-700 overflow-hidden sticky top-4 lg:top-6 h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
+        <aside :class="[
+            'w-64 bg-white dark:bg-gray-800 rounded-3xl flex-shrink-0 flex-col shadow-sm transition-all duration-300 border border-gray-100 dark:border-gray-700 overflow-hidden h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]',
+            'fixed md:sticky top-4 lg:top-6 z-50',
+            isSidebarOpen ? 'flex left-4 shadow-2xl' : '-left-72 md:left-0 md:flex hidden md:flex'
+        ]">
             
             <!-- Logo -->
             <div class="h-24 flex items-center px-8 border-b border-transparent">
@@ -507,7 +514,7 @@ const menuItems = computed(() => {
                 </div>
 
                 <div class="md:hidden flex items-center gap-3">
-                    <button class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                    <button @click="isSidebarOpen = true" class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                 </div>
