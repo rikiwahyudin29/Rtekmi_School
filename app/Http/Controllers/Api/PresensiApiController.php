@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PresensiApiController extends Controller
 {
@@ -14,7 +15,7 @@ class PresensiApiController extends Controller
     private function getRealSiswaID($nisn)
     {
         $siswa = DB::table('tbl_siswa')->where('nisn', $nisn)->first();
-        if (!$siswa) {
+        if (!$siswa && Schema::hasColumn('tbl_siswa', 'nis')) {
             $siswa = DB::table('tbl_siswa')->where('nis', $nisn)->first();
         }
         if ($siswa) return $siswa->id;
@@ -140,7 +141,7 @@ class PresensiApiController extends Controller
         $absen = DB::table('tbl_presensi')
             ->where('user_id', $id_siswa)
             ->where('role', 'siswa')
-            ->where('tanggal', 'like', "$bulan%")
+            ->where('tanggal', 'like', "%$bulan%")
             ->get();
 
         $total = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alpha' => 0, 'terlambat' => 0];

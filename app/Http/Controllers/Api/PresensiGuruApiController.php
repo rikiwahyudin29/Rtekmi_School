@@ -5,16 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PresensiGuruApiController extends Controller
 {
     private function getRealGuruID($id_user_login)
     {
-        // First check if it maps to tbl_guru.id_user (or similar mapping)
-        // Adjust the column name to match the new Laravel schema
-        // In the old system it was checking 'id_user' or 'user_id' in 'tbl_guru'
-        $guru = DB::table('tbl_guru')->where('id_user', $id_user_login)->first();
-        if ($guru) return $guru->id;
+        $kolom_user = Schema::hasColumn('tbl_guru', 'id_user') ? 'id_user' : 'user_id';
+        if (Schema::hasColumn('tbl_guru', $kolom_user)) {
+            $guru = DB::table('tbl_guru')->where($kolom_user, $id_user_login)->first();
+            if ($guru) return $guru->id;
+        }
         
         $guru_direct = DB::table('tbl_guru')->where('id', $id_user_login)->first();
         if ($guru_direct) return $guru_direct->id;
@@ -70,7 +71,7 @@ class PresensiGuruApiController extends Controller
             ]);
             return response()->json(['status' => true, 'message' => "Berhasil Absen Masuk Jam $now"], 200);
         } else {
-            if (!empty($cek->jam_pulang) && $cek->jam_pulang != '00:00:00') {
+            if (!empty($cek->jam_pulang)) {
                 return response()->json(['status' => false, 'message' => 'Anda sudah absen pulang hari ini.'], 400);
             }
             DB::table('tbl_presensi')->where('id', $cek->id)->update(['jam_pulang' => $now]);
@@ -84,13 +85,16 @@ class PresensiGuruApiController extends Controller
         $id_user = $request->input('id_user');
         $id_guru = $this->getRealGuruID($id_user);
         
-        $bulan = $request->input('bulan') ?? date('Y-m');
+        $bulan = $request->input('bulan');
+        if (empty($bulan)) { 
+            $bulan = date('Y-m');
+        }
 
         $absen = DB::table('tbl_presensi')
             ->select('tanggal', 'jam_masuk', 'jam_pulang', 'status_kehadiran')
             ->where('user_id', $id_guru)
             ->where('role', 'guru')
-            ->where('tanggal', 'like', "$bulan%")
+            ->where('tanggal', 'like', "%$bulan%")
             ->orderBy('tanggal', 'DESC')
             ->get()->toArray();
 
@@ -139,9 +143,8 @@ class PresensiGuruApiController extends Controller
         if (!empty($base64Image)) {
             $image_base64 = base64_decode($base64Image);
             $namaFile = uniqid() . '.jpg';
-            $path = public_path('uploads/surat_izin/');
-            if (!is_dir($path)) mkdir($path, 0777, true);
-            file_put_contents($path . $namaFile, $image_base64);
+            // Pastikan folder ini writable (bisa ditulis)
+            file_put_contents(public_path('uploads/surat_izin/') . $namaFile, $image_base64);
         }
 
         DB::table('tbl_presensi')->insert([
