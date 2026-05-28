@@ -117,10 +117,10 @@ const simpanUrutan = () => {
 const getJenisSoalBadge = (jenis) => {
     const map = {
         1: { label: 'PG', color: 'bg-blue-100 text-blue-700' },
-        2: { label: 'PG Kompleks', color: 'bg-indigo-100 text-indigo-700' },
-        3: { label: 'Menjodohkan', color: 'bg-purple-100 text-purple-700' },
-        4: { label: 'Isian Singkat', color: 'bg-emerald-100 text-emerald-700' },
-        5: { label: 'Esai', color: 'bg-orange-100 text-orange-700' },
+        2: { label: 'Esai', color: 'bg-orange-100 text-orange-700' },
+        3: { label: 'PG Kompleks', color: 'bg-indigo-100 text-indigo-700' },
+        4: { label: 'Menjodohkan', color: 'bg-purple-100 text-purple-700' },
+        5: { label: 'Isian Singkat', color: 'bg-emerald-100 text-emerald-700' },
         6: { label: 'Benar/Salah', color: 'bg-rose-100 text-rose-700' }
     };
     return map[jenis] || { label: 'Unknown', color: 'bg-gray-100 text-gray-700' };
