@@ -54,21 +54,46 @@
                 <th rowspan="2" width="2%">No</th>
                 <th rowspan="2" width="15%" class="text-left">Nama Lengkap</th>
                 <th colspan="{{ $jml_hari }}">Tanggal</th>
+                <th colspan="5">Total</th>
             </tr>
             <tr>
                 @for($i=1; $i<=$jml_hari; $i++)
                 <th>{{ $i }}</th>
                 @endfor
+                <th width="2%">H</th>
+                <th width="2%">T</th>
+                <th width="2%">S</th>
+                <th width="2%">I</th>
+                <th width="2%">A</th>
             </tr>
         </thead>
         <tbody>
             @foreach($siswa as $index => $s)
+            @php
+                $totH = 0; $totT = 0; $totS = 0; $totI = 0; $totA = 0;
+            @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td class="text-left">{{ $s->nama_lengkap ?? $s->nama_guru }}</td>
                 @for($d=1; $d<=$jml_hari; $d++)
-                <td>{{ $matrix[$s->id][$d] ?? '-' }}</td>
+                @php
+                    $val = $matrix[$s->id][$d] ?? '-';
+                    $color = '';
+                    if($val == 'H') { $color = 'color: green; font-weight: bold;'; $totH++; }
+                    elseif($val == 'T') { $color = 'color: orange; font-weight: bold;'; $totT++; $totH++; }
+                    elseif($val == 'S') { $color = 'color: blue; font-weight: bold;'; $totS++; }
+                    elseif($val == 'I') { $color = 'color: #17a2b8; font-weight: bold;'; $totI++; }
+                    elseif($val == 'DL') { $color = 'color: purple; font-weight: bold;'; $totI++; } // Dinas luar digabung izin
+                    elseif($val == 'A') { $color = 'color: red; font-weight: bold;'; $totA++; }
+                    elseif($val == '-') { $color = 'color: #ccc;'; }
+                @endphp
+                <td style="{{ $color }}">{{ $val }}</td>
                 @endfor
+                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totH }}</td>
+                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totT }}</td>
+                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totS }}</td>
+                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totI }}</td>
+                <td style="font-weight: bold; background-color: #f2f2f2; color: red;">{{ $totA }}</td>
             </tr>
             @endforeach
         </tbody>
