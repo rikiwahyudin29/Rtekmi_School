@@ -20,6 +20,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "date-fns": "^4.3.0",
         "dayjs": "^1.11.21",
         "vue3-puzzle-vcode": "^1.1.7"
     }
