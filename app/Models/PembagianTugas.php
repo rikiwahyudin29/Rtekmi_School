@@ -11,6 +11,8 @@ class PembagianTugas extends Model
 
     protected $table = 'tbl_pembagian_tugas';
     
+    public $timestamps = false;
+    
     protected $guarded = ['id'];
 
     public function tahunAjaran()
