@@ -401,6 +401,7 @@ const menuItems = computed(() => {
                             <li v-else>
                                 <!-- No Children -->
                                 <Link v-if="!item.children" :href="item.route && item.route !== '#' ? route(item.route) : '#'" 
+                                      @click="isSidebarOpen = false"
                                       class="flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all duration-200 group relative"
                                       :class="item.active ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-bold' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 font-medium'">
                                     
@@ -439,6 +440,7 @@ const menuItems = computed(() => {
                                         <ul v-show="openDropdowns.includes(item.name)" class="pl-12 pr-4 py-2 space-y-1">
                                             <li v-for="child in item.children" :key="child.name">
                                                 <Link :href="child.route && child.route !== '#' ? route(child.route) : '#'" 
+                                                      @click="isSidebarOpen = false"
                                                       class="flex items-center gap-3 py-2 text-sm transition-colors relative group"
                                                       :class="child.active ? 'text-primary-600 dark:text-primary-400 font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-300 font-medium'">
                                                     
@@ -458,6 +460,7 @@ const menuItems = computed(() => {
                         </li>
                         <li>
                             <Link :href="route('profile.edit')" 
+                                  @click="isSidebarOpen = false"
                                   class="flex items-center gap-3.5 px-4 py-3 rounded-2xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 font-medium transition-colors">
                                 <i class="fas fa-cog w-5 text-center text-lg"></i>
                                 <span>Settings</span>
@@ -465,6 +468,7 @@ const menuItems = computed(() => {
                         </li>
                         <li>
                             <Link :href="route('logout')" method="post" as="button"
+                                  @click="isSidebarOpen = false"
                                   class="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 font-medium transition-colors">
                                 <i class="fas fa-sign-out-alt w-5 text-center text-lg"></i>
                                 <span>Logout</span>
