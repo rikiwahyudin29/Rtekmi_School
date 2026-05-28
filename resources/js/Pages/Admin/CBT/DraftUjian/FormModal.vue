@@ -52,7 +52,7 @@ watch(() => props.show, (newVal) => {
             form.reset();
         }
     }
-});
+}, { immediate: true });
 
 const submit = () => {
     if (props.editData) {
