@@ -45,6 +45,11 @@ const toggleDarkMode = () => {
     }
 };
 
+// Auto-close sidebar on mobile when navigating to a new page
+watch(() => page.url, () => {
+    isSidebarOpen.value = false;
+});
+
 import { router } from '@inertiajs/vue3';
 
 const changeTheme = (themeName) => {
