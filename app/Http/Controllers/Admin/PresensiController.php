@@ -336,6 +336,7 @@ class PresensiController extends Controller
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
                     $verif = $data_tgl['verif'];
                     $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
                 } else {
@@ -461,6 +462,7 @@ class PresensiController extends Controller
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
                     $verif = $data_tgl['verif'];
                     $status_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
                 } else {
@@ -513,6 +515,7 @@ class PresensiController extends Controller
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
                     $verif = $data_tgl['verif'];
 
                     $status = 'A';
@@ -619,6 +622,7 @@ class PresensiController extends Controller
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
                     $verif = $data_tgl['verif'];
 
                     $status = 'A';
