@@ -369,7 +369,7 @@ const menuItems = computed(() => {
                     <div v-else class="w-9 h-9 rounded-xl bg-primary-500 text-white flex items-center justify-center font-bold">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
-                    <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">{{ web.nama_sekolah || 'SIAKAD' }}</span>
+                    <span class="font-bold text-sm leading-tight tracking-tight text-gray-900 dark:text-white line-clamp-2">{{ web.nama_sekolah || 'SIAKAD' }}</span>
                 </div>
             </div>
 
