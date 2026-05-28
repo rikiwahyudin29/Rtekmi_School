@@ -9,7 +9,7 @@ const web = computed(() => page.props.web_settings || {});
 
 // State
 const isDarkMode = ref(false);
-const isSidebarOpen = ref(true);
+const isSidebarOpen = ref(false);
 const currentTheme = computed(() => page.props.theme || 'theme-green');
 const sidebarScrollArea = ref(null);
 
