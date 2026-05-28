@@ -79,21 +79,21 @@
                 @php
                     $val = $matrix[$s->id][$d] ?? '-';
                     $color = '';
-                    if($val == 'H') { $color = 'color: green; font-weight: bold;'; $totH++; }
-                    elseif($val == 'T') { $color = 'color: orange; font-weight: bold;'; $totT++; $totH++; }
-                    elseif($val == 'S') { $color = 'color: blue; font-weight: bold;'; $totS++; }
-                    elseif($val == 'I') { $color = 'color: #17a2b8; font-weight: bold;'; $totI++; }
-                    elseif($val == 'DL') { $color = 'color: purple; font-weight: bold;'; $totI++; } // Dinas luar digabung izin
-                    elseif($val == 'A') { $color = 'color: red; font-weight: bold;'; $totA++; }
+                    if($val == 'H') { $color = 'background-color: #22c55e; color: white; font-weight: bold;'; $totH++; }
+                    elseif($val == 'T') { $color = 'background-color: #f97316; color: white; font-weight: bold;'; $totT++; $totH++; }
+                    elseif($val == 'S') { $color = 'background-color: #3b82f6; color: white; font-weight: bold;'; $totS++; }
+                    elseif($val == 'I') { $color = 'background-color: #06b6d4; color: white; font-weight: bold;'; $totI++; }
+                    elseif($val == 'DL') { $color = 'background-color: #a855f7; color: white; font-weight: bold;'; $totI++; } // Dinas luar digabung izin
+                    elseif($val == 'A') { $color = 'background-color: #ef4444; color: white; font-weight: bold;'; $totA++; }
                     elseif($val == '-') { $color = 'color: #ccc;'; }
                 @endphp
                 <td style="{{ $color }}">{{ $val }}</td>
                 @endfor
-                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totH }}</td>
-                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totT }}</td>
-                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totS }}</td>
-                <td style="font-weight: bold; background-color: #f2f2f2;">{{ $totI }}</td>
-                <td style="font-weight: bold; background-color: #f2f2f2; color: red;">{{ $totA }}</td>
+                <td style="font-weight: bold; background-color: #22c55e; color: white;">{{ $totH }}</td>
+                <td style="font-weight: bold; background-color: #f97316; color: white;">{{ $totT }}</td>
+                <td style="font-weight: bold; background-color: #3b82f6; color: white;">{{ $totS }}</td>
+                <td style="font-weight: bold; background-color: #06b6d4; color: white;">{{ $totI }}</td>
+                <td style="font-weight: bold; background-color: #ef4444; color: white;">{{ $totA }}</td>
             </tr>
             @endforeach
         </tbody>
