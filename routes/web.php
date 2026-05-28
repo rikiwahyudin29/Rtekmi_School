@@ -256,9 +256,15 @@ require __DIR__.'/auth.php';
 // ==========================================
 // ROUTE KHUSUS API (UNTUK FLUTTER MOBILE)
 // ==========================================
-Route::prefix('api/ujian')->name('api.ujian.')->group(function () {
-    Route::get('jadwal', [\App\Http\Controllers\Api\UjianApiController::class, 'getJadwal']);
-    Route::post('download', [\App\Http\Controllers\Api\UjianApiController::class, 'downloadSoal']);
-    Route::post('submit', [\App\Http\Controllers\Api\UjianApiController::class, 'submitJawaban']);
-    Route::get('cek_waktu', [\App\Http\Controllers\Api\UjianApiController::class, 'cekWaktu']);
+Route::prefix('api')->name('api.')->group(function () {
+    // Auth Login API
+    Route::post('login', [\App\Http\Controllers\Api\AuthApiController::class, 'login']);
+
+    // Ujian API
+    Route::prefix('ujian')->name('ujian.')->group(function () {
+        Route::get('jadwal', [\App\Http\Controllers\Api\UjianApiController::class, 'getJadwal']);
+        Route::post('download', [\App\Http\Controllers\Api\UjianApiController::class, 'downloadSoal']);
+        Route::post('submit', [\App\Http\Controllers\Api\UjianApiController::class, 'submitJawaban']);
+        Route::get('cek_waktu', [\App\Http\Controllers\Api\UjianApiController::class, 'cekWaktu']);
+    });
 });
