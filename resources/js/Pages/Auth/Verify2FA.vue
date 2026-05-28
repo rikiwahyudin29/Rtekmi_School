@@ -1,0 +1,145 @@
+<script setup>
+import { Head, Link, useForm } from '@inertiajs/vue3';
+
+const props = defineProps({
+    web: {
+        type: Object,
+        default: () => ({})
+    }
+});
+
+const form = useForm({
+    otp_code: '',
+    mode: 'verify'
+});
+
+const submit = () => {
+    form.post(route('2fa.process'));
+};
+</script>
+
+<template>
+    <Head title="Verifikasi 2-Langkah" />
+
+    <div class="min-h-screen flex w-full font-sans bg-gray-50">
+        <!-- Left Side: Form -->
+        <div class="w-full lg:w-1/2 flex flex-col justify-between p-8 sm:p-12 lg:p-16 bg-white relative">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-8 lg:mb-0">
+                <img v-if="web.logo" :src="`/uploads/identitas/${web.logo}`" class="w-10 h-10 object-contain drop-shadow-md bg-white rounded-full p-0.5 border-2 border-blue-600/30" alt="Logo">
+                <div v-else class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <span class="font-bold text-xl text-gray-900 tracking-tight uppercase">{{ web.nama_sekolah || 'SIAKAD' }}</span>
+            </div>
+
+            <!-- Form Container -->
+            <div class="max-w-md w-full mx-auto my-auto text-center">
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Verifikasi 2-Langkah</h2>
+                <p class="text-sm text-gray-500 font-medium mb-8">
+                    Buka aplikasi Google Authenticator Anda dan masukkan kode 6-digit.
+                </p>
+
+                <div v-if="form.errors.otp_code" class="mb-4 text-sm font-bold text-red-600 bg-red-50 py-2 rounded-lg">
+                    {{ form.errors.otp_code }}
+                </div>
+
+                <form @submit.prevent="submit" class="text-left">
+                    <!-- Single Input for 6-digit Code -->
+                    <div class="mb-6">
+                        <input 
+                            type="text" 
+                            v-model="form.otp_code"
+                            class="w-full text-center text-3xl font-mono tracking-[0.5em] text-gray-800 border border-gray-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none rounded-lg py-4 transition-colors placeholder-gray-300"
+                            placeholder="000000"
+                            maxlength="6"
+                            required
+                            autofocus
+                            autocomplete="one-time-code"
+                            pattern="\d*"
+                        />
+                    </div>
+
+                    <div class="mt-4">
+                        <button 
+                            type="submit" 
+                            :disabled="form.processing || form.otp_code.length !== 6" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span v-if="form.processing">Memverifikasi...</span>
+                            <span v-else>Masuk Sekarang</span>
+                        </button>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                        <Link 
+                            :href="route('logout')" 
+                            method="post" 
+                            as="button" 
+                            class="text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                            <i class="fas fa-arrow-left mr-1"></i> Batal Login
+                        </Link>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-between items-center text-xs text-gray-400 font-medium mt-8 lg:mt-0">
+                <p>&copy; {{ new Date().getFullYear() }} {{ web.nama_sekolah || 'SIAKAD' }}</p>
+                <a href="#" class="hover:text-gray-600 transition-colors">Privacy Policy</a>
+            </div>
+        </div>
+
+        <!-- Right Side: Blue Graphic Section -->
+        <div class="hidden lg:flex lg:w-1/2 p-4">
+            <div class="w-full h-full bg-blue-600 rounded-[2rem] p-12 flex flex-col relative overflow-hidden shadow-2xl">
+                <!-- Decorative Elements -->
+                <div class="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/4"></div>
+                <div class="absolute bottom-0 left-0 w-80 h-80 bg-blue-400 opacity-20 rounded-full blur-3xl transform -translate-x-1/4 translate-y-1/4"></div>
+                
+                <!-- Text Content -->
+                <div class="relative z-10 max-w-lg mt-8">
+                    <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+                        Keamanan Akun Anda adalah Prioritas Kami.
+                    </h2>
+                    <p class="text-blue-100 text-lg font-medium opacity-90">
+                        Kami menggunakan Autentikasi 2-Langkah untuk memastikan hanya Anda yang dapat mengakses akun Anda.
+                    </p>
+                </div>
+
+                <!-- Dashboard Mockup Image -->
+                <div class="relative z-10 flex-1 w-full mt-12 flex items-end justify-center perspective-1000">
+                    <div class="w-[110%] ml-[10%] h-[90%] bg-white/10 backdrop-blur-sm rounded-tl-2xl rounded-tr-2xl border border-white/20 p-2 shadow-2xl transform rotate-1 lg:rotate-2">
+                        <div class="w-full h-full bg-white rounded-xl shadow-inner overflow-hidden border border-gray-100 relative">
+                            <!-- Fake Dashboard UI -->
+                            <div class="h-10 border-b border-gray-100 flex items-center px-4 gap-2 bg-gray-50/50">
+                                <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            </div>
+                            <div class="p-6 grid grid-cols-3 gap-6 opacity-80 pointer-events-none">
+                                <div class="col-span-2 space-y-4">
+                                    <div class="h-32 bg-blue-50 rounded-xl flex items-center p-6 gap-4">
+                                        <div class="w-16 h-16 rounded-full bg-blue-100"></div>
+                                        <div class="space-y-2">
+                                            <div class="h-4 w-32 bg-blue-200 rounded"></div>
+                                            <div class="h-3 w-24 bg-blue-100 rounded"></div>
+                                        </div>
+                                    </div>
+                                    <div class="h-48 bg-gray-50 rounded-xl border border-gray-100"></div>
+                                </div>
+                                <div class="col-span-1 space-y-4">
+                                    <div class="h-24 bg-purple-50 rounded-xl border border-purple-100"></div>
+                                    <div class="h-56 bg-green-50 rounded-xl border border-green-100 relative overflow-hidden flex items-center justify-center">
+                                        <div class="w-32 h-32 rounded-full border-[12px] border-green-200 border-t-green-400 border-r-green-500"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
