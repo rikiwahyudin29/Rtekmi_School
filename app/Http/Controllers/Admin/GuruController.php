@@ -252,22 +252,52 @@ class GuruController extends Controller
             'roles' => 'array',
         ]);
 
+        $user = null;
         if ($guru->user_id) {
             $user = User::find($guru->user_id);
-            if ($user) {
-                // Ensure the base 'guru' role is always kept
-                $rolesToSync = $request->roles ?? [];
-                $roleGuru = Role::where('role_key', 'guru')->first();
-                if ($roleGuru && !in_array($roleGuru->id, $rolesToSync)) {
-                    $rolesToSync[] = $roleGuru->id;
-                }
-                
-                $user->roles()->sync($rolesToSync);
-                return back()->with('message', 'Tugas tambahan guru berhasil diperbarui.');
+        }
+
+        // AUTO HEAL: Jika user_id kosong atau user tidak ditemukan di tabel users
+        if (!$user) {
+            $passwordAsli = Str::random(8);
+            $userEmail = $guru->email ?? ($guru->nip . '@sekolah.id');
+            
+            // Cek apakah username dengan NIP ini sudah ada di tabel users
+            $user = User::where('username', $guru->nip)->first();
+            
+            if (!$user) {
+                $user = User::create([
+                    'username'     => $guru->nip,
+                    'password'     => Hash::make($passwordAsli),
+                    'email'        => $userEmail,
+                    'nama_lengkap' => $guru->nama_lengkap,
+                    'nomor_wa'     => $guru->nomor_wa ?? null,
+                ]);
+            }
+            
+            // Tautkan kembali user_id ke tabel guru
+            $guru->update(['user_id' => $user->id]);
+            
+            // Berikan role dasar guru
+            $roleGuru = Role::where('role_key', 'guru')->first();
+            if ($roleGuru && !$user->roles->contains($roleGuru->id)) {
+                $user->roles()->attach($roleGuru->id);
             }
         }
+
+        if ($user) {
+            // Ensure the base 'guru' role is always kept
+            $rolesToSync = $request->roles ?? [];
+            $roleGuru = Role::where('role_key', 'guru')->first();
+            if ($roleGuru && !in_array($roleGuru->id, $rolesToSync)) {
+                $rolesToSync[] = $roleGuru->id;
+            }
+            
+            $user->roles()->sync($rolesToSync);
+            return back()->with('message', 'Akun berhasil ditautkan & Tugas tambahan guru diperbarui.');
+        }
         
-        return back()->with('error', 'Guru ini tidak tertaut dengan akun pengguna (User ID kosong).');
+        return back()->with('error', 'Gagal membuat atau mengaitkan akun pengguna.');
     }
 
     public function templateExcel()
