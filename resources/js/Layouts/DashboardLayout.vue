@@ -268,11 +268,11 @@ const menuItems = computed(() => {
     if (isSuperAdmin || isKeuangan) {
         menus.push(
             { isHeader: true, name: 'Keuangan & Bendahara' },
-            { name: 'Keuangan Sekolah', icon: 'fas fa-wallet', route: '#', active: route().current('keuangan.*'), children: [
-                { name: 'Pos Bayar', icon: 'fas fa-tags', route: 'keuangan.pos.index', active: route().current('keuangan.pos.*') },
-                { name: 'Setting Pembayaran', icon: 'fas fa-file-invoice-dollar', route: 'keuangan.jenis.index', active: route().current('keuangan.jenis.*') || route().current('keuangan.tagihan.*') },
-                { name: 'Kasir Pembayaran', icon: 'fas fa-cash-register', route: 'keuangan.pembayaran.index', active: route().current('keuangan.pembayaran.*') },
-                { name: 'Pengeluaran Ops', icon: 'fas fa-shopping-cart', route: 'keuangan.pengeluaran.index', active: route().current('keuangan.pengeluaran.*') },
+            { name: 'Keuangan Sekolah', icon: 'fas fa-wallet', route: '#', active: route().current('admin.keuangan.*'), children: [
+                { name: 'Pos Bayar', icon: 'fas fa-tags', route: 'admin.keuangan.pos.index', active: route().current('admin.keuangan.pos.*') },
+                { name: 'Setting Pembayaran', icon: 'fas fa-file-invoice-dollar', route: 'admin.keuangan.jenis.index', active: route().current('admin.keuangan.jenis.*') || route().current('admin.keuangan.tagihan.*') },
+                { name: 'Kasir Pembayaran', icon: 'fas fa-cash-register', route: 'admin.keuangan.pembayaran.index', active: route().current('admin.keuangan.pembayaran.*') },
+                { name: 'Pengeluaran Ops', icon: 'fas fa-shopping-cart', route: 'admin.keuangan.pengeluaran.index', active: route().current('admin.keuangan.pengeluaran.*') },
                 { name: 'Laporan Keuangan', icon: 'fas fa-chart-line', route: '#', active: false },
                 { name: 'Log Aktivitas', icon: 'fas fa-history', route: '#', active: false },
                 { name: 'Blast Tagihan WA', icon: 'fab fa-whatsapp', route: '#', active: false },
