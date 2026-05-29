@@ -268,12 +268,12 @@ const menuItems = computed(() => {
     if (isSuperAdmin || isKeuangan) {
         menus.push(
             { isHeader: true, name: 'Keuangan & Bendahara' },
-            { name: 'Keuangan Sekolah', icon: 'fas fa-wallet', route: '#', active: false, children: [
-                { name: 'Pos Bayar', icon: 'fas fa-tags', route: '#', active: false },
-                { name: 'Jenis & Generate', icon: 'fas fa-file-invoice-dollar', route: '#', active: false },
-                { name: 'Pembayaran (Kasir)', icon: 'fas fa-cash-register', route: '#', active: false },
+            { name: 'Keuangan Sekolah', icon: 'fas fa-wallet', route: '#', active: route().current('keuangan.*'), children: [
+                { name: 'Pos Bayar', icon: 'fas fa-tags', route: 'keuangan.pos.index', active: route().current('keuangan.pos.*') },
+                { name: 'Setting Pembayaran', icon: 'fas fa-file-invoice-dollar', route: 'keuangan.jenis.index', active: route().current('keuangan.jenis.*') || route().current('keuangan.tagihan.*') },
+                { name: 'Kasir Pembayaran', icon: 'fas fa-cash-register', route: 'keuangan.pembayaran.index', active: route().current('keuangan.pembayaran.*') },
+                { name: 'Pengeluaran Ops', icon: 'fas fa-shopping-cart', route: 'keuangan.pengeluaran.index', active: route().current('keuangan.pengeluaran.*') },
                 { name: 'Laporan Keuangan', icon: 'fas fa-chart-line', route: '#', active: false },
-                { name: 'Pengeluaran Ops', icon: 'fas fa-shopping-cart', route: '#', active: false },
                 { name: 'Log Aktivitas', icon: 'fas fa-history', route: '#', active: false },
                 { name: 'Blast Tagihan WA', icon: 'fab fa-whatsapp', route: '#', active: false },
             ]},
