@@ -347,3 +347,15 @@ Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluar
 Route::get('/cetak-surat/{id}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetak'])->name('surat.cetak')->middleware('auth');
 
 // API Routes are now served via routes/api.php and configured in bootstrap/app.php
+
+// Temporary Route to Fix CI4 User ID Mapping
+Route::get('/fix-users', function () {
+    \Illuminate\Support\Facades\DB::statement('UPDATE tbl_guru SET user_id = id_user WHERE id_user IS NOT NULL AND id_user > 0');
+    \Illuminate\Support\Facades\DB::statement('UPDATE tbl_siswa SET user_id = id_user WHERE id_user IS NOT NULL AND id_user > 0');
+    
+    // Hapus sisa user duplikat (auto-heal) yang barusan terbuat (yang role aslinya belum lengkap)
+    // agar database kembali bersih seperti sedia kala (opsional tapi disarankan)
+    // Untuk amannya, kita biarkan saja. Yang penting user_id sudah kembali nyantol ke id_user lama.
+    
+    return 'Berhasil menyinkronkan data User ID lama (CI4) ke sistem baru! Silakan kembali ke menu Manajemen Guru di web, refresh halaman, dan role lama pasti sudah muncul semua!';
+});
