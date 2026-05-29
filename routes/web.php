@@ -228,8 +228,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/bank-soal/{id}/export', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'exportSoal'])->name('bank-soal.export');
             Route::post('/bank-soal/{id}/import-excel', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'importSoalExcel'])->name('bank-soal.import-excel');
             Route::post('/bank-soal/{id}/import-word', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'importSoalWord'])->name('bank-soal.import-word');
-            Route::get('/bank-soal/download-template-excel', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'downloadTemplateExcel'])->name('bank-soal.download-template-excel');
-            Route::get('/bank-soal/download-template-word', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'downloadTemplateWord'])->name('bank-soal.download-template-word');
+            Route::get('/bank-soal/template-excel', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'downloadTemplateExcel'])->name('bank-soal.download-template-excel');
+            Route::get('/bank-soal/template-word', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'downloadTemplateWord'])->name('bank-soal.download-template-word');
             Route::get('/bank-soal/{id}/soal', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'soal'])->name('bank-soal.editor');
             Route::get('/bank-soal/{id}/get-soal', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'getSoal'])->name('bank-soal.get-soal');
             Route::post('/bank-soal/{id}/save-soal', [\App\Http\Controllers\Admin\CBT\BankSoalController::class, 'saveSoal'])->name('bank-soal.save-soal');
