@@ -270,6 +270,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/jadwal-ujian/{id}/jawaban/{ujian_id}', [\App\Http\Controllers\Admin\CBT\DetailJadwalController::class, 'update_jawaban'])->name('jadwal-ujian.update_jawaban');
             Route::resource('jadwal-ujian', \App\Http\Controllers\Admin\CBT\JadwalUjianController::class);
         });
+        // Keuangan Group
+        Route::prefix('keuangan')->name('keuangan.')->group(function () {
+            // Pos Bayar
+            Route::resource('pos', \App\Http\Controllers\Admin\Keuangan\PosBayarController::class)->except(['create', 'edit', 'show']);
+            
+            // Jenis Bayar
+            Route::resource('jenis', \App\Http\Controllers\Admin\Keuangan\JenisBayarController::class)->except(['create', 'edit', 'show']);
+            
+            // Tagihan
+            Route::get('tagihan/kelola/{id_jenis}', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'kelola'])->name('tagihan.kelola');
+            Route::post('tagihan/generate', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'generate'])->name('tagihan.generate');
+            Route::post('tagihan/update-nominal', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'updateNominal'])->name('tagihan.update_nominal');
+            
+            // Pembayaran
+            Route::get('pembayaran', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'index'])->name('pembayaran.index');
+            Route::get('pembayaran/siswa/{id_siswa}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'transaksi'])->name('pembayaran.transaksi');
+            Route::post('pembayaran/proses', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'prosesBayar'])->name('pembayaran.proses_bayar');
+            Route::post('pembayaran/batal', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'batal'])->name('pembayaran.batal');
+            
+            // Pengeluaran
+            Route::get('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'index'])->name('pengeluaran.index');
+            Route::post('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'store'])->name('pengeluaran.store');
+            Route::delete('pengeluaran/{id}', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'destroy'])->name('pengeluaran.destroy');
+        });
     });
 
     // App Setting and Role Group

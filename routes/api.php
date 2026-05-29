@@ -26,3 +26,6 @@ Route::prefix('ujian')->name('ujian.')->group(function () {
     Route::post('submit', [\App\Http\Controllers\Api\UjianApiController::class, 'submitJawaban']);
     Route::get('cek_waktu', [\App\Http\Controllers\Api\UjianApiController::class, 'cekWaktu']);
 });
+
+// TRIPAY CALLBACK
+Route::post('tripay/callback', [\App\Http\Controllers\Api\TripayCallbackController::class, 'handle']);
