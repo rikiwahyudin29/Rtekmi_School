@@ -16,7 +16,7 @@ class JenisBayarController extends Controller
     {
         $jenis = JenisBayar::with(['posBayar', 'tahunAjaran'])->orderBy('id', 'desc')->get();
         $pos = PosBayar::orderBy('nama_pos', 'asc')->get();
-        $tahun = TahunAjaran::orderBy('id', 'desc')->get();
+        $tahun = TahunAjaran::orderBy('id', 'desc')->get()->unique('tahun_ajaran')->values();
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
 
         return Inertia::render('Admin/Keuangan/Jenis/Index', [
