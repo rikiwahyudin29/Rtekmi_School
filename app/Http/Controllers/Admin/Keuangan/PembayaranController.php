@@ -93,7 +93,7 @@ class PembayaranController extends Controller
 
         // Note: Logging and WA can be implemented later or via Observers.
 
-        return redirect()->route('keuangan.pembayaran.transaksi', $request->id_siswa)->with('message', 'Pembayaran berhasil disimpan.');
+        return redirect()->route('admin.keuangan.pembayaran.transaksi', $request->id_siswa)->with('message', 'Pembayaran berhasil disimpan.');
     }
 
     public function batal(Request $request)

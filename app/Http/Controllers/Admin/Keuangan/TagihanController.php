@@ -98,7 +98,7 @@ class TagihanController extends Controller
             }
         }
 
-        return redirect()->route('keuangan.tagihan.kelola', $id_jenis)->with('message', "$sukses tagihan berhasil dibuat.");
+        return redirect()->route('admin.keuangan.tagihan.kelola', $id_jenis)->with('message', "$sukses tagihan berhasil dibuat.");
     }
 
     public function updateNominal(Request $request)
