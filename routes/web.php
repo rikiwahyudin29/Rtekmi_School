@@ -98,6 +98,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('tahun-ajaran', TahunAjaranController::class);
             Route::resource('jurusan', JurusanController::class);
             Route::resource('kelas', KelasController::class);
+            Route::get('mapel/template', [MapelController::class, 'template'])->name('mapel.template');
+            Route::post('mapel/import', [MapelController::class, 'import'])->name('mapel.import');
             Route::resource('mapel', MapelController::class);
             Route::resource('ruangan', RuanganController::class);
             Route::resource('jenis-ujian', JenisUjianController::class);

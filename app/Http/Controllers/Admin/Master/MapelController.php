@@ -7,6 +7,9 @@ use App\Models\Mapel;
 use App\Models\Jurusan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class MapelController extends Controller
 {
@@ -86,6 +89,80 @@ class MapelController extends Controller
             return back()->with('message', 'Mata Pelajaran berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    public function template()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header
+        $sheet->setCellValue('A1', 'KODE MAPEL');
+        $sheet->setCellValue('B1', 'NAMA MAPEL');
+        $sheet->setCellValue('C1', 'KELOMPOK (Contoh: A/B/C)');
+
+        // Style header
+        $sheet->getStyle('A1:C1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:C1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+              ->getStartColor()->setARGB('FFCCCCCC');
+              
+        // Auto size columns
+        foreach (range('A', 'C') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Dummy data
+        $sheet->setCellValue('A2', 'MAT-01');
+        $sheet->setCellValue('B2', 'Matematika Dasar');
+        $sheet->setCellValue('C2', 'A');
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Template_Mata_Pelajaran.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'. urlencode($fileName).'"');
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+            $highestRow = $sheet->getHighestRow();
+
+            $inserted = 0;
+            for ($row = 2; $row <= $highestRow; $row++) {
+                $kode_mapel = $sheet->getCell('A' . $row)->getValue();
+                $nama_mapel = $sheet->getCell('B' . $row)->getValue();
+                $kelompok = $sheet->getCell('C' . $row)->getValue();
+
+                if ($nama_mapel) {
+                    Mapel::updateOrCreate(
+                        ['kode_mapel' => $kode_mapel],
+                        [
+                            'nama_mapel' => $nama_mapel,
+                            'kelompok' => $kelompok,
+                            'jurusan_id' => '0',
+                            'tampil_raport' => true,
+                            'tampil_skl' => true,
+                            'tampil_transkrip' => true,
+                        ]
+                    );
+                    $inserted++;
+                }
+            }
+
+            return back()->with('message', "Berhasil mengimport {$inserted} mata pelajaran.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
     }
 }

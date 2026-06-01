@@ -14,6 +14,7 @@ const perPage = ref(props.filters.per_page || 10);
 const kelompokFilter = ref(props.filters.kelompok || '');
 
 const showModal = ref(false);
+const showImportModal = ref(false);
 const isEditing = ref(false);
 
 const form = useForm({
@@ -65,6 +66,32 @@ const submit = () => {
             onSuccess: () => closeModal(),
         });
     }
+    }
+};
+
+const importForm = useForm({
+    file: null,
+});
+
+const openImportModal = () => {
+    importForm.reset();
+    importForm.clearErrors();
+    showImportModal.value = true;
+};
+
+const closeImportModal = () => {
+    showImportModal.value = false;
+    importForm.reset();
+    importForm.clearErrors();
+};
+
+const submitImport = () => {
+    importForm.post(route('admin.master.mapel.import'), {
+        onSuccess: () => {
+            closeImportModal();
+            importForm.reset();
+        },
+    });
 };
 
 const deleteData = (id) => {
@@ -100,6 +127,9 @@ watch([search, perPage, kelompokFilter], ([newSearch, newPerPage, newKelompokFil
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola data mata pelajaran beserta kelompok dan pengaturannya.</p>
                     </div>
                     <div class="flex gap-2">
+                        <button @click="openImportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                            <i class="fas fa-file-excel"></i> Import Data
+                        </button>
                         <button @click="openModal()" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all flex items-center gap-2">
                             <i class="fas fa-plus"></i> Tambah Data
                         </button>
@@ -311,4 +341,52 @@ watch([search, perPage, kelompokFilter], ([newSearch, newPerPage, newKelompokFil
             </div>
         </div>
     </DashboardLayout>
+
+    <!-- Import Modal -->
+    <div v-if="showImportModal" class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-900/75 backdrop-blur-sm" @click="closeImportModal"></div>
+
+            <div class="relative inline-block w-full max-w-md p-6 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold leading-6 text-gray-900 dark:text-white">
+                        Import Mata Pelajaran
+                    </h3>
+                    <button @click="closeImportModal" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-5 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <p class="text-sm text-blue-800 dark:text-blue-400 mb-3">Silakan download template Excel di bawah ini, isi data mata pelajaran, lalu upload kembali file tersebut.</p>
+                    <a :href="route('admin.master.mapel.template')" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
+                        <i class="fas fa-download"></i> Download Template
+                    </a>
+                </div>
+
+                <form @submit.prevent="submitImport" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">File Excel (.xlsx, .xls) <span class="text-red-500">*</span></label>
+                        <input type="file" @change="e => importForm.file = e.target.files[0]" accept=".xlsx, .xls" class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-xl file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-emerald-50 file:text-emerald-700
+                            hover:file:bg-emerald-100
+                            dark:file:bg-emerald-900/30 dark:file:text-emerald-400" required>
+                        <div v-if="importForm.errors.file" class="text-red-500 text-xs mt-1">{{ importForm.errors.file }}</div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" @click="closeImportModal" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" :disabled="importForm.processing" class="px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-xl hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50 flex items-center gap-2">
+                            <i class="fas fa-upload"></i> Upload & Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </template>
