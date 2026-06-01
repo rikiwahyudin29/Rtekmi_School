@@ -244,6 +244,21 @@ class GuruController extends Controller
         }
     }
 
+    public function reset2FA($id)
+    {
+        $guru = Guru::findOrFail($id);
+        
+        if ($guru->user_id) {
+            $user = User::find($guru->user_id);
+            if ($user) {
+                $user->update(['google2fa_secret' => null]);
+                return back()->with('message', 'Google Authenticator untuk guru ini berhasil di-reset.');
+            }
+        }
+        
+        return back()->with('error', 'Gagal mereset! Guru ini tidak tertaut dengan akun pengguna (User ID kosong).');
+    }
+
     public function syncRoles(Request $request, $id)
     {
         $guru = Guru::findOrFail($id);

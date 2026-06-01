@@ -71,6 +71,14 @@ const hapus = (id) => {
         router.delete(`/admin/guru/${id}`);
     }
 };
+
+const reset2FA = (id) => {
+    if (confirm('Yakin ingin mereset Google Authenticator guru ini? Guru harus menautkan ulang authenticator-nya pada saat login berikutnya.')) {
+        router.post(`/admin/guru/${id}/reset-2fa`, {}, {
+            preserveScroll: true
+        });
+    }
+};
 </script>
 
 <template>
@@ -174,6 +182,9 @@ const hapus = (id) => {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center justify-center gap-2">
+                                            <button @click="reset2FA(guru.id)" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 flex items-center justify-center transition-colors" title="Reset Google Authenticator 2FA">
+                                                <i class="fas fa-shield-alt"></i>
+                                            </button>
                                             <button @click="openAssignRoleModal(guru)" class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 flex items-center justify-center transition-colors" title="Tugas Tambahan">
                                                 <i class="fas fa-user-tag"></i>
                                             </button>

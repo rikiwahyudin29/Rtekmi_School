@@ -128,6 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Admin User/Data Group
         Route::post('guru/{id}/roles', [GuruController::class, 'syncRoles'])->name('guru.roles.sync');
+        Route::post('guru/{id}/reset-2fa', [GuruController::class, 'reset2FA'])->name('guru.reset2fa');
         Route::resource('guru', GuruController::class);
         Route::resource('siswa', SiswaController::class);
         
