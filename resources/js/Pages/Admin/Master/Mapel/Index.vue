@@ -66,7 +66,6 @@ const submit = () => {
             onSuccess: () => closeModal(),
         });
     }
-    }
 };
 
 const importForm = useForm({
