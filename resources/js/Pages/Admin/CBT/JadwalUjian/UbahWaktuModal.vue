@@ -17,17 +17,16 @@ watch(() => props.show, (newVal) => {
         editingJadwals.value = props.jadwals.data
             .filter(j => props.selectedIds.includes(j.id))
             .map(j => {
-                const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-                const startStr = new Date(j.startDateTime * 1000 - tzoffset).toISOString().slice(0, 16);
-                const endStr = new Date(j.endDateTime * 1000 - tzoffset).toISOString().slice(0, 16);
+                const startStr = j.waktu_mulai ? j.waktu_mulai.replace(' ', 'T').slice(0, 16) : '';
+                const endStr = j.waktu_selesai ? j.waktu_selesai.replace(' ', 'T').slice(0, 16) : '';
 
                 return {
                     id: j.id,
-                    nama_draft: j.nama_draft,
-                    kode_ruang: j.kode_ruang,
+                    nama_draft: j.nama_ujian || (j.draft_ujian ? j.draft_ujian.nama : 'Ujian'),
+                    kode_ruang: j.ruangan ? j.ruangan.kode_ruangan : 'ALL',
                     startDateTime: startStr,
                     endDateTime: endStr,
-                    status: j.status,
+                    status: j.status_ujian === 'AKTIF' ? 1 : 0,
                     use_token: j.setting_token,
                     show_point: j.setting_show_score,
                     multi_login: j.setting_multi_login
