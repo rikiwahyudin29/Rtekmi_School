@@ -48,6 +48,16 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        $redis_status = false;
+        if (config('cache.default') === 'redis') {
+            try {
+                \Illuminate\Support\Facades\Redis::ping();
+                $redis_status = true;
+            } catch (\Throwable $e) {
+                $redis_status = false;
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -62,6 +72,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'web_settings' => $web,
             'theme' => $tema ? $tema->nilai : 'theme-green',
+            'redis_status' => $redis_status,
         ];
     }
 }

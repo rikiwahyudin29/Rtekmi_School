@@ -539,6 +539,17 @@ const menuItems = computed(() => {
                         <button @click="changeTheme('theme-orange')" :class="currentTheme === 'theme-orange' ? 'ring-2 ring-offset-1 ring-orange-500 dark:ring-offset-gray-800' : ''" class="w-6 h-6 rounded-full bg-orange-500 hover:scale-110 transition-transform" title="Orange Theme"></button>
                     </div>
 
+                    <!-- Redis Status Badge -->
+                    <div v-if="auth.role === 'admin' || auth.role === 'kepsek' || auth.role === 'superadmin'" class="hidden md:flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700" title="Status Koneksi Redis">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span v-if="$page.props.redis_status" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5" :class="$page.props.redis_status ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                        </span>
+                        <span class="text-xs font-bold" :class="$page.props.redis_status ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+                            Redis {{ $page.props.redis_status ? 'Active' : 'Offline' }}
+                        </span>
+                    </div>
+
                     <button @click="toggleDarkMode" class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-700/50 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all">
                         <i class="fas" :class="isDarkMode ? 'fa-sun text-yellow-500' : 'fa-moon'"></i>
                     </button>
