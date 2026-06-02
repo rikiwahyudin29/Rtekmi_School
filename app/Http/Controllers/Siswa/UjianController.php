@@ -260,15 +260,8 @@ class UjianController extends Controller
                 return (array) $item;
             })->toArray();
 
-        // Merge dengan Cache Redis
-        foreach ($listSoal as &$item) {
-            $keyRedis = "ujian_tmp_{$idUjianSiswa}_{$item['soal_id']}";
-            $cached = Cache::get($keyRedis); 
-            if ($cached && is_array($cached)) {
-                $item['jawaban_siswa'] = $cached['jawaban_siswa'] ?? $item['jawaban_siswa'];
-                $item['ragu'] = $cached['ragu'] ?? $item['ragu'];
-            }
-        }
+        // Karena DB table sudah di-update tiap klik, kita hapus cache Redis yang duplikat
+        // agar tidak muncul jawaban hantu (ghost answers) saat ujian di-reset admin.
 
         // Ambil Opsi Jawaban
         foreach ($listSoal as &$item) {
@@ -316,12 +309,6 @@ class UjianController extends Controller
         }
 
         if (!empty($newData)) {
-            // Simpan ke Cache
-            $key = "ujian_tmp_{$idUjian}_{$idSoal}";
-            $curr = Cache::get($key, []);
-            $newData = array_merge($curr, $newData); 
-            Cache::put($key, $newData, now()->addHours(3)); 
-
             // Simpan ke Database Permanen
             DB::table('tbl_jawaban_siswa')
                 ->where('id_ujian_siswa', $idUjian)
@@ -371,29 +358,37 @@ class UjianController extends Controller
             ->where('id_ujian_siswa', $idUjian)
             ->get();
             
+        // Pre-load semua opsi untuk mempercepat proses (Mencegah N+1 Query yang bikin ngelag/lama)
+        $soalIds = $list->pluck('soal_id')->toArray();
+        $allOpsi = DB::table('soal_opsi')->whereIn('soal_id', $soalIds)->get()->groupBy('soal_id');
+        $allCouple = DB::table('soal_data_couple')->whereIn('soal_id', $soalIds)->get()->groupBy('soal_id');
+            
         $skorTot = 0; $bobotTot = 0; $ben = 0; $sal = 0; $kos = 0;
 
         foreach($list as $j) {
             $sc = 0; $cor = 0;
             $inp = $j->jawaban_siswa;
             $bobot = 0;
+            
+            $opsiSoal = isset($allOpsi[$j->soal_id]) ? $allOpsi[$j->soal_id] : collect([]);
+            $coupleSoal = isset($allCouple[$j->soal_id]) ? $allCouple[$j->soal_id] : collect([]);
 
             // Logic Scoring
             if ($j->jenis_soal == 1) { // PG
                 $bobot = $jadwal->bobot_pg ?? 1;
                 if ($inp !== null && $inp !== '') {
-                    if(DB::table('soal_opsi')->where(['id'=>$inp, 'is_key'=>1])->exists()) { $sc=1; $cor=1; }
+                    if($opsiSoal->where('id', $inp)->where('is_key', 1)->first()) { $sc=1; $cor=1; }
                 }
             } 
             elseif ($j->jenis_soal == 6) { // Benar Salah (Matrix)
                 $bobot = $jadwal->bobot_pg ?? 1;
                 if ($inp) {
                     $obj = json_decode($inp, true); // {opsi_id: "1" atau "0"}
-                    $tot = DB::table('soal_opsi')->where('soal_id', $j->soal_id)->count();
+                    $tot = $opsiSoal->count();
                     $hit = 0;
                     if($obj && is_array($obj)){
                         foreach($obj as $k => $v){
-                            if(DB::table('soal_opsi')->where(['id'=>$k, 'is_key'=>$v])->exists()) $hit++;
+                            if($opsiSoal->where('id', $k)->where('is_key', $v)->first()) $hit++;
                         }
                         if($tot>0){ $sc = $hit/$tot; if($sc==1) $cor=1; }
                     }
@@ -403,7 +398,7 @@ class UjianController extends Controller
                 $bobot = $jadwal->bobot_pg ?? 1;
                 if ($inp) {
                     $arr = json_decode($inp, true);
-                    $kunciObj = DB::table('soal_opsi')->select('id')->where(['soal_id'=>$j->soal_id,'is_key'=>1])->get();
+                    $kunciObj = $opsiSoal->where('is_key', 1);
                     $kunci = [];
                     foreach($kunciObj as $ko) $kunci[] = (string)$ko->id; 
                     
@@ -419,11 +414,11 @@ class UjianController extends Controller
                 $bobot = $jadwal->bobot_pg ?? 1;
                 if ($inp) {
                     $obj = json_decode($inp, true); // {id_kiri: id_kanan}
-                    $tot = DB::table('soal_data_couple')->where('soal_id', $j->soal_id)->count(); 
+                    $tot = $coupleSoal->count(); 
                     $hit = 0;
                     if($obj && is_array($obj)){ 
                         foreach($obj as $k => $v){ 
-                            if(DB::table('soal_opsi')->where(['id'=>$v, 'soal_couple_id'=>$k])->exists()) $hit++; 
+                            if($opsiSoal->where('id', $v)->where('soal_couple_id', $k)->first()) $hit++; 
                         } 
                         if($tot>0){ $sc = $hit/$tot; if($sc==1) $cor=1; } 
                     }
@@ -432,7 +427,7 @@ class UjianController extends Controller
             elseif ($j->jenis_soal == 5) { // Isian Singkat
                 $bobot = $jadwal->bobot_esai ?? 1;
                 if ($inp !== null && $inp !== '') {
-                    $kunci = DB::table('soal_opsi')->where(['soal_id'=>$j->soal_id,'is_key'=>1])->first();
+                    $kunci = $opsiSoal->where('is_key', 1)->first();
                     if($kunci && trim(strtolower($inp)) == trim(strtolower($kunci->body))) { $sc=1; $cor=1; }
                 }
             }
