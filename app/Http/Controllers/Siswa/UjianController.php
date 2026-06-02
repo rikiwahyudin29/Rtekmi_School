@@ -261,15 +261,12 @@ class UjianController extends Controller
             })->toArray();
 
         // Merge dengan Cache Redis
-        $keyRedis = "ujian_tmp_" . $idUjianSiswa;
-        $cached = Cache::get($keyRedis); 
-        
-        if ($cached && is_array($cached)) {
-            foreach ($listSoal as &$item) {
-                if (isset($cached[$item['soal_id']])) {
-                    $item['jawaban_siswa'] = $cached[$item['soal_id']]['jawaban_siswa'] ?? $item['jawaban_siswa'];
-                    $item['ragu'] = $cached[$item['soal_id']]['ragu'] ?? $item['ragu'];
-                }
+        foreach ($listSoal as &$item) {
+            $keyRedis = "ujian_tmp_{$idUjianSiswa}_{$item['soal_id']}";
+            $cached = Cache::get($keyRedis); 
+            if ($cached && is_array($cached)) {
+                $item['jawaban_siswa'] = $cached['jawaban_siswa'] ?? $item['jawaban_siswa'];
+                $item['ragu'] = $cached['ragu'] ?? $item['ragu'];
             }
         }
 
@@ -320,14 +317,10 @@ class UjianController extends Controller
 
         if (!empty($newData)) {
             // Simpan ke Cache
-            $key = "ujian_tmp_" . $idUjian;
+            $key = "ujian_tmp_{$idUjian}_{$idSoal}";
             $curr = Cache::get($key, []);
-            
-            if (isset($curr[$idSoal])) {
-                $newData = array_merge($curr[$idSoal], $newData); 
-            }
-            $curr[$idSoal] = $newData; 
-            Cache::put($key, $curr, now()->addHours(3)); 
+            $newData = array_merge($curr, $newData); 
+            Cache::put($key, $newData, now()->addHours(3)); 
 
             // Simpan ke Database Permanen
             DB::table('tbl_jawaban_siswa')
@@ -369,8 +362,7 @@ class UjianController extends Controller
             }
         }
 
-        // Hapus Cache Redis
-        Cache::forget("ujian_tmp_" . $idUjian);
+        // Hapus Cache Redis (opsional, karena pakai key spesifik, akan expired sendiri)
 
         // Ambil Jawaban untuk Scoring
         $list = DB::table('tbl_jawaban_siswa')

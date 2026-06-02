@@ -259,7 +259,26 @@ const saveAnswerData = (data) => {
     data.id_ujian_siswa = props.sesi.id;
     data.soal_id = currentSoal.value.soal_id;
     
-    axios.post(route('siswa.ujian.simpan-jawaban'), data).catch(err => {
+    // Tampilkan indikator loading kecil jika perlu (opsional)
+    const navBtn = document.getElementById(`nav-btn-${currentSoal.value.soal_id}`);
+    if(navBtn) navBtn.classList.add('animate-pulse');
+
+    axios.post(route('siswa.ujian.simpan-jawaban'), data).then(res => {
+        if(navBtn) navBtn.classList.remove('animate-pulse');
+    }).catch(err => {
+        if(navBtn) navBtn.classList.remove('animate-pulse');
+        
+        let msg = 'Koneksi terputus. Gagal menyimpan jawaban.';
+        if (err.response && err.response.status === 419) {
+            msg = 'Sesi Anda telah berakhir. Silakan muat ulang (refresh) halaman ini.';
+        }
+        
+        window.Swal.fire({
+            title: 'Gagal Menyimpan!',
+            text: msg,
+            icon: 'error',
+            confirmButtonText: 'Tutup & Coba Lagi'
+        });
         console.error('Failed to save answer:', err);
     });
 };
@@ -592,6 +611,7 @@ const getNavClass = (state, index) => {
                 <div class="grid grid-cols-5 gap-3">
                     <button v-for="(state, idx) in stateSoal" :key="idx"
                             @click="showSoal(idx)"
+                            :id="`nav-btn-${state.id}`"
                             class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all border-2"
                             :class="getNavClass(state, idx)">
                         {{ idx + 1 }}
