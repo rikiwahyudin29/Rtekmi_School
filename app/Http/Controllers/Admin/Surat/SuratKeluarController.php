@@ -109,6 +109,15 @@ class SuratKeluarController extends Controller
     public function cetakPublic($token)
     {
         $surat = SuratKeluar::with(['siswa', 'siswa.kelas'])->where('token_validasi', $token)->firstOrFail();
+        
+        if ($surat->perihal == 'Surat Keterangan Lulus') {
+            $kelulusanController = new \App\Http\Controllers\Admin\KelulusanController();
+            return $kelulusanController->cetakSkl($surat->siswa_id);
+        } elseif ($surat->perihal == 'Transkrip Nilai') {
+            $kelulusanController = new \App\Http\Controllers\Admin\KelulusanController();
+            return $kelulusanController->cetakTranskrip($surat->siswa_id);
+        }
+
         $sekolah = Sekolah::find(1);
         $qr_link = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode(route('surat.verifikasi', $surat->token_validasi));
         return view('surat.cetak', compact('surat', 'sekolah', 'qr_link'));

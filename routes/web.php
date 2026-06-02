@@ -66,6 +66,13 @@ Route::get('/test-jadwal-kelas/{id}', function ($id) {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
 Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
+
+// Portal Kelulusan Public
+Route::get('/kelulusan', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'index'])->name('kelulusan.index');
+Route::post('/kelulusan/login', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'login'])->name('kelulusan.login');
+Route::get('/kelulusan/hasil', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'getHasil'])->name('kelulusan.hasil');
+Route::get('/kelulusan/download', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'downloadDokumen'])->name('kelulusan.download');
+
 Route::get('/debug-siswa', function() {
     $user = \Illuminate\Support\Facades\Auth::user();
     if (!$user) return 'Not logged in';
@@ -212,6 +219,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/import', [\App\Http\Controllers\Admin\KelulusanController::class, 'importNilai'])->name('import');
             Route::get('/cetak-transkrip/{id}', [\App\Http\Controllers\Admin\KelulusanController::class, 'cetakTranskrip'])->name('cetak_transkrip');
             Route::get('/cetak-skl/{id}', [\App\Http\Controllers\Admin\KelulusanController::class, 'cetakSkl'])->name('cetak_skl');
+            Route::get('/cetak-semua-transkrip', [\App\Http\Controllers\Admin\KelulusanController::class, 'cetakTranskripSemua'])->name('cetak_semua_transkrip');
+            Route::get('/cetak-semua-skl', [\App\Http\Controllers\Admin\KelulusanController::class, 'cetakSklSemua'])->name('cetak_semua_skl');
         });
 
         // Roles is inside the admin prefix, making the route name 'admin.roles.index'

@@ -476,6 +476,29 @@ class KelulusanController extends Controller
     // =========================================================
     public function cetakTranskrip($siswaId)
     {
+        $data = $this->getTranskripData($siswaId);
+        return view('kelulusan.cetak_transkrip', $data);
+    }
+    
+    public function cetakTranskripSemua(Request $request)
+    {
+        $kelasId = $request->kelas_id;
+        $query = Siswa::whereHas('kelas', function($q) { $q->where('tingkat', 12); });
+        if ($kelasId) {
+            $query->where('kelas_id', $kelasId);
+        }
+        $siswas = $query->get();
+        
+        $semuaData = [];
+        foreach ($siswas as $siswa) {
+            $semuaData[] = $this->getTranskripData($siswa->id);
+        }
+        
+        return view('kelulusan.cetak_transkrip_semua', compact('semuaData'));
+    }
+
+    private function getTranskripData($siswaId)
+    {
         $siswa = Siswa::with('kelas.jurusan')->findOrFail($siswaId);
         $setting = SettingKelulusan::first();
         $sekolah = Sekolah::first();
@@ -680,7 +703,7 @@ class KelulusanController extends Controller
             $finalGroup[$newKey] = $val;
         }
 
-        return view('kelulusan.cetak_transkrip', [
+        return [
             'siswa' => $siswa,
             'sekolah' => $sekolah,
             'setting' => $setting,
@@ -691,14 +714,39 @@ class KelulusanController extends Controller
             'nomor_surat' => $nomorSurat,
             'qr_url' => $qrUrl,
             'token_validasi' => $tokenValidasi
-        ]);
+        ];
     }
 
     public function cetakSkl($siswaId)
     {
+        $data = $this->getSklData($siswaId);
+        if (!$data) return redirect()->back()->with('error', 'Status kelulusan siswa ini masih Pending!');
+        return view('kelulusan.cetak_skl', $data);
+    }
+    
+    public function cetakSklSemua(Request $request)
+    {
+        $kelasId = $request->kelas_id;
+        $query = Siswa::whereHas('kelas', function($q) { $q->where('tingkat', 12); });
+        if ($kelasId) {
+            $query->where('kelas_id', $kelasId);
+        }
+        $siswas = $query->get();
+        
+        $semuaData = [];
+        foreach ($siswas as $siswa) {
+            $data = $this->getSklData($siswa->id);
+            if ($data) $semuaData[] = $data;
+        }
+        
+        return view('kelulusan.cetak_skl_semua', compact('semuaData'));
+    }
+
+    private function getSklData($siswaId)
+    {
         $siswa = Siswa::with(['kelas.jurusan', 'kelulusan'])->findOrFail($siswaId);
         if (!$siswa->kelulusan || $siswa->kelulusan->status_lulus == 'Pending') {
-            return redirect()->back()->with('error', 'Status kelulusan siswa ini masih Pending!');
+            return null;
         }
 
         $setting = SettingKelulusan::first();
@@ -822,7 +870,7 @@ class KelulusanController extends Controller
             $finalGroup[$newKey] = $val;
         }
 
-        return view('kelulusan.cetak_skl', [
+        return [
             'siswa' => $siswa,
             'sekolah' => $sekolah,
             'setting' => $setting,
@@ -831,6 +879,6 @@ class KelulusanController extends Controller
             'nomor_surat' => $nomorSurat,
             'qr_url' => $qrUrl,
             'token_validasi' => $tokenValidasi
-        ]);
+        ];
     }
 }
