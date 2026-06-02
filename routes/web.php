@@ -71,6 +71,8 @@ Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\Surat
 Route::get('/kelulusan', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'index'])->name('kelulusan.index');
 Route::post('/kelulusan/login', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'login'])->name('kelulusan.login');
 Route::get('/kelulusan/hasil', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'getHasil'])->name('kelulusan.hasil');
+Route::get('/kelulusan/antrian/request', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'requestAntrian'])->name('kelulusan.antrian.request');
+Route::get('/kelulusan/antrian/cek/{id}', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'cekAntrian'])->name('kelulusan.antrian.cek');
 Route::get('/kelulusan/download', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'downloadDokumen'])->name('kelulusan.download');
 
 Route::get('/debug-siswa', function() {

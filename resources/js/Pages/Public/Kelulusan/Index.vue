@@ -88,6 +88,64 @@ const handleLogin = async () => {
 
 const envelopeState = ref('closed'); // closed, opening, opened
 
+const downloadState = ref({
+    isDownloading: false,
+    status: '', // 'requesting', 'antri', 'proses', 'ready'
+    sisaAntrian: 0,
+    tipe: ''
+});
+
+const pollingInterval = ref(null);
+
+const handleDownload = async (tipe) => {
+    downloadState.value = {
+        isDownloading: true,
+        status: 'requesting',
+        sisaAntrian: 0,
+        tipe: tipe
+    };
+
+    try {
+        const response = await axios.get(route('kelulusan.antrian.request'), { params: { tipe } });
+        if (response.data.status === 'success') {
+            const idAntrian = response.data.id_antrian;
+            startPolling(idAntrian, tipe);
+        } else {
+            alert(response.data.msg || 'Terjadi kesalahan sistem.');
+            downloadState.value.isDownloading = false;
+        }
+    } catch (e) {
+        alert('Gagal menghubungi server.');
+        downloadState.value.isDownloading = false;
+    }
+};
+
+const startPolling = (idAntrian, tipe) => {
+    pollingInterval.value = setInterval(async () => {
+        try {
+            const response = await axios.get(route('kelulusan.antrian.cek', idAntrian));
+            
+            downloadState.value.status = response.data.status;
+            downloadState.value.sisaAntrian = response.data.sisa || 0;
+
+            if (response.data.status === 'ready') {
+                clearInterval(pollingInterval.value);
+                
+                // Mulai download file beneran
+                window.location.href = route('kelulusan.download') + '?tipe=' + tipe;
+                
+                setTimeout(() => {
+                    downloadState.value.isDownloading = false;
+                }, 2000);
+            }
+        } catch (e) {
+            clearInterval(pollingInterval.value);
+            alert('Koneksi terputus saat menunggu antrean.');
+            downloadState.value.isDownloading = false;
+        }
+    }, 2000); // Poll every 2 seconds
+};
+
 const startAnimation = () => {
     step.value = 3; // Envelope animation
     setTimeout(() => {
@@ -294,18 +352,18 @@ const bgImage = computed(() => {
                         </div>
 
                         <div v-if="hasilKelulusan?.status_lulus === 'Lulus' || hasilKelulusan?.status_lulus === 'Lulus Bersyarat'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <a :href="route('kelulusan.download') + '?tipe=skl'" class="flex items-center justify-center p-4 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold transition-colors border border-emerald-200 group">
+                            <button @click="handleDownload('skl')" class="flex items-center justify-center p-4 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold transition-colors border border-emerald-200 group w-full">
                                 <div class="w-10 h-10 rounded-full bg-emerald-200 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
                                     <i class="fas fa-graduation-cap text-lg"></i>
                                 </div>
                                 Unduh SKL
-                            </a>
-                            <a :href="route('kelulusan.download') + '?tipe=transkrip'" class="flex items-center justify-center p-4 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl font-bold transition-colors border border-blue-200 group">
+                            </button>
+                            <button @click="handleDownload('transkrip')" class="flex items-center justify-center p-4 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl font-bold transition-colors border border-blue-200 group w-full">
                                 <div class="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
                                     <i class="fas fa-file-invoice text-lg"></i>
                                 </div>
                                 Unduh Transkrip
-                            </a>
+                            </button>
                         </div>
                         <div v-else class="p-4 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-xl text-center text-sm font-medium">
                             Dokumen kelulusan tidak dapat diunduh karena status kelulusan Anda.
@@ -321,6 +379,57 @@ const bgImage = computed(() => {
             </div>
 
         </div>
+
+        <!-- Download Modal Queue -->
+        <div v-if="downloadState.isDownloading" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center border border-white/20 transform transition-all scale-100 opacity-100">
+                
+                <div v-if="downloadState.status === 'antri'" class="text-blue-500 mb-4">
+                    <i class="fas fa-users text-5xl animate-bounce"></i>
+                </div>
+                <div v-else-if="downloadState.status === 'proses'" class="text-emerald-500 mb-4">
+                    <i class="fas fa-cog fa-spin text-5xl"></i>
+                </div>
+                <div v-else-if="downloadState.status === 'ready'" class="text-green-500 mb-4">
+                    <i class="fas fa-check-circle text-5xl"></i>
+                </div>
+                <div v-else class="text-gray-400 mb-4">
+                    <i class="fas fa-circle-notch fa-spin text-5xl"></i>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                    {{ 
+                        downloadState.status === 'antri' ? 'Masuk Antrean' : 
+                        downloadState.status === 'proses' ? 'Merender PDF...' :
+                        downloadState.status === 'ready' ? 'Siap Diunduh!' : 'Menghubungkan...' 
+                    }}
+                </h3>
+                
+                <p class="text-sm text-gray-600 mb-4 font-medium">
+                    <span v-if="downloadState.status === 'antri'">
+                        Harap tunggu. Ada <b class="text-blue-600">{{ downloadState.sisaAntrian }}</b> orang di antrean depan Anda.
+                    </span>
+                    <span v-else-if="downloadState.status === 'proses'">
+                        Server sedang menggambar dokumen PDF Anda. Mohon jangan tutup halaman ini.
+                    </span>
+                    <span v-else-if="downloadState.status === 'ready'">
+                        Dokumen sedang diunduh ke perangkat Anda.
+                    </span>
+                    <span v-else>
+                        Meminta tiket antrean ke server...
+                    </span>
+                </p>
+
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden relative">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500 absolute left-0 top-0" :style="`width: ${downloadState.status === 'ready' ? '100%' : downloadState.status === 'proses' ? '75%' : '25%'}`"></div>
+                </div>
+
+                <button v-if="downloadState.status === 'antri' || downloadState.status === 'requesting'" @click="downloadState.isDownloading = false; clearInterval(pollingInterval)" class="text-xs text-red-500 hover:text-red-700 underline font-medium">
+                    Batalkan
+                </button>
+            </div>
+        </div>
+
     </div>
 </template>
 
