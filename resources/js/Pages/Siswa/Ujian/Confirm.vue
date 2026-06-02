@@ -65,6 +65,7 @@ const submitToken = () => {
                         <div v-if="jadwal.setting_token" class="w-full max-w-sm mb-6">
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 text-center">Masukkan Token Ujian</label>
                             <input type="text" v-model="form.token" required placeholder="Contoh: AB12CD" 
+                                @input="form.token = form.token.toUpperCase()"
                                 class="w-full text-center text-xl font-mono uppercase tracking-widest border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm p-4">
                         </div>
 

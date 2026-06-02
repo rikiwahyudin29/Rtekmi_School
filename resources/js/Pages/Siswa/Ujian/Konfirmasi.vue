@@ -107,6 +107,7 @@ const formatTime = (date) => {
                                     <i class="fas fa-key text-primary-500 text-xl"></i>
                                 </div>
                                 <input type="text" v-model="form.token" id="token" 
+                                    @input="form.token = form.token.toUpperCase()"
                                     class="bg-white border-2 border-gray-300 text-gray-900 text-3xl rounded-2xl focus:ring-4 focus:ring-primary-500/20 focus:border-primary-500 block w-full pl-14 p-4 font-mono font-bold text-center uppercase tracking-[0.3em] shadow-inner dark:bg-gray-800 dark:text-white dark:border-gray-600 transition-all uppercase-input" 
                                     placeholder="TOKEN" required autocomplete="off" maxlength="10">
                             </div>
