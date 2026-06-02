@@ -176,6 +176,7 @@ class PortalKelulusanController extends Controller
 
             $pdf = \Spatie\Browsershot\Browsershot::html($html)
                 ->paperSize(215.9, 330.2)
+                ->margins(0, 0, 0, 0)
                 ->showBackground()
                 ->noSandbox()
                 ->pdf();
