@@ -55,7 +55,7 @@
         
         <div class="main-content">
             <div class="kop-surat">
-                @if(!empty($sekolah->kop_surat) && file_exists(public_path('uploads/identitas/' . $sekolah->kop_surat)))
+                @if(!empty($sekolah->kop_surat) && $sekolah->kop_surat !== 'default_kop.png')
                     <img src="{{ asset('uploads/identitas/' . $sekolah->kop_surat) }}" alt="Kop Surat">
                 @else
                     <h2 style="margin:0; font-family: Arial; font-size: 16pt;">{{ $sekolah->nama_sekolah ?? 'NAMA SEKOLAH' }}</h2>

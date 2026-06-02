@@ -97,11 +97,13 @@ const submitMassal = () => {
                             <td class="px-6 py-4">
                                 <select v-model="form.lulus[s.id].status" :class="{
                                     'text-emerald-600 bg-emerald-50 border-emerald-200': form.lulus[s.id].status === 'Lulus',
+                                    'text-amber-600 bg-amber-50 border-amber-200': form.lulus[s.id].status === 'Lulus Bersyarat',
                                     'text-red-600 bg-red-50 border-red-200': form.lulus[s.id].status === 'Tidak Lulus',
                                     'text-orange-600 bg-orange-50 border-orange-200': form.lulus[s.id].status === 'Pending'
-                                }" class="rounded-lg text-sm font-bold w-full focus:ring-0">
+                                }" class="w-full md:w-auto rounded-lg text-sm font-bold focus:ring-0">
                                     <option value="Pending" class="text-orange-600">PENDING</option>
                                     <option value="Lulus" class="text-emerald-600">LULUS</option>
+                                    <option value="Lulus Bersyarat" class="text-amber-600">LULUS BERSYARAT</option>
                                     <option value="Tidak Lulus" class="text-red-600">TIDAK LULUS</option>
                                 </select>
                             </td>

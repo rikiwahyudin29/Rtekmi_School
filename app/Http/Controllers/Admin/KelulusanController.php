@@ -146,12 +146,25 @@ class KelulusanController extends Controller
                 $rekapNilai[$sid] = ['total_mapel' => 0, 'total_rapor' => 0, 'total_us' => 0];
             }
 
-            $rataMapel = (floatval($n->s1) + floatval($n->s2) + floatval($n->s3) + floatval($n->s4) + floatval($n->s5) + floatval($n->s6)) / 6;
-            $usMapel = floatval($n->nilai_us);
+            $s1 = floatval($n->s1 ?? 0); $s2 = floatval($n->s2 ?? 0); $s3 = floatval($n->s3 ?? 0);
+            $s4 = floatval($n->s4 ?? 0); $s5 = floatval($n->s5 ?? 0); $s6 = floatval($n->s6 ?? 0);
+            $usMapel = floatval($n->nilai_us ?? 0);
 
-            $rekapNilai[$sid]['total_mapel'] += 1;
-            $rekapNilai[$sid]['total_rapor'] += $rataMapel;
-            $rekapNilai[$sid]['total_us'] += $usMapel;
+            $pembagi = 0; $totalRapor = 0;
+            if ($s1 > 0) { $pembagi++; $totalRapor += $s1; }
+            if ($s2 > 0) { $pembagi++; $totalRapor += $s2; }
+            if ($s3 > 0) { $pembagi++; $totalRapor += $s3; }
+            if ($s4 > 0) { $pembagi++; $totalRapor += $s4; }
+            if ($s5 > 0) { $pembagi++; $totalRapor += $s5; }
+            if ($s6 > 0) { $pembagi++; $totalRapor += $s6; }
+
+            $rataMapel = ($pembagi > 0) ? ($totalRapor / $pembagi) : 0;
+
+            if ($rataMapel > 0 || $usMapel > 0) {
+                $rekapNilai[$sid]['total_mapel'] += 1;
+                $rekapNilai[$sid]['total_rapor'] += $rataMapel;
+                $rekapNilai[$sid]['total_us'] += $usMapel;
+            }
         }
 
         foreach ($siswa as $s) {
@@ -553,21 +566,23 @@ class KelulusanController extends Controller
                 $c3['count_mapel']++;
             } else {
                 if ($n->tampil_transkrip == 1) {
-                    if (!isset($nilaiGroup[$kelompok])) $nilaiGroup[$kelompok] = [];
-                    $nilaiGroup[$kelompok][] = [
-                        'nama_mapel' => $n->nama_mapel,
-                        's1' => $s1, 's2' => $s2, 's3' => $s3, 's4' => $s4, 's5' => $s5, 's6' => $s6,
-                        'rata_rapor' => round($rataRapor, 2), 'nilai_us' => round($us, 2),
-                        'ket' => ($rataRapor > 0 || $us > 0) ? 'Baik' : '-'
-                    ];
-                    $totalRataRaporAll += $rataRapor; 
-                    $jumlahMapel++;
-                    
-                    if ($us > 0) {
-                        $totalUsAll += $us; $jumlahMapelUs++;
-                        $totalPrestasiAll += (($rataRapor * 0.6) + ($us * 0.4));
-                    } else {
-                        $totalPrestasiAll += $rataRapor; 
+                    if ($rataRapor > 0 || $us > 0) {
+                        if (!isset($nilaiGroup[$kelompok])) $nilaiGroup[$kelompok] = [];
+                        $nilaiGroup[$kelompok][] = [
+                            'nama_mapel' => $n->nama_mapel,
+                            's1' => $s1, 's2' => $s2, 's3' => $s3, 's4' => $s4, 's5' => $s5, 's6' => $s6,
+                            'rata_rapor' => round($rataRapor, 2), 'nilai_us' => round($us, 2),
+                            'ket' => 'Baik'
+                        ];
+                        $totalRataRaporAll += $rataRapor; 
+                        $jumlahMapel++;
+                        
+                        if ($us > 0) {
+                            $totalUsAll += $us; $jumlahMapelUs++;
+                            $totalPrestasiAll += (($rataRapor * 0.6) + ($us * 0.4));
+                        } else {
+                            $totalPrestasiAll += $rataRapor; 
+                        }
                     }
                 }
             }
@@ -597,17 +612,19 @@ class KelulusanController extends Controller
             $rRapor = ($pembagiC2 > 0) ? ($totC2 / $pembagiC2) : 0;
             $rUs = ($c2['c_us'] > 0) ? ($c2['us'] / $c2['c_us']) : 0;
 
-            $nilaiGroup[$kategoriKejuruan][] = [
-                'nama_mapel' => 'Dasar Program Keahlian',
-                's1' => round($rS1), 's2' => round($rS2), 's3' => round($rS3), 's4' => round($rS4), 's5' => round($rS5), 's6' => round($rS6),
-                'rata_rapor' => round($rRapor, 2), 'nilai_us' => round($rUs, 2), 'ket' => ($rRapor > 0 || $rUs > 0) ? 'Baik' : '-'
-            ];
-            $totalRataRaporAll += $rRapor; $jumlahMapel++;
-            if ($rUs > 0) {
-                $totalUsAll += $rUs; $jumlahMapelUs++;
-                $totalPrestasiAll += (($rRapor * 0.6) + ($rUs * 0.4));
-            } else {
-                $totalPrestasiAll += $rRapor;
+            if ($rRapor > 0 || $rUs > 0) {
+                $nilaiGroup[$kategoriKejuruan][] = [
+                    'nama_mapel' => 'Dasar Program Keahlian',
+                    's1' => round($rS1), 's2' => round($rS2), 's3' => round($rS3), 's4' => round($rS4), 's5' => round($rS5), 's6' => round($rS6),
+                    'rata_rapor' => round($rRapor, 2), 'nilai_us' => round($rUs, 2), 'ket' => 'Baik'
+                ];
+                $totalRataRaporAll += $rRapor; $jumlahMapel++;
+                if ($rUs > 0) {
+                    $totalUsAll += $rUs; $jumlahMapelUs++;
+                    $totalPrestasiAll += (($rRapor * 0.6) + ($rUs * 0.4));
+                } else {
+                    $totalPrestasiAll += $rRapor;
+                }
             }
         }
 
@@ -630,17 +647,19 @@ class KelulusanController extends Controller
             $rRapor = ($pembagiC3 > 0) ? ($totC3 / $pembagiC3) : 0;
             $rUs = ($c3['c_us'] > 0) ? ($c3['us'] / $c3['c_us']) : 0;
 
-            $nilaiGroup[$kategoriKejuruan][] = [
-                'nama_mapel' => 'Kompetensi Keahlian',
-                's1' => round($rS1), 's2' => round($rS2), 's3' => round($rS3), 's4' => round($rS4), 's5' => round($rS5), 's6' => round($rS6),
-                'rata_rapor' => round($rRapor, 2), 'nilai_us' => round($rUs, 2), 'ket' => ($rRapor > 0 || $rUs > 0) ? 'Baik' : '-'
-            ];
-            $totalRataRaporAll += $rRapor; $jumlahMapel++;
-            if ($rUs > 0) {
-                $totalUsAll += $rUs; $jumlahMapelUs++;
-                $totalPrestasiAll += (($rRapor * 0.6) + ($rUs * 0.4));
-            } else {
-                $totalPrestasiAll += $rRapor;
+            if ($rRapor > 0 || $rUs > 0) {
+                $nilaiGroup[$kategoriKejuruan][] = [
+                    'nama_mapel' => 'Kompetensi Keahlian',
+                    's1' => round($rS1), 's2' => round($rS2), 's3' => round($rS3), 's4' => round($rS4), 's5' => round($rS5), 's6' => round($rS6),
+                    'rata_rapor' => round($rRapor, 2), 'nilai_us' => round($rUs, 2), 'ket' => 'Baik'
+                ];
+                $totalRataRaporAll += $rRapor; $jumlahMapel++;
+                if ($rUs > 0) {
+                    $totalUsAll += $rUs; $jumlahMapelUs++;
+                    $totalPrestasiAll += (($rRapor * 0.6) + ($rUs * 0.4));
+                } else {
+                    $totalPrestasiAll += $rRapor;
+                }
             }
         }
 
@@ -753,14 +772,20 @@ class KelulusanController extends Controller
             $kelompok = strtoupper(trim($n->kelompok));
 
             if (strpos($kelompok, 'C2') !== false || strpos($kelompok, 'C.2') !== false) {
-                $c2TotalNilai += $nilaiAkhir; $c2Jumlah++;
+                if ($nilaiAkhir > 0) {
+                    $c2TotalNilai += $nilaiAkhir; $c2Jumlah++;
+                }
             } elseif (strpos($kelompok, 'C3') !== false || strpos($kelompok, 'C.3') !== false) {
-                $c3TotalNilai += $nilaiAkhir; $c3Jumlah++;
+                if ($nilaiAkhir > 0) {
+                    $c3TotalNilai += $nilaiAkhir; $c3Jumlah++;
+                }
             } else {
                 if ($n->tampil_skl == 1) {
-                    if (!isset($nilaiGroup[$kelompok])) $nilaiGroup[$kelompok] = [];
-                    $nilaiGroup[$kelompok][] = ['nama_mapel' => $n->nama_mapel, 'nilai_akhir' => $nilaiAkhir];
-                    $totalSemuaNilai += $nilaiAkhir; $jumlahMapel++;
+                    if ($nilaiAkhir > 0) {
+                        if (!isset($nilaiGroup[$kelompok])) $nilaiGroup[$kelompok] = [];
+                        $nilaiGroup[$kelompok][] = ['nama_mapel' => $n->nama_mapel, 'nilai_akhir' => $nilaiAkhir];
+                        $totalSemuaNilai += $nilaiAkhir; $jumlahMapel++;
+                    }
                 }
             }
         }
