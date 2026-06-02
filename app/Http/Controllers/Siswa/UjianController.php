@@ -243,6 +243,7 @@ class UjianController extends Controller
         
         if ($sesi->status == 2) return redirect()->route('siswa.ujian.index')->with('error', 'Ujian telah selesai.');
         if ($sesi->hasCheating == 1) return redirect()->route('siswa.ujian.locked', $idUjianSiswa);
+        if ($sesi->status == 0 || $sesi->soal_generated != 1) return redirect()->route('siswa.ujian.index')->with('error', 'Sesi ujian telah di-reset oleh Admin. Silakan masuk kembali.');
 
         // Update Heartbeat (IP Address as activity tracker)
         DB::table('ujian_siswa')->where('id', $idUjianSiswa)->update(['ip_address' => substr(request()->ip(), 0, 50)]);
