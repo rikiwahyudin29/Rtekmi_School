@@ -369,10 +369,14 @@ const selesaiUjian = (isAuto) => {
         is_auto: isAuto ? 1 : 0
     }).then(response => {
         if (response.data.status === 'success') {
+            window.Swal.close();
             router.visit(response.data.redirect);
         } else {
             window.Swal.fire('Gagal', response.data.message, 'error');
         }
+    }).catch(err => {
+        window.Swal.fire('Error', 'Terjadi kesalahan jaringan saat mengumpulkan. Silakan coba lagi.', 'error');
+        console.error(err);
     });
 };
 
