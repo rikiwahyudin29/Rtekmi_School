@@ -143,7 +143,7 @@ class KelulusanController extends Controller
         foreach ($semuaNilai as $n) {
             $sid = $n->siswa_id;
             if (!isset($rekapNilai[$sid])) {
-                $rekapNilai[$sid] = ['total_mapel' => 0, 'total_rapor' => 0, 'total_us' => 0];
+                $rekapNilai[$sid] = ['total_mapel' => 0, 'total_mapel_us' => 0, 'total_rapor' => 0, 'total_us' => 0];
             }
 
             $s1 = floatval($n->s1 ?? 0); $s2 = floatval($n->s2 ?? 0); $s3 = floatval($n->s3 ?? 0);
@@ -160,19 +160,23 @@ class KelulusanController extends Controller
 
             $rataMapel = ($pembagi > 0) ? ($totalRapor / $pembagi) : 0;
 
-            if ($rataMapel > 0 || $usMapel > 0) {
+            if ($rataMapel > 0) {
                 $rekapNilai[$sid]['total_mapel'] += 1;
                 $rekapNilai[$sid]['total_rapor'] += $rataMapel;
+            }
+            if ($usMapel > 0) {
+                $rekapNilai[$sid]['total_mapel_us'] += 1;
                 $rekapNilai[$sid]['total_us'] += $usMapel;
             }
         }
 
         foreach ($siswa as $s) {
             $sid = $s->id;
-            if (isset($rekapNilai[$sid]) && $rekapNilai[$sid]['total_mapel'] > 0) {
+            if (isset($rekapNilai[$sid]) && ($rekapNilai[$sid]['total_mapel'] > 0 || $rekapNilai[$sid]['total_mapel_us'] > 0)) {
                 $jml = $rekapNilai[$sid]['total_mapel'];
-                $s->rata_rapor = round($rekapNilai[$sid]['total_rapor'] / $jml, 2);
-                $s->rata_us = round($rekapNilai[$sid]['total_us'] / $jml, 2);
+                $jmlUs = $rekapNilai[$sid]['total_mapel_us'];
+                $s->rata_rapor = $jml > 0 ? round($rekapNilai[$sid]['total_rapor'] / $jml, 2) : 0;
+                $s->rata_us = $jmlUs > 0 ? round($rekapNilai[$sid]['total_us'] / $jmlUs, 2) : 0;
                 $s->nilai_skl = round(($s->rata_rapor * 0.6) + ($s->rata_us * 0.4), 2);
                 $s->jml_mapel = $jml;
             } else {
