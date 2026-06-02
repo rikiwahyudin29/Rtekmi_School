@@ -63,6 +63,19 @@ const submitImport = () => {
     });
 };
 
+const isGenerating = ref(false);
+const autoGenerate = () => {
+    if (confirm('PERINGATAN: Auto Generate akan MENGHAPUS SEMUA jadwal yang ada saat ini untuk Tahun Ajaran aktif dan menyusun ulang secara otomatis berdasarkan beban guru.\n\nApakah Anda yakin ingin melanjutkan?')) {
+        isGenerating.value = true;
+        router.post('/admin/kurikulum/jadwal-pelajaran/auto-generate', {}, {
+            preserveScroll: true,
+            onFinish: () => {
+                isGenerating.value = false;
+            }
+        });
+    }
+};
+
 // =============================================
 // MAPPED MAPELS (from Pembagian Tugas)
 // =============================================
@@ -290,6 +303,10 @@ const selectedKelasName = computed(() => {
                             </Link>
                             <button @click="openImportModal = true" class="bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center gap-2 border border-green-200 dark:border-green-800">
                                 <i class="fas fa-upload"></i> Import
+                            </button>
+                            <button @click="autoGenerate" :disabled="isGenerating" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 disabled:opacity-50 border border-orange-600">
+                                <i class="fas fa-magic" :class="{'fa-spin': isGenerating}"></i>
+                                {{ isGenerating ? 'Menyusun...' : 'Auto Generate' }}
                             </button>
                             <a v-if="selectedKelas" :href="buildPrintUrl()" target="_blank" class="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center gap-2 border border-blue-200 dark:border-blue-800">
                                 <i class="fas fa-print"></i> Cetak

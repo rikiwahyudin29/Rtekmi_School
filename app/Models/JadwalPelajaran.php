@@ -12,11 +12,13 @@ class JadwalPelajaran extends Model
     protected $table = 'tbl_jadwal';
 
     protected $fillable = [
+        'id_pembagian_tugas',
         'id_tahun_ajaran',
         'id_kelas',
         'id_mapel',
         'id_guru',
         'hari',
+        'id_jam_master',
         'jam_mulai',
         'jam_selesai',
     ];
@@ -39,5 +41,15 @@ class JadwalPelajaran extends Model
     public function guru()
     {
         return $this->belongsTo(Guru::class, 'id_guru');
+    }
+
+    public function pembagianTugas()
+    {
+        return $this->belongsTo(PembagianTugas::class, 'id_pembagian_tugas');
+    }
+
+    public function jamMaster()
+    {
+        return $this->belongsTo(JamMaster::class, 'id_jam_master');
     }
 }

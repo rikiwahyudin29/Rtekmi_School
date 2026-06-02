@@ -11,6 +11,7 @@ use App\Models\Guru;
 use App\Models\Jurusan;
 use App\Models\JamMaster; // Assuming tbl_jam_master for times
 use App\Models\PembagianTugas;
+use App\Services\TimetableEngine;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf; // Or simple HTML view
@@ -483,6 +484,23 @@ class JadwalPelajaranController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
+        }
+    }
+
+    public function autoGenerate(Request $request)
+    {
+        $tahunAktif = TahunAjaran::where('status', 'Aktif')->first();
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tidak ada Tahun Ajaran aktif.');
+        }
+
+        $engine = new TimetableEngine($tahunAktif->id);
+        $result = $engine->autoGenerate();
+
+        if ($result['status'] === 'success') {
+            return back()->with('message', $result['msg']);
+        } else {
+            return back()->with('error', 'Gagal Generate: ' . $result['msg']);
         }
     }
 }

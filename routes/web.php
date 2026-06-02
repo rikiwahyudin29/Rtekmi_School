@@ -155,6 +155,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('jadwal-pelajaran/rekap', [JadwalPelajaranController::class, 'rekap'])->name('jadwal-pelajaran.rekap');
             Route::get('jadwal-pelajaran/cetak-rekap', [JadwalPelajaranController::class, 'cetakRekap'])->name('jadwal-pelajaran.cetak_rekap');
             Route::get('jadwal-pelajaran/cetak', [JadwalPelajaranController::class, 'cetak'])->name('jadwal-pelajaran.cetak');
+            Route::post('jadwal-pelajaran/auto-generate', [JadwalPelajaranController::class, 'autoGenerate'])->name('jadwal-pelajaran.auto-generate');
             Route::resource('jadwal-pelajaran', JadwalPelajaranController::class)->except(['create', 'edit', 'show']);
         });
 
