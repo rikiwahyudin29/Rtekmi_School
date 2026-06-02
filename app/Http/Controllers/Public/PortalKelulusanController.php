@@ -175,7 +175,7 @@ class PortalKelulusanController extends Controller
             \App\Models\AntrianDownload::where('siswa_id', $siswaId)->where('tipe', $tipe)->delete();
 
             $pdf = \Spatie\Browsershot\Browsershot::html($html)
-                ->format('A4')
+                ->paperSize(215.9, 330.2)
                 ->showBackground()
                 ->noSandbox()
                 ->pdf();
