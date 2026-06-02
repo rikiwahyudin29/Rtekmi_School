@@ -57,7 +57,8 @@ const initSoal = () => {
             id: s.soal_id,
             ragu: s.ragu == 1,
             isi: isIsi,
-            jenis_soal: s.jenis_soal
+            jenis_soal: s.jenis_soal,
+            sync_status: 'synced' // 'synced', 'saving', 'failed'
         });
     });
 };
@@ -77,6 +78,18 @@ onMounted(() => {
     
     // Auto Fullscreen on first click
     document.body.addEventListener('click', autoFullscreen, { once: true });
+    
+    // Auto-Retry Background Worker (Setiap 5 detik)
+    setInterval(() => {
+        const failedItems = stateSoal.value.filter(s => s.sync_status === 'failed');
+        failedItems.forEach(item => {
+            const soalData = props.soal.find(s => s.soal_id === item.id);
+            if (soalData) {
+                // Kirim ulang jawaban secara rahasia di background
+                saveAnswerData({ jawaban_siswa: soalData.jawaban_siswa }, item.id, true);
+            }
+        });
+    }, 5000);
 });
 
 onBeforeUnmount(() => {
@@ -255,31 +268,33 @@ const saveAnswerEsai = (soalId, event) => {
     saveAnswerData({ jawaban_siswa: text });
 };
 
-const saveAnswerData = (data) => {
+const saveAnswerData = (data, manualSoalId = null, isRetry = false) => {
     data.id_ujian_siswa = props.sesi.id;
-    data.soal_id = currentSoal.value.soal_id;
+    const targetSoalId = manualSoalId || currentSoal.value.soal_id;
+    data.soal_id = targetSoalId;
     
-    // Tampilkan indikator loading kecil jika perlu (opsional)
-    const navBtn = document.getElementById(`nav-btn-${currentSoal.value.soal_id}`);
-    if(navBtn) navBtn.classList.add('animate-pulse');
+    // Update status lokal menjadi saving
+    const sIndex = stateSoal.value.findIndex(s => s.id == targetSoalId);
+    if (sIndex > -1) {
+        stateSoal.value[sIndex].sync_status = 'saving';
+    }
 
     axios.post(route('siswa.ujian.simpan-jawaban'), data).then(res => {
-        if(navBtn) navBtn.classList.remove('animate-pulse');
+        if (sIndex > -1) stateSoal.value[sIndex].sync_status = 'synced';
     }).catch(err => {
-        if(navBtn) navBtn.classList.remove('animate-pulse');
+        if (sIndex > -1) stateSoal.value[sIndex].sync_status = 'failed';
         
-        let msg = 'Koneksi terputus. Gagal menyimpan jawaban.';
         if (err.response && err.response.status === 419) {
-            msg = 'Sesi Anda telah berakhir. Silakan muat ulang (refresh) halaman ini.';
+            window.Swal.fire({
+                title: 'Sesi Habis!',
+                text: 'Sesi Anda telah berakhir. Silakan muat ulang (refresh) halaman ini.',
+                icon: 'error',
+                confirmButtonText: 'Tutup'
+            });
+        } else if (!isRetry) {
+            // Kita tidak perlu memunculkan error popup lagi, cukup andalkan warna merah di navigasi.
+            console.error('Koneksi terputus. Menunggu auto-retry...');
         }
-        
-        window.Swal.fire({
-            title: 'Gagal Menyimpan!',
-            text: msg,
-            icon: 'error',
-            confirmButtonText: 'Tutup & Coba Lagi'
-        });
-        console.error('Failed to save answer:', err);
     });
 };
 
@@ -321,8 +336,24 @@ const cekSelesai = () => {
         return; 
     }
 
+    // Ping check koneksi internet
+    fetch(window.location.origin, { method: 'HEAD', cache: 'no-store' }).then(() => {
+        lanjutCekSelesai();
+    }).catch(() => {
+        window.Swal.fire('Koneksi Terputus!', 'Sistem mendeteksi jaringan Anda sedang terputus. Silakan cari sinyal atau hubungkan kembali internet Anda sebelum mengumpulkan ujian.', 'error');
+    });
+};
+
+const lanjutCekSelesai = () => {
     let belumDijawab = stateSoal.value.filter(s => !s.isi).length;
     let raguRagu = stateSoal.value.filter(s => s.ragu).length;
+    let gagalSimpan = stateSoal.value.filter(s => s.sync_status === 'failed').length;
+    let sedangSimpan = stateSoal.value.filter(s => s.sync_status === 'saving').length;
+    
+    if (gagalSimpan > 0 || sedangSimpan > 0) {
+        window.Swal.fire('Menunggu Sinkronisasi!', `Masih ada ${gagalSimpan + sedangSimpan} jawaban yang belum berhasil terkirim ke server (warna merah/kuning). Tunggu sebentar sampai semua berubah hijau sebelum Selesai.`, 'warning');
+        return;
+    }
     
     let htmlPesan = "Apakah Anda yakin ingin mengakhiri ujian ini? Jawaban yang sudah dikirim tidak dapat diubah lagi.";
     let iconTipe = "question";
@@ -383,8 +414,16 @@ const selesaiUjian = (isAuto) => {
 const getNavClass = (state, index) => {
     let cls = 'bg-white text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600';
     
-    if (state.ragu) cls = 'bg-amber-500 text-white border-amber-500 dark:bg-amber-600 dark:border-amber-600';
-    else if (state.isi) cls = 'bg-emerald-500 text-white border-emerald-500 dark:bg-emerald-600 dark:border-emerald-600';
+    // Status Prioritas: Failed (Merah) > Saving (Kuning) > Ragu (Amber) > Terisi (Hijau)
+    if (state.sync_status === 'failed') {
+        cls = 'bg-rose-500 text-white border-rose-500 dark:bg-rose-600 dark:border-rose-600 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
+    } else if (state.sync_status === 'saving') {
+        cls = 'bg-amber-300 text-amber-900 border-amber-300 dark:bg-amber-400 dark:border-amber-400 animate-pulse';
+    } else if (state.ragu) {
+        cls = 'bg-amber-500 text-white border-amber-500 dark:bg-amber-600 dark:border-amber-600';
+    } else if (state.isi) {
+        cls = 'bg-emerald-500 text-white border-emerald-500 dark:bg-emerald-600 dark:border-emerald-600';
+    }
     
     if (index === currentIndex.value) {
         cls += ' ring-4 ring-primary-500/50 scale-110 shadow-lg';
