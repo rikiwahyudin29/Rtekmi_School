@@ -153,7 +153,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
     </table>
 
     <div class="ttd">
-        {{ $sekolah->kota ?? 'Kota' }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+        {{ $sekolah->kota ?? 'Jalancagak' }}, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
         @if(isset($tipe) && $tipe == 'guru')
         Kepala Sekolah,<br><br><br><br>
         <b>{{ $sekolah->nama_kepsek ?? '..................................' }}</b><br>

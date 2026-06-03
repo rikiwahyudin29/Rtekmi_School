@@ -315,6 +315,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'index'])->name('pengeluaran.index');
             Route::post('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'store'])->name('pengeluaran.store');
             Route::delete('pengeluaran/{id}', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'destroy'])->name('pengeluaran.destroy');
+            Route::post('pengeluaran/divisi', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'storeDivisi'])->name('pengeluaran.store_divisi');
+            Route::post('pengeluaran/jenis', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'storeJenis'])->name('pengeluaran.store_jenis');
+
+            // Laporan
+            Route::get('laporan', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'index'])->name('laporan.index');
+            Route::get('laporan/cetak-transaksi', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'cetakTransaksi'])->name('laporan.cetak_transaksi');
+            Route::get('laporan/cetak-tunggakan', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'cetakTunggakan'])->name('laporan.cetak_tunggakan');
+            Route::get('laporan/export', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'exportExcel'])->name('laporan.export');
+
+            // Log
+            Route::get('log-aktivitas', [\App\Http\Controllers\Admin\Keuangan\LogKeuanganController::class, 'index'])->name('log.index');
+
+            // Notif Tagihan
+            Route::get('notif-tagihan', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'index'])->name('notif.index');
+            Route::post('notif-tagihan/kirim', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'kirimMassal'])->name('notif.kirim');
         });
     });
 

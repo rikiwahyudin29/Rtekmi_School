@@ -6,6 +6,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 const props = defineProps({
     pengeluaran: Array,
     jenis: Array,
+    divisi: Array,
     bulan: [String, Number],
     tahun: [String, Number],
 });
@@ -15,6 +16,7 @@ const filterTahun = ref(props.tahun);
 const isModalOpen = ref(false);
 
 const form = useForm({
+    id_divisi: '',
     id_jenis: '',
     judul_pengeluaran: '',
     nominal: '',
@@ -65,6 +67,20 @@ const hapus = (id) => {
 
 // Calculate total
 const totalPengeluaran = props.pengeluaran.reduce((sum, p) => sum + parseFloat(p.nominal), 0);
+
+const tambahDivisi = () => {
+    const nama = prompt('Masukkan Nama Divisi Baru (Cth: Kurikulum, Kesiswaan):');
+    if (nama) {
+        router.post('/admin/keuangan/pengeluaran/divisi', { nama_divisi: nama }, { preserveScroll: true });
+    }
+};
+
+const tambahJenis = () => {
+    const nama = prompt('Masukkan Kategori Pengeluaran Baru (Cth: ATK, Konsumsi):');
+    if (nama) {
+        router.post('/admin/keuangan/pengeluaran/jenis', { nama_jenis: nama }, { preserveScroll: true });
+    }
+};
 </script>
 
 <template>
@@ -93,6 +109,11 @@ const totalPengeluaran = props.pengeluaran.reduce((sum, p) => sum + parseFloat(p
                         </button>
                     </div>
                 </div>
+                
+                <div class="flex gap-2 mb-4 justify-end">
+                    <button @click="tambahDivisi" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 py-1.5 px-3 rounded-lg font-medium"><i class="fas fa-plus"></i> Master Divisi</button>
+                    <button @click="tambahJenis" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 py-1.5 px-3 rounded-lg font-medium"><i class="fas fa-plus"></i> Master Kategori</button>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                     <div class="bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl p-6 text-white shadow-xl shadow-rose-500/30 col-span-1 md:col-span-4 relative overflow-hidden flex flex-col justify-center min-h-[140px]">
@@ -117,7 +138,7 @@ const totalPengeluaran = props.pengeluaran.reduce((sum, p) => sum + parseFloat(p
                                     <th class="px-6 py-5 font-bold w-16 text-center">No</th>
                                     <th class="px-6 py-5 font-bold">Tanggal</th>
                                     <th class="px-6 py-5 font-bold">Judul & Keterangan</th>
-                                    <th class="px-6 py-5 font-bold">Kategori</th>
+                                    <th class="px-6 py-5 font-bold">Divisi & Kategori</th>
                                     <th class="px-6 py-5 font-bold text-right">Nominal (Rp)</th>
                                     <th class="px-6 py-5 font-bold text-center">Aksi</th>
                                 </tr>
@@ -132,7 +153,10 @@ const totalPengeluaran = props.pengeluaran.reduce((sum, p) => sum + parseFloat(p
                                         <div class="font-bold text-gray-900 text-base">{{ p.judul_pengeluaran }}</div>
                                         <div class="text-sm text-gray-500 mt-0.5">{{ p.keterangan || '-' }}</div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                            {{ p.divisi?.nama_divisi || '-' }}
+                                        </span>
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
                                             {{ p.jenis?.nama_jenis || 'Umum' }}
                                         </span>
@@ -178,6 +202,15 @@ const totalPengeluaran = props.pengeluaran.reduce((sum, p) => sum + parseFloat(p
                         <label class="block text-sm font-medium text-gray-700 mb-1">Judul Pengeluaran <span class="text-red-500">*</span></label>
                         <input type="text" v-model="form.judul_pengeluaran" required placeholder="Cth: Beli ATK Kantor" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-rose-500 focus:border-rose-500 text-sm">
                         <div v-if="form.errors.judul_pengeluaran" class="text-red-500 text-xs mt-1">{{ form.errors.judul_pengeluaran }}</div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Divisi <span class="text-red-500">*</span></label>
+                        <select v-model="form.id_divisi" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-rose-500 focus:border-rose-500 text-sm">
+                            <option value="" disabled>Pilih Divisi...</option>
+                            <option v-for="d in divisi" :key="d.id" :value="d.id">{{ d.nama_divisi }}</option>
+                        </select>
+                        <div v-if="form.errors.id_divisi" class="text-red-500 text-xs mt-1">{{ form.errors.id_divisi }}</div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">

@@ -274,9 +274,9 @@ const menuItems = computed(() => {
                 { name: 'Setting Pembayaran', icon: 'fas fa-file-invoice-dollar', route: 'admin.keuangan.jenis.index', active: route().current('admin.keuangan.jenis.*') || route().current('admin.keuangan.tagihan.*') },
                 { name: 'Kasir Pembayaran', icon: 'fas fa-cash-register', route: 'admin.keuangan.pembayaran.index', active: route().current('admin.keuangan.pembayaran.*') },
                 { name: 'Pengeluaran Ops', icon: 'fas fa-shopping-cart', route: 'admin.keuangan.pengeluaran.index', active: route().current('admin.keuangan.pengeluaran.*') },
-                { name: 'Laporan Keuangan', icon: 'fas fa-chart-line', route: '#', active: false },
-                { name: 'Log Aktivitas', icon: 'fas fa-history', route: '#', active: false },
-                { name: 'Blast Tagihan WA', icon: 'fab fa-whatsapp', route: '#', active: false },
+                { name: 'Laporan Keuangan', icon: 'fas fa-chart-line', route: 'admin.keuangan.laporan.index', active: route().current('admin.keuangan.laporan.*') },
+                { name: 'Log Aktivitas', icon: 'fas fa-history', route: 'admin.keuangan.log.index', active: route().current('admin.keuangan.log.*') },
+                { name: 'Blast Tagihan WA', icon: 'fab fa-whatsapp', route: 'admin.keuangan.notif.index', active: route().current('admin.keuangan.notif.*') },
             ]},
             { name: 'Layanan Perbankan', icon: 'fas fa-university', route: '#', active: false, children: [
                 { name: 'Bank Mini (Tabungan)', icon: 'fas fa-piggy-bank', route: '#', active: false },

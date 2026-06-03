@@ -29,6 +29,11 @@ class Pengeluaran extends Model
         return $this->belongsTo(JenisPengeluaran::class, 'id_jenis', 'id');
     }
 
+    public function divisi()
+    {
+        return $this->belongsTo(Divisi::class, 'id_divisi', 'id');
+    }
+
     public function petugas()
     {
         return $this->belongsTo(User::class, 'petugas_id', 'id');
