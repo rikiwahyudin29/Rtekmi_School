@@ -39,12 +39,12 @@ const formatDate = (dateString) => {
                         <div v-for="log in logs" :key="log.id" class="mb-8 ml-6 relative">
                             <!-- Timeline dot -->
                             <span class="absolute -left-[35px] flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-full ring-4 ring-white dark:ring-gray-800 dark:bg-indigo-900/50">
-                                <i class="fas" :class="[(log.aktivitas || '').toLowerCase().includes('hapus') ? 'fa-trash text-red-500' : 'fa-info-circle text-indigo-500']"></i>
+                                <i class="fas" :class="[(log.aksi || log.aktivitas || '').toLowerCase().includes('hapus') ? 'fa-trash text-red-500' : 'fa-info-circle text-indigo-500']"></i>
                             </span>
                             
                             <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
                                 <h3 class="flex items-center mb-1 text-sm font-semibold text-gray-900 dark:text-white">
-                                    {{ log.aktivitas }}
+                                    {{ log.aksi || log.aktivitas || 'Aktivitas tidak diketahui' }}
                                 </h3>
                                 <div class="flex items-center gap-3 text-xs font-normal text-gray-500 dark:text-gray-400">
                                     <span class="flex items-center gap-1">

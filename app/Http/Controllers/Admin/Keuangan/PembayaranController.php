@@ -69,7 +69,7 @@ class PembayaranController extends Controller
 
         $bayar = (float) str_replace('.', '', $request->jumlah_bayar);
         
-        $tagihan = Tagihan::findOrFail($request->id_tagihan);
+        $tagihan = Tagihan::with(['jenisBayar.posBayar', 'siswa'])->findOrFail($request->id_tagihan);
         
         $sisa = $tagihan->nominal_tagihan - $tagihan->nominal_terbayar;
         if ($bayar > ($sisa + 1)) {
@@ -95,7 +95,17 @@ class PembayaranController extends Controller
             'status_bayar'     => $status_baru
         ]);
 
-        // Note: Logging and WA can be implemented later or via Observers.
+        // Note: WA can be implemented later or via Observers.
+        \App\Models\LogKeuangan::create([
+            'aksi' => "Menerima Pembayaran {$tagihan->jenisBayar->posBayar->nama_pos} sejumlah Rp " . number_format($bayar, 0, ',', '.') . " dari " . ($tagihan->siswa->nama_lengkap ?? 'Siswa'),
+            'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
 
         return redirect()->route('admin.keuangan.pembayaran.transaksi', $request->id_siswa)->with('message', 'Pembayaran berhasil disimpan.');
     }
@@ -107,7 +117,7 @@ class PembayaranController extends Controller
         ]);
 
         $trx = Transaksi::findOrFail($request->id_transaksi);
-        $tagihan = Tagihan::findOrFail($trx->id_tagihan);
+        $tagihan = Tagihan::with('siswa')->findOrFail($trx->id_tagihan);
 
         $saldo_baru = $tagihan->nominal_terbayar - $trx->jumlah_bayar;
         
@@ -126,6 +136,17 @@ class PembayaranController extends Controller
         ]);
 
         $trx->delete();
+
+        \App\Models\LogKeuangan::create([
+            'aksi' => "MENGHAPUS/BATAL Transaksi {$trx->kode_transaksi} sebesar Rp " . number_format($trx->jumlah_bayar, 0, ',', '.') . " milik " . ($tagihan->siswa->nama_lengkap ?? 'Siswa'),
+            'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
 
         return back()->with('message', 'Transaksi berhasil dibatalkan. Saldo tagihan dikembalikan.');
     }

@@ -97,8 +97,12 @@ class NotifTagihanController extends Controller
         }
 
         LogKeuangan::create([
-            'aktivitas' => "Blast Tagihan WA Kelas " . ($siswa->first()->kelas->nama_kelas ?? 'Unknown') . " (Berhasil: $berhasil, Gagal: $gagal)",
+            'aksi' => "Blast Tagihan WA Kelas " . ($siswa->first()->kelas->nama_kelas ?? 'Unknown') . " (Berhasil: $berhasil, Gagal: $gagal)",
             'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
             'created_at' => now(),
             'updated_at' => now()
         ]);

@@ -62,8 +62,12 @@ class PengeluaranController extends Controller
         // Rekam Log Aktivitas
         $rp = number_format($nominal, 0, ',', '.');
         LogKeuangan::create([
-            'aktivitas' => "Mencatat Pengeluaran: {$request->judul_pengeluaran} sebesar Rp $rp",
+            'aksi' => "Mencatat Pengeluaran: {$request->judul_pengeluaran} sebesar Rp $rp",
             'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
             'created_at' => now(),
             'updated_at' => now()
         ]);
@@ -82,8 +86,12 @@ class PengeluaranController extends Controller
         
         // Rekam Log
         LogKeuangan::create([
-            'aktivitas' => "MENGHAPUS Pengeluaran: $judul (Rp $rp)",
+            'aksi' => "MENGHAPUS Pengeluaran: $judul (Rp $rp)",
             'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
             'created_at' => now(),
             'updated_at' => now()
         ]);
@@ -97,8 +105,12 @@ class PengeluaranController extends Controller
         Divisi::create(['nama_divisi' => $request->nama_divisi]);
 
         LogKeuangan::create([
-            'aktivitas' => "Menambah Master Divisi: {$request->nama_divisi}",
+            'aksi' => "Menambah Master Divisi: {$request->nama_divisi}",
             'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
             'created_at' => now(),
             'updated_at' => now()
         ]);
@@ -112,8 +124,12 @@ class PengeluaranController extends Controller
         JenisPengeluaran::create(['nama_jenis' => $request->nama_jenis]);
 
         LogKeuangan::create([
-            'aktivitas' => "Menambah Master Jenis Pengeluaran: {$request->nama_jenis}",
+            'aksi' => "Menambah Master Jenis Pengeluaran: {$request->nama_jenis}",
             'user_id' => auth()->id(),
+            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
+            'role' => auth()->user()->role,
+            'ip_address' => request()->ip(),
+            'device_info' => request()->header('User-Agent'),
             'created_at' => now(),
             'updated_at' => now()
         ]);
