@@ -49,18 +49,35 @@ class TagihanController extends Controller
             return back()->with('error', 'Harap pilih minimal satu kelas!');
         }
 
-        $jenis = JenisBayar::with('posBayar')->findOrFail($id_jenis);
+        $jenis = JenisBayar::with(['posBayar', 'jenisBayarJurusan'])->findOrFail($id_jenis);
         
-        $siswa = Siswa::whereIn('kelas_id', $kelas_ids)->get();
+        // Kita juga perlu tahu jurusan siswa, panggil relasi kelas untuk dapet id_jurusan
+        $siswa = Siswa::with('kelas')->whereIn('kelas_id', $kelas_ids)->get();
 
         if ($siswa->isEmpty()) {
             return back()->with('error', 'Tidak ada siswa di kelas yang dipilih.');
+        }
+
+        // Siapkan map tarif jurusan jika is_per_jurusan
+        $tarifJurusan = [];
+        if ($jenis->is_per_jurusan) {
+            foreach ($jenis->jenisBayarJurusan as $jbj) {
+                $tarifJurusan[$jbj->id_jurusan] = $jbj->nominal;
+            }
         }
 
         $sukses = 0;
         $bulanIndo = [1=>'Juli', 2=>'Agustus', 3=>'September', 4=>'Oktober', 5=>'November', 6=>'Desember', 7=>'Januari', 8=>'Februari', 9=>'Maret', 10=>'April', 11=>'Mei', 12=>'Juni'];
 
         foreach ($siswa as $s) {
+            // Tentukan tarif untuk siswa ini
+            $nominal_tagihan = $jenis->nominal_default;
+            if ($jenis->is_per_jurusan) {
+                // Ambil dari jurusan yang nyantol di siswa atau nyantol di kelas
+                $jurId = $s->jurusan_id ?? $s->kelas->id_jurusan ?? null;
+                $nominal_tagihan = $tarifJurusan[$jurId] ?? 0;
+            }
+
             if ($jenis->tipe_bayar == 'BEBAS') {
                 $exist = Tagihan::where('id_jenis_bayar', $id_jenis)
                                 ->where('id_siswa', $s->id)
@@ -71,7 +88,7 @@ class TagihanController extends Controller
                         'id_jenis_bayar' => $id_jenis,
                         'id_siswa'       => $s->id, 
                         'id_kelas'       => $s->kelas_id,
-                        'nominal_tagihan'=> $jenis->nominal_default,
+                        'nominal_tagihan'=> $nominal_tagihan,
                         'keterangan'     => $jenis->posBayar->nama_pos ?? 'Tagihan Bebas'
                     ]);
                     $sukses++;
@@ -88,7 +105,7 @@ class TagihanController extends Controller
                             'id_jenis_bayar' => $id_jenis,
                             'id_siswa'       => $s->id, 
                             'id_kelas'       => $s->kelas_id,
-                            'nominal_tagihan'=> $jenis->nominal_default,
+                            'nominal_tagihan'=> $nominal_tagihan,
                             'keterangan'     => $bln, 
                             'bulan_ke'       => $idx
                         ]);

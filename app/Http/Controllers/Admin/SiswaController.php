@@ -92,6 +92,8 @@ class SiswaController extends Controller
                 $request->foto->move($dir, $fotoName);
             }
 
+            $kelas = Kelas::find($request->kelas_id);
+
             Siswa::create([
                 'user_id'          => $user->id,
                 'nisn'             => $request->nisn,
@@ -106,7 +108,7 @@ class SiswaController extends Controller
                 'no_hp_siswa'      => $request->no_hp_siswa,
                 'email_siswa'      => $request->email_siswa,
                 'kelas_id'         => $request->kelas_id,
-                'jurusan_id'       => $request->jurusan_id,
+                'jurusan_id'       => $kelas ? $kelas->id_jurusan : null,
                 'ekskul_id'        => $request->ekskul_id,
                 'sekolah_asal'     => $request->sekolah_asal,
                 'tahun_angkatan'   => $request->tahun_angkatan,
@@ -170,6 +172,8 @@ class SiswaController extends Controller
             $request->foto->move($dir, $fotoName);
         }
 
+        $kelas = Kelas::find($request->kelas_id);
+
         $siswa->update([
             'nisn'             => $request->nisn,
             'nis'              => $request->nis,
@@ -183,7 +187,7 @@ class SiswaController extends Controller
             'no_hp_siswa'      => $request->no_hp_siswa,
             'email_siswa'      => $request->email_siswa,
             'kelas_id'         => $request->kelas_id,
-            'jurusan_id'       => $request->jurusan_id,
+            'jurusan_id'       => $kelas ? $kelas->id_jurusan : null,
             'ekskul_id'        => $request->ekskul_id,
             'sekolah_asal'     => $request->sekolah_asal,
             'tahun_angkatan'   => $request->tahun_angkatan,

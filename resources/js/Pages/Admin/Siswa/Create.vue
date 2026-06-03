@@ -5,7 +5,6 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
     data_kelas: Array,
-    data_jurusan: Array,
     data_ekskul: Array,
 });
 
@@ -24,7 +23,6 @@ const form = useForm({
     no_hp_siswa: '',
     email_siswa: '',
     kelas_id: '',
-    jurusan_id: '',
     ekskul_id: '',
     sekolah_asal: '',
     tahun_angkatan: '',
@@ -153,13 +151,6 @@ const submit = () => {
                                     <option v-for="k in data_kelas" :key="k.id" :value="k.id">{{ k.nama_kelas }}</option>
                                 </select>
                                 <div v-if="form.errors.kelas_id" class="text-red-500 text-xs mt-1">{{ form.errors.kelas_id }}</div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jurusan</label>
-                                <select v-model="form.jurusan_id" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                    <option value="">-- Pilih Jurusan --</option>
-                                    <option v-for="j in data_jurusan" :key="j.id" :value="j.id">{{ j.nama_jurusan }}</option>
-                                </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ekskul</label>

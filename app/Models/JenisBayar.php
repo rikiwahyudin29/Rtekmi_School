@@ -16,6 +16,7 @@ class JenisBayar extends Model
         'id_tahun_ajaran',
         'tipe_bayar',
         'nominal_default',
+        'is_per_jurusan',
     ];
 
     public function posBayar()
@@ -31,5 +32,10 @@ class JenisBayar extends Model
     public function tagihan()
     {
         return $this->hasMany(Tagihan::class, 'id_jenis_bayar', 'id');
+    }
+
+    public function jenisBayarJurusan()
+    {
+        return $this->hasMany(JenisBayarJurusan::class, 'id_jenis_bayar', 'id');
     }
 }

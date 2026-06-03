@@ -7,6 +7,8 @@ use App\Models\JenisBayar;
 use App\Models\PosBayar;
 use App\Models\TahunAjaran;
 use App\Models\Kelas;
+use App\Models\Jurusan;
+use App\Models\JenisBayarJurusan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,16 +16,18 @@ class JenisBayarController extends Controller
 {
     public function index()
     {
-        $jenis = JenisBayar::with(['posBayar', 'tahunAjaran'])->orderBy('id', 'desc')->get();
+        $jenis = JenisBayar::with(['posBayar', 'tahunAjaran', 'jenisBayarJurusan.jurusan'])->orderBy('id', 'desc')->get();
         $pos = PosBayar::orderBy('nama_pos', 'asc')->get();
         $tahun = TahunAjaran::orderBy('id', 'desc')->get()->unique('tahun_ajaran')->values();
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $jurusan = Jurusan::orderBy('nama_jurusan', 'asc')->get();
 
         return Inertia::render('Admin/Keuangan/Jenis/Index', [
             'jenis' => $jenis,
             'pos'   => $pos,
             'tahun' => $tahun,
-            'kelas' => $kelas
+            'kelas' => $kelas,
+            'jurusan' => $jurusan
         ]);
     }
 
@@ -33,10 +37,13 @@ class JenisBayarController extends Controller
             'id_pos_bayar'    => 'required|integer',
             'id_tahun_ajaran' => 'required|integer',
             'tipe_bayar'      => 'required|in:BULANAN,BEBAS',
-            'nominal_default' => 'required'
+            'is_per_jurusan'  => 'boolean',
         ]);
 
-        $nominal = str_replace('.', '', $request->nominal_default);
+        $nominal_default = 0;
+        if (!$request->is_per_jurusan) {
+            $nominal_default = str_replace('.', '', $request->nominal_default ?? 0);
+        }
 
         // Cek duplikasi
         $cek = JenisBayar::where('id_pos_bayar', $request->id_pos_bayar)
@@ -47,12 +54,23 @@ class JenisBayarController extends Controller
             return back()->with('error', 'Gagal! Jenis pembayaran ini sudah ada di tahun ajaran tersebut.');
         }
 
-        JenisBayar::create([
+        $jenis = JenisBayar::create([
             'id_pos_bayar'    => $request->id_pos_bayar,
             'id_tahun_ajaran' => $request->id_tahun_ajaran,
             'tipe_bayar'      => $request->tipe_bayar,
-            'nominal_default' => $nominal
+            'is_per_jurusan'  => $request->is_per_jurusan ? 1 : 0,
+            'nominal_default' => $nominal_default
         ]);
+
+        if ($request->is_per_jurusan && $request->has('nominal_jurusan')) {
+            foreach ($request->nominal_jurusan as $id_jur => $nom) {
+                JenisBayarJurusan::create([
+                    'id_jenis_bayar' => $jenis->id,
+                    'id_jurusan' => $id_jur,
+                    'nominal' => str_replace('.', '', $nom ?? 0)
+                ]);
+            }
+        }
 
         return back()->with('message', 'Setting pembayaran berhasil ditambahkan.');
     }
@@ -63,10 +81,13 @@ class JenisBayarController extends Controller
             'id_pos_bayar'    => 'required|integer',
             'id_tahun_ajaran' => 'required|integer',
             'tipe_bayar'      => 'required|in:BULANAN,BEBAS',
-            'nominal_default' => 'required'
+            'is_per_jurusan'  => 'boolean',
         ]);
 
-        $nominal = str_replace('.', '', $request->nominal_default);
+        $nominal_default = 0;
+        if (!$request->is_per_jurusan) {
+            $nominal_default = str_replace('.', '', $request->nominal_default ?? 0);
+        }
 
         $jenis = JenisBayar::findOrFail($id);
         
@@ -85,8 +106,21 @@ class JenisBayarController extends Controller
             'id_pos_bayar'    => $request->id_pos_bayar,
             'id_tahun_ajaran' => $request->id_tahun_ajaran,
             'tipe_bayar'      => $request->tipe_bayar,
-            'nominal_default' => $nominal
+            'is_per_jurusan'  => $request->is_per_jurusan ? 1 : 0,
+            'nominal_default' => $nominal_default
         ]);
+
+        // Re-sync jurusan nominals
+        JenisBayarJurusan::where('id_jenis_bayar', $jenis->id)->delete();
+        if ($request->is_per_jurusan && $request->has('nominal_jurusan')) {
+            foreach ($request->nominal_jurusan as $id_jur => $nom) {
+                JenisBayarJurusan::create([
+                    'id_jenis_bayar' => $jenis->id,
+                    'id_jurusan' => $id_jur,
+                    'nominal' => str_replace('.', '', $nom ?? 0)
+                ]);
+            }
+        }
 
         return back()->with('message', 'Setting pembayaran berhasil diperbarui.');
     }
