@@ -69,7 +69,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
             <tr>
                 <th rowspan="2" width="3%">No</th>
                 <th rowspan="2" width="20%">Nama Lengkap</th>
-                <th colspan="7">Total Kehadiran</th>
+                <th colspan="8">Total Kehadiran</th>
             </tr>
             <tr>
                 <th width="10%">Hadir (H)</th>
@@ -77,6 +77,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <th width="10%">Izin (I)</th>
                 <th width="10%">Alpha (A)</th>
                 <th width="10%">Dinas Luar (DL)</th>
+                <th width="10%">Cuti (C)</th>
                 <th width="10%">Terlambat (T)</th>
                 <th width="10%">Waktu Terlambat</th>
             </tr>
@@ -91,12 +92,13 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <td class="text-center">{{ $item['total']['I'] ?? 0 }}</td>
                 <td class="text-center">{{ $item['total']['A'] ?? 0 }}</td>
                 <td class="text-center">{{ $item['total']['DL'] ?? 0 }}</td>
+                <td class="text-center">{{ $item['total']['C'] ?? 0 }}</td>
                 <td class="text-center">{{ $item['total']['T'] ?? 0 }}</td>
                 <td class="text-center">{{ $item['format_terlambat'] ?? '-' }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center">Tidak ada data {{ $tipe ?? 'siswa' }}.</td>
+                <td colspan="10" class="text-center">Tidak ada data {{ $tipe ?? 'siswa' }}.</td>
             </tr>
             @endforelse
         </tbody>

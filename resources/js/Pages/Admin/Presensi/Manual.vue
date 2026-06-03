@@ -38,8 +38,8 @@ const loadBelumAbsen = async () => {
             // Inisialisasi properti form per user
             listBelumAbsen.value = res.data.data.map(u => ({
                 ...u,
-                formStatus: 'Hadir',
-                formJam: '07:00',
+                formStatus: u.status_presensi !== 'Belum Absen' ? u.status_presensi : 'Belum Absen',
+                formJam: u.jam_masuk_absen || '07:00',
                 isSaving: false,
                 saveSuccess: false
             }));
@@ -72,10 +72,6 @@ const simpanManual = async (user) => {
         
         if (res.data.success) {
             user.saveSuccess = true;
-            // Hapus dari list setelah 1 detik
-            setTimeout(() => {
-                listBelumAbsen.value = listBelumAbsen.value.filter(u => u.id !== user.id);
-            }, 800);
         } else {
             alert(res.data.message);
         }
@@ -87,8 +83,8 @@ const simpanManual = async (user) => {
 };
 
 const handleStatusChange = (user) => {
-    if (user.formStatus !== 'Hadir' && user.formStatus !== 'Terlambat') {
-        // Langsung simpan jika bukan Hadir/Terlambat
+    if (user.formStatus !== 'Hadir' && user.formStatus !== 'Terlambat' && user.formStatus !== 'Belum Absen') {
+        // Langsung simpan jika bukan Hadir/Terlambat/Belum Absen
         simpanManual(user);
     }
 };
@@ -145,7 +141,7 @@ const handleStatusChange = (user) => {
 
                 <div v-else-if="listBelumAbsen.length > 0" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-900 dark:text-white">Daftar {{ filterForm.role === 'siswa' ? 'Siswa' : 'Guru' }} Belum Absen</h3>
+                        <h3 class="font-bold text-gray-900 dark:text-white">Daftar Absensi {{ filterForm.role === 'siswa' ? 'Siswa' : 'Guru' }}</h3>
                         <span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">{{ listBelumAbsen.length }} Orang</span>
                     </div>
                     <div class="overflow-x-auto">
@@ -170,24 +166,25 @@ const handleStatusChange = (user) => {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <select v-model="user.formStatus" @change="handleStatusChange(user)" :disabled="user.isSaving || user.saveSuccess" class="block w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 sm:text-sm font-semibold"
-                                            :class="{'text-green-600': user.formStatus == 'Hadir', 'text-orange-600': user.formStatus == 'Terlambat', 'text-yellow-600': user.formStatus == 'Sakit' || user.formStatus == 'Izin', 'text-red-600': user.formStatus == 'Alpha', 'text-purple-600': user.formStatus == 'Dinas Luar'}">
+                                            :class="{'text-gray-500': user.formStatus == 'Belum Absen', 'text-green-600': user.formStatus == 'Hadir', 'text-orange-600': user.formStatus == 'Terlambat', 'text-yellow-600': user.formStatus == 'Sakit' || user.formStatus == 'Izin', 'text-red-600': user.formStatus == 'Alpha', 'text-purple-600': user.formStatus == 'Dinas Luar', 'text-pink-600': user.formStatus == 'Cuti'}">
+                                            <option value="Belum Absen" disabled>Belum Absen</option>
                                             <option value="Hadir">Hadir</option>
                                             <option value="Terlambat">Terlambat</option>
                                             <option value="Sakit">Sakit</option>
                                             <option value="Izin">Izin</option>
                                             <option value="Alpha">Alpha</option>
                                             <option v-if="filterForm.role === 'guru'" value="Dinas Luar">Dinas Luar</option>
+                                            <option v-if="filterForm.role === 'guru'" value="Cuti">Cuti</option>
                                         </select>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <input type="time" v-if="user.formStatus === 'Hadir' || user.formStatus === 'Terlambat'" v-model="user.formJam" @keyup.enter="simpanManual(user)" :disabled="user.isSaving || user.saveSuccess" class="block w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 sm:text-sm text-center" title="Tekan Enter untuk menyimpan">
+                                        <span v-else-if="user.formStatus === 'Belum Absen'" class="text-xs text-gray-400 italic">-</span>
                                         <span v-else class="text-xs text-gray-400 italic">Otomatis tersimpan</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <button v-if="user.formStatus === 'Hadir' || user.formStatus === 'Terlambat'" @click="simpanManual(user)" :disabled="user.isSaving || user.saveSuccess" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center w-10 h-10">
-                                            <i v-if="user.isSaving" class="fas fa-circle-notch fa-spin"></i>
-                                            <i v-else-if="user.saveSuccess" class="fas fa-check"></i>
-                                            <i v-else class="fas fa-save"></i>
+                                        <button v-if="user.formStatus !== 'Belum Absen' && !user.isSaving && !user.saveSuccess" @click="simpanManual(user)" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center w-10 h-10">
+                                            <i class="fas fa-save"></i>
                                         </button>
                                         <div v-else-if="user.isSaving" class="text-indigo-600 flex items-center justify-center w-10 h-10">
                                             <i class="fas fa-circle-notch fa-spin"></i>
@@ -209,8 +206,8 @@ const handleStatusChange = (user) => {
 
                 <div v-else-if="!loadingList && listBelumAbsen.length === 0" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-8 text-center">
                     <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
-                    <h3 class="text-xl font-bold text-green-700 dark:text-green-400">Semua Sudah Absen!</h3>
-                    <p class="text-sm text-green-600 dark:text-green-300 mt-2">Tidak ada {{ filterForm.role === 'siswa' ? 'siswa' : 'guru' }} yang belum absen pada tanggal ini.</p>
+                    <h3 class="text-xl font-bold text-green-700 dark:text-green-400">Data Kosong!</h3>
+                    <p class="text-sm text-green-600 dark:text-green-300 mt-2">Tidak ada data {{ filterForm.role === 'siswa' ? 'siswa' : 'guru' }} yang ditemukan.</p>
                 </div>
 
             </div>

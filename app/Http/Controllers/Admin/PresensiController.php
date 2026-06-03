@@ -292,18 +292,26 @@ class PresensiController extends Controller
             ]);
         }
 
-        $sudah_absen = Presensi::where('role', $role)->where('tanggal', $tanggal)->pluck('user_id')->toArray();
+        $sudah_absen = Presensi::where('role', $role)->where('tanggal', $tanggal)->get()->keyBy('user_id');
 
         if ($role === 'siswa') {
             if (!$id_kelas) {
                 return response()->json(['status' => 'success', 'data' => []]);
             }
-            $belum_absen = Siswa::with('kelas')->where('kelas_id', $id_kelas)->whereNotIn('id', $sudah_absen)->orderBy('nama_lengkap', 'asc')->get();
+            $pengguna = Siswa::with('kelas')->where('kelas_id', $id_kelas)->orderBy('nama_lengkap', 'asc')->get();
         } else {
-            $belum_absen = Guru::whereNotIn('id', $sudah_absen)->orderBy('nama_lengkap', 'asc')->get();
+            $pengguna = Guru::orderBy('nama_lengkap', 'asc')->get();
         }
 
-        return response()->json(['status' => 'success', 'data' => $belum_absen]);
+        $result = [];
+        foreach ($pengguna as $p) {
+            $absen = $sudah_absen->get($p->id);
+            $p->status_presensi = $absen ? $absen->status_kehadiran : 'Belum Absen';
+            $p->jam_masuk_absen = $absen ? $absen->jam_masuk : null;
+            $result[] = $p;
+        }
+
+        return response()->json(['status' => 'success', 'data' => $result]);
     }
 
     public function simpanManualAjax(Request $request)
@@ -318,10 +326,6 @@ class PresensiController extends Controller
             ->where('role', $role)
             ->where('tanggal', $tanggal)
             ->first();
-
-        if ($cek) {
-            return response()->json(['success' => false, 'message' => 'Orang ini sudah memiliki presensi pada hari tersebut.']);
-        }
 
         $menit_terlambat = 0;
         if ($status == 'Hadir' || $status == 'Terlambat') {
@@ -344,7 +348,7 @@ class PresensiController extends Controller
             $jam_masuk = null;
         }
 
-        Presensi::create([
+        $dataToSave = [
             'user_id' => $user_id,
             'role' => $role,
             'tanggal' => $tanggal,
@@ -353,7 +357,13 @@ class PresensiController extends Controller
             'menit_terlambat' => $menit_terlambat,
             'metode' => 'Manual',
             'status_verifikasi' => 'Disetujui',
-        ]);
+        ];
+
+        if ($cek) {
+            $cek->update($dataToSave);
+        } else {
+            Presensi::create($dataToSave);
+        }
 
         return response()->json(['success' => true, 'message' => 'Data tersimpan.']);
     }
@@ -493,7 +503,7 @@ class PresensiController extends Controller
                 'nama' => $s->nama_lengkap ?? $s->nama_guru,
                 'identitas' => $role === 'siswa' ? $s->nis : ($s->nik ?? '-'),
                 'harian' => [],
-                'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0, 'DL' => 0],
+                'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0, 'DL' => 0, 'C' => 0],
                 'total_menit_terlambat' => 0,
                 'persen' => 0
             ];
@@ -528,7 +538,7 @@ class PresensiController extends Controller
 
                         $verif = $data_tgl['verif'];
                         // Jika Izin/Sakit/Dinas Luar ditolak maka Alfa
-                        $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                        $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar', 'Cuti']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
                         if ($status_final == 'Terlambat') {
                             $row['total_menit_terlambat'] += $data_tgl['menit'];
                         }
@@ -545,15 +555,12 @@ class PresensiController extends Controller
                 if ($status_final == 'Izin') $row['total']['I']++;
                 if ($status_final == 'Alpha') $row['total']['A']++;
                 if ($status_final == 'Dinas Luar') $row['total']['DL']++;
+                if ($status_final == 'Cuti') $row['total']['C']++;
             }
             // Izin dan Sakit hitung Alfa presentasenya (Hanya Hadir dan DL yang efektif)
-            // Wait, the user said "ya kalo sakit ya sakit gak alfa tapi presentasi pemotongan nya ya sama kayak alfa"
-            // So they do not contribute to 'Hadir'.
-            // total_efektif = days that should have been attended.
-            // H + S + I + A + DL
-            $total_efektif = $row['total']['H'] + $row['total']['S'] + $row['total']['I'] + $row['total']['A'] + $row['total']['DL'];
-            // Persentase hanya dihitung dari H dan DL
-            $total_hadir = $row['total']['H'] + $row['total']['DL'];
+            // Cuti juga tidak memotong/menambah hadir tapi bagian dari hitungan? Atau Cuti itu hak, jadi tidak mengurangi persentase
+            $total_efektif = $row['total']['H'] + $row['total']['S'] + $row['total']['I'] + $row['total']['A'] + $row['total']['DL'] + $row['total']['C'];
+            $total_hadir = $row['total']['H'] + $row['total']['DL'] + $row['total']['C'];
             $row['persen'] = ($total_efektif > 0) ? round(($total_hadir / $total_efektif) * 100) : 0;
             
             // Format menit ke jam & menit
@@ -693,7 +700,7 @@ class PresensiController extends Controller
         $hari_ini_real = date('Y-m-d');
 
         foreach ($siswa as $s) {
-            $row = ['nama' => $s->nama_lengkap, 'nis' => $s->nis, 'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0], 'total_menit' => 0];
+            $row = ['nama' => $s->nama_lengkap, 'nis' => $s->nis, 'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0, 'C' => 0], 'total_menit' => 0];
 
             foreach ($dates as $tgl) {
                 $kode_hari = date('N', strtotime($tgl));
@@ -738,6 +745,7 @@ class PresensiController extends Controller
                 if ($status_final == 'Sakit') $row['total']['S']++;
                 if ($status_final == 'Izin') $row['total']['I']++;
                 if ($status_final == 'Alpha') $row['total']['A']++;
+                if ($status_final == 'Cuti') $row['total']['C']++;
             }
             
             $jam_t = floor($row['total_menit'] / 60);
@@ -846,6 +854,7 @@ class PresensiController extends Controller
                         if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$s->id] += $data_tgl['menit']; }
                         if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
                         if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
+                        if ($st_asli == 'Cuti' && $verif == 'Disetujui') $status = 'C';
 
                         $data_matrix[$s->id][$tgl] = $status;
                     } else {
@@ -1010,6 +1019,7 @@ class PresensiController extends Controller
                         if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
                         if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
                         if ($st_asli == 'Dinas Luar' && $verif == 'Disetujui') $status = 'DL';
+                        if ($st_asli == 'Cuti' && $verif == 'Disetujui') $status = 'C';
 
                         $data_matrix[$g->id][$tgl] = $status;
                     } else {

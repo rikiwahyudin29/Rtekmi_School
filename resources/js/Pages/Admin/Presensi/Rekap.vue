@@ -130,7 +130,7 @@ const cetakMatrix = () => {
                                         <th rowspan="2" class="px-4 py-3 text-left font-bold uppercase tracking-wider text-xs border-r border-gray-200 dark:border-gray-700">No</th>
                                         <th rowspan="2" class="px-4 py-3 text-left font-bold uppercase tracking-wider text-xs border-r border-gray-200 dark:border-gray-700 w-48">Nama Lengkap</th>
                                         <th :colspan="dates?.length || 0" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Tanggal (19-18)</th>
-                                        <th colspan="6" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Total</th>
+                                        <th colspan="7" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Total</th>
                                         <th rowspan="2" class="px-2 py-3 text-center font-bold uppercase tracking-wider text-xs border-r border-gray-200 dark:border-gray-700">%</th>
                                     </tr>
                                     <tr>
@@ -140,6 +140,7 @@ const cetakMatrix = () => {
                                         <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-blue-600 dark:text-blue-400 font-bold" title="Izin">I</th>
                                         <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-red-600 dark:text-red-400 font-bold" title="Alpha">A</th>
                                         <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-purple-600 dark:text-purple-400 font-bold" title="Dinas Luar">DL</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-pink-600 dark:text-pink-400 font-bold" title="Cuti">C</th>
                                         <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-16 text-orange-600 dark:text-orange-400 font-bold" title="Total Keterlambatan">Menit Terlambat</th>
                                     </tr>
                                 </thead>
@@ -162,7 +163,8 @@ const cetakMatrix = () => {
                                                 'bg-cyan-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Izin',
                                                 'bg-red-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Alpha',
                                                 'bg-purple-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Dinas Luar',
-                                                'text-gray-300 dark:text-gray-600': !info_libur?.[dateStr] && !['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha', 'Dinas Luar'].includes(item.harian[dateStr])
+                                                'bg-pink-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Cuti',
+                                                'text-gray-300 dark:text-gray-600': !info_libur?.[dateStr] && !['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha', 'Dinas Luar', 'Cuti'].includes(item.harian[dateStr])
                                             }">
                                             
                                             <!-- Jika Libur (render sekali berkat rowspan) -->
@@ -180,6 +182,7 @@ const cetakMatrix = () => {
                                                 <span v-else-if="item.harian[dateStr] == 'Izin'">I</span>
                                                 <span v-else-if="item.harian[dateStr] == 'Alpha'">A</span>
                                                 <span v-else-if="item.harian[dateStr] == 'Dinas Luar'">DL</span>
+                                                <span v-else-if="item.harian[dateStr] == 'Cuti'">C</span>
                                                 <span v-else>-</span>
                                             </template>
                                         </td>
@@ -191,6 +194,7 @@ const cetakMatrix = () => {
                                         <td class="px-2 py-2 text-center font-bold text-white bg-cyan-500 border-r border-white dark:border-gray-700">{{ item.total.I }}</td>
                                         <td class="px-2 py-2 text-center font-bold text-white bg-red-500 border-r border-white dark:border-gray-700">{{ item.total.A }}</td>
                                         <td class="px-2 py-2 text-center font-bold text-white bg-purple-500 border-r border-white dark:border-gray-700">{{ item.total.DL }}</td>
+                                        <td class="px-2 py-2 text-center font-bold text-white bg-pink-500 border-r border-white dark:border-gray-700">{{ item.total.C }}</td>
                                         <td class="px-2 py-2 text-center font-bold text-white bg-orange-500 border-r border-white dark:border-gray-700">{{ item.format_terlambat || '-' }}</td>
                                         
                                         <!-- Persentase -->
@@ -199,7 +203,7 @@ const cetakMatrix = () => {
                                         </td>
                                     </tr>
                                     <tr v-if="data_rekap.length === 0">
-                                        <td :colspan="(dates?.length || 0) + 9" class="px-6 py-8 text-center text-gray-500">
+                                        <td :colspan="(dates?.length || 0) + 10" class="px-6 py-8 text-center text-gray-500">
                                             Data tidak ditemukan.
                                         </td>
                                     </tr>

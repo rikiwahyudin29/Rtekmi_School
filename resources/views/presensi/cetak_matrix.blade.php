@@ -70,7 +70,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <th rowspan="2" width="2%">No</th>
                 <th rowspan="2" width="15%" class="text-left">Nama Lengkap</th>
                 <th colspan="{{ count($dates) }}">Tanggal (19-18)</th>
-                <th colspan="7">Total</th>
+                <th colspan="8">Total</th>
             </tr>
             <tr>
                 @foreach($dates as $dateStr)
@@ -87,6 +87,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <th width="2%">I</th>
                 <th width="2%">A</th>
                 <th width="2%">DL</th>
+                <th width="2%">C</th>
                 <th width="6%">Waktu Terlambat</th>
                 <th width="3%">%</th>
             </tr>
@@ -94,7 +95,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
         <tbody>
             @foreach($siswa as $index => $s)
             @php
-                $totH = 0; $totS = 0; $totI = 0; $totA = 0; $totDL = 0;
+                $totH = 0; $totS = 0; $totI = 0; $totA = 0; $totDL = 0; $totC = 0;
             @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
@@ -122,6 +123,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                         elseif($val == 'S') { $color = 'background-color: #3b82f6; color: white; font-weight: bold;'; $totS++; }
                         elseif($val == 'I') { $color = 'background-color: #06b6d4; color: white; font-weight: bold;'; $totI++; }
                         elseif($val == 'DL') { $color = 'background-color: #a855f7; color: white; font-weight: bold;'; $totDL++; }
+                        elseif($val == 'C') { $color = 'background-color: #ec4899; color: white; font-weight: bold;'; $totC++; }
                         elseif($val == 'A') { $color = 'background-color: #ef4444; color: white; font-weight: bold;'; $totA++; }
                         elseif($val == '-') { $color = 'color: #ccc;'; }
                     @endphp
@@ -133,14 +135,15 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <td style="font-weight: bold; background-color: #06b6d4; color: white;">{{ $totI }}</td>
                 <td style="font-weight: bold; background-color: #ef4444; color: white;">{{ $totA }}</td>
                 <td style="font-weight: bold; background-color: #a855f7; color: white;">{{ $totDL }}</td>
+                <td style="font-weight: bold; background-color: #ec4899; color: white;">{{ $totC }}</td>
                 @php
                     $menit = $data_menit[$s->id] ?? 0;
                     $jam_t = floor($menit / 60);
                     $menit_t = $menit % 60;
                     $format = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
                     
-                    $total_efektif = $totH + $totS + $totI + $totA + $totDL;
-                    $persen = $total_efektif > 0 ? round((($totH + $totDL) / $total_efektif) * 100) : 0;
+                    $total_efektif = $totH + $totS + $totI + $totA + $totDL + $totC;
+                    $persen = $total_efektif > 0 ? round((($totH + $totDL + $totC) / $total_efektif) * 100) : 0;
                 @endphp
                 <td style="font-weight: bold; background-color: #f97316; color: white;">{{ $format }}</td>
                 <td style="font-weight: bold; color: {{ $persen < 50 ? '#ef4444' : '#1f2937' }};">{{ $persen }}%</td>
