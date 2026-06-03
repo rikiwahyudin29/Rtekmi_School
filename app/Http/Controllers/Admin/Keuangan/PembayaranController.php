@@ -103,8 +103,7 @@ class PembayaranController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return redirect()->route('admin.keuangan.pembayaran.transaksi', $request->id_siswa)->with('message', 'Pembayaran berhasil disimpan.');
@@ -144,8 +143,7 @@ class PembayaranController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return back()->with('message', 'Transaksi berhasil dibatalkan. Saldo tagihan dikembalikan.');

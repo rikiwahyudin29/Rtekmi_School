@@ -10,6 +10,7 @@ class LogKeuangan extends Model
     use HasFactory;
 
     protected $table = 'tbl_log_keuangan';
+    public const UPDATED_AT = null;
     protected $guarded = ['id'];
 
     public function user()

@@ -103,8 +103,7 @@ class NotifTagihanController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return back()->with('message', "Proses Selesai! Pesan WA berhasil dikirim ke $berhasil Orang Tua. (Lewati/Lunas/Gagal: $gagal siswa)");

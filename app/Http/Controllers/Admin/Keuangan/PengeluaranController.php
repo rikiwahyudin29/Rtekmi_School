@@ -68,8 +68,7 @@ class PengeluaranController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return back()->with('message', 'Pengeluaran berhasil dicatat.');
@@ -92,8 +91,7 @@ class PengeluaranController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return back()->with('message', 'Pengeluaran berhasil dihapus.');
@@ -111,8 +109,7 @@ class PengeluaranController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return back()->with('message', 'Divisi baru ditambahkan.');
@@ -130,8 +127,7 @@ class PengeluaranController extends Controller
             'role' => auth()->user()->role,
             'ip_address' => request()->ip(),
             'device_info' => request()->header('User-Agent'),
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => now()
         ]);
 
         return back()->with('message', 'Jenis Pengeluaran baru ditambahkan.');
