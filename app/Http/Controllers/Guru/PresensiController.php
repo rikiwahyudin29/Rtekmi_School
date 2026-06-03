@@ -104,10 +104,21 @@ class PresensiController extends Controller
                 return redirect()->route('guru.presensi.absen_harian')->with('error', "Absen Masuk Sudah Ditutup! (Batas Akhir: $setting->jam_masuk_akhir)");
             }
 
+            $status = 'Hadir';
+            $menit_terlambat = 0;
+            $mulai_terlambat = $setting->jam_masuk_mulai_terlambat ?? '07:00:00';
+
+            if ($now > $mulai_terlambat) {
+                $status = 'Terlambat';
+                $mulai_time = strtotime($mulai_terlambat);
+                $sekarang_time = strtotime($now);
+                $menit_terlambat = floor(($sekarang_time - $mulai_time) / 60);
+            }
+
             Presensi::create([
                 'user_id' => $id_guru, 'role' => 'guru', 'tanggal' => $today, 'jam_masuk' => $now,
                 'latitude' => $lat_user, 'longitude' => $long_user, 'jarak_meter' => $jarak_meter,
-                'bukti_izin' => 'QR_CODE_SCAN', 'status_kehadiran' => 'Hadir', 'metode' => 'QRCode/Geo', 'status_verifikasi' => 'Terverifikasi'
+                'bukti_izin' => 'QR_CODE_SCAN', 'status_kehadiran' => $status, 'menit_terlambat' => $menit_terlambat, 'metode' => 'QRCode/Geo', 'status_verifikasi' => 'Terverifikasi'
             ]);
             return redirect()->route('guru.presensi.index')->with('success', "✅ Berhasil Absen Masuk Jam $now");
         } else {

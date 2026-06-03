@@ -456,7 +456,8 @@ class PresensiController extends Controller
             $absen_map[$p->user_id][$p->tanggal] = [
                 'status' => $p->status_kehadiran, 
                 'verif' => $p->status_verifikasi,
-                'menit' => $p->menit_terlambat ?? 0
+                'menit' => $p->menit_terlambat ?? 0,
+                'jam_masuk' => $p->jam_masuk
             ];
         }
 
@@ -504,6 +505,8 @@ class PresensiController extends Controller
                 $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
                 $data_tgl = $absen_map[$s->id][$tgl] ?? null;
+                $jamSetting = JamSekolah::find(1);
+                $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
 
                 if ($is_weekend || $is_libur_nasional || $is_future) {
                     $status_final = '-';
@@ -511,6 +514,18 @@ class PresensiController extends Controller
                     if ($data_tgl) {
                         $st_asli = $data_tgl['status'];
                         if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
+
+                        // FIX: Retroactive calculation if previously saved incorrectly as Hadir
+                        if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
+                            if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
+                                $st_asli = 'Terlambat';
+                                $mulai_time = strtotime($mulai_terlambat);
+                                $sekarang_time = strtotime($data_tgl['jam_masuk']);
+                                $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
+                                if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
+                            }
+                        }
+
                         $verif = $data_tgl['verif'];
                         // Jika Izin/Sakit/Dinas Luar ditolak maka Alfa
                         $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
@@ -671,7 +686,7 @@ class PresensiController extends Controller
 
         $absen_map = [];
         foreach ($presensi as $p) {
-            $absen_map[$p->user_id][$p->tanggal] = ['status' => $p->status_kehadiran, 'verif' => $p->status_verifikasi, 'menit' => $p->menit_terlambat ?? 0];
+            $absen_map[$p->user_id][$p->tanggal] = ['status' => $p->status_kehadiran, 'verif' => $p->status_verifikasi, 'menit' => $p->menit_terlambat ?? 0, 'jam_masuk' => $p->jam_masuk];
         }
 
         $data_rekap = [];
@@ -687,6 +702,8 @@ class PresensiController extends Controller
                 $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
                 $data_tgl = $absen_map[$s->id][$tgl] ?? null;
+                $jamSetting = JamSekolah::find(1);
+                $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
 
                 if ($is_weekend || $is_libur_nasional || $is_future) {
                     $status_final = '-';
@@ -694,6 +711,18 @@ class PresensiController extends Controller
                     if ($data_tgl) {
                         $st_asli = $data_tgl['status'];
                         if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
+
+                        // FIX: Retroactive calculation if previously saved incorrectly as Hadir
+                        if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
+                            if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
+                                $st_asli = 'Terlambat';
+                                $mulai_time = strtotime($mulai_terlambat);
+                                $sekarang_time = strtotime($data_tgl['jam_masuk']);
+                                $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
+                                if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
+                            }
+                        }
+
                         $verif = $data_tgl['verif'];
                         $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
                         if ($status_final == 'Terlambat') {
