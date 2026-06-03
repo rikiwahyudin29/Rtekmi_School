@@ -308,6 +308,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('pembayaran/siswa/{id_siswa}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'transaksi'])->name('pembayaran.transaksi');
             Route::post('pembayaran/proses', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'prosesBayar'])->name('pembayaran.proses_bayar');
             Route::post('pembayaran/batal', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'batal'])->name('pembayaran.batal');
+            Route::get('pembayaran/cetak-thermal/{id}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'cetakThermal'])->name('pembayaran.cetak_thermal');
+            Route::get('pembayaran/cetak-invoice/{id}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'cetakInvoice'])->name('pembayaran.cetak_invoice');
             
             // Pengeluaran
             Route::get('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'index'])->name('pengeluaran.index');

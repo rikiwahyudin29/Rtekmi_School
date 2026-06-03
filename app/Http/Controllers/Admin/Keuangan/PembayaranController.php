@@ -21,7 +21,7 @@ class PembayaranController extends Controller
         if ($keyword) {
             $siswa = Siswa::with('kelas')
                 ->where('nama_lengkap', 'like', "%{$keyword}%")
-                ->orWhere('nis', 'like', "%{$keyword}%")
+                ->orWhere('nisn', 'like', "%{$keyword}%")
                 ->limit(10)
                 ->get();
         }
@@ -45,13 +45,17 @@ class PembayaranController extends Controller
         $riwayat = Transaksi::with(['tagihan.jenisBayar.posBayar', 'petugas'])
             ->where('id_siswa', $id_siswa)
             ->orderBy('created_at', 'desc')
-            ->limit(10)
             ->get();
 
+        $total_tunggakan = $tagihan->sum(function ($t) {
+            return $t->nominal_tagihan - $t->nominal_terbayar;
+        });
+
         return Inertia::render('Admin/Keuangan/Pembayaran/Transaksi', [
-            'siswa'   => $siswa,
-            'tagihan' => $tagihan,
-            'riwayat' => $riwayat
+            'siswa'           => $siswa,
+            'tagihan'         => $tagihan,
+            'riwayat'         => $riwayat,
+            'total_tunggakan' => $total_tunggakan
         ]);
     }
 
@@ -124,5 +128,21 @@ class PembayaranController extends Controller
         $trx->delete();
 
         return back()->with('message', 'Transaksi berhasil dibatalkan. Saldo tagihan dikembalikan.');
+    }
+
+    public function cetakThermal($id)
+    {
+        $trx = Transaksi::with(['tagihan.jenisBayar.posBayar', 'siswa.kelas', 'petugas'])->findOrFail($id);
+        $sekolah = Sekolah::first();
+        
+        return view('keuangan.cetak_thermal', compact('trx', 'sekolah'));
+    }
+
+    public function cetakInvoice($id)
+    {
+        $trx = Transaksi::with(['tagihan.jenisBayar.posBayar', 'siswa.kelas', 'petugas'])->findOrFail($id);
+        $sekolah = Sekolah::first();
+        
+        return view('keuangan.cetak_invoice', compact('trx', 'sekolah'));
     }
 }

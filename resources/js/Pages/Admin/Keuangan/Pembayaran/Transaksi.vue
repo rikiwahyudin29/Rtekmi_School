@@ -7,10 +7,13 @@ const props = defineProps({
     siswa: Object,
     tagihan: Array,
     riwayat: Array,
+    total_tunggakan: Number,
 });
 
 const isBayarModalOpen = ref(false);
+const isCetakModalOpen = ref(false);
 const selectedTagihan = ref(null);
+const lastTransactionId = ref(null);
 
 const form = useForm({
     id_tagihan: '',
@@ -47,11 +50,35 @@ const openBayarModal = (t) => {
 
 const submitBayar = () => {
     form.post('/admin/keuangan/pembayaran/proses', {
-        onSuccess: () => {
+        onSuccess: (page) => {
             isBayarModalOpen.value = false;
             form.reset();
+            // Cek apakah ada message sukses (transaksi berhasil)
+            if (page.props.flash?.message) {
+                // Ambil ID transaksi terakhir dari riwayat yang baru di-load (karena ini fresh dari server)
+                if (page.props.riwayat && page.props.riwayat.length > 0) {
+                    lastTransactionId.value = page.props.riwayat[0].id;
+                    isCetakModalOpen.value = true;
+                }
+            }
         }
     });
+};
+
+const openCetakModal = (id) => {
+    lastTransactionId.value = id;
+    isCetakModalOpen.value = true;
+};
+
+const cetakStruk = (type) => {
+    if (!lastTransactionId.value) return;
+    
+    if (type === 'thermal') {
+        window.open(`/admin/keuangan/pembayaran/cetak-thermal/${lastTransactionId.value}`, '_blank', 'width=400,height=600');
+    } else if (type === 'invoice') {
+        window.open(`/admin/keuangan/pembayaran/cetak-invoice/${lastTransactionId.value}`, '_blank');
+    }
+    isCetakModalOpen.value = false;
 };
 
 const batalTrx = (id) => {
@@ -102,7 +129,7 @@ const batalTrx = (id) => {
                             <div class="relative z-10">
                                 <h3 class="font-black text-xl text-gray-900">{{ siswa.nama_lengkap }}</h3>
                                 <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-500 font-medium">
-                                    <span class="flex items-center gap-1"><i class="fas fa-id-badge text-gray-400"></i> NIS: {{ siswa.nis || '-' }}</span>
+                                    <span class="flex items-center gap-1"><i class="fas fa-id-badge text-gray-400"></i> NISN: {{ siswa.nisn || '-' }}</span>
                                     <span class="flex items-center gap-1"><i class="fas fa-layer-group text-gray-400"></i> Kelas: <span class="text-primary-600 font-bold">{{ siswa.kelas?.nama_kelas || '-' }}</span></span>
                                 </div>
                             </div>
@@ -114,6 +141,10 @@ const batalTrx = (id) => {
                                 <h3 class="font-bold text-gray-900 flex items-center gap-2">
                                     <i class="fas fa-file-invoice text-primary-500"></i> Daftar Tagihan
                                 </h3>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 font-medium">Total Keseluruhan Belum Lunas:</p>
+                                    <p class="font-black text-red-600 text-lg">{{ formatRupiah(total_tunggakan) }}</p>
+                                </div>
                             </div>
                             <div class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
                                 <div v-for="t in tagihan" :key="t.id" class="p-5 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -159,7 +190,7 @@ const batalTrx = (id) => {
                         <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden sticky top-24">
                             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-900 flex items-center gap-2">
-                                    <i class="fas fa-history text-gray-500"></i> Riwayat 10 Terakhir
+                                    <i class="fas fa-history text-gray-500"></i> Riwayat Transaksi
                                 </h3>
                             </div>
                             <div class="p-4 space-y-4">
@@ -183,7 +214,7 @@ const batalTrx = (id) => {
                                     
                                     <!-- Aksi (Batal/Cetak) on Hover -->
                                     <div class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
-                                        <button class="bg-gray-100 text-gray-700 hover:bg-gray-200 w-10 h-10 rounded-xl flex items-center justify-center" title="Cetak Struk (On Development)">
+                                        <button @click="openCetakModal(trx.id)" class="bg-gray-100 text-gray-700 hover:bg-gray-200 w-10 h-10 rounded-xl flex items-center justify-center" title="Cetak Struk">
                                             <i class="fas fa-print"></i>
                                         </button>
                                         <button v-if="trx.status_transaksi === 'SUCCESS' && (trx.payment_type === 'TUNAI' || !trx.payment_type)" @click="batalTrx(trx.id)" class="bg-red-50 text-red-600 hover:bg-red-100 w-10 h-10 rounded-xl flex items-center justify-center" title="Batalkan Transaksi">
@@ -239,6 +270,31 @@ const batalTrx = (id) => {
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal Pilihan Cetak Struk -->
+        <div v-if="isCetakModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all text-center">
+                <div class="p-6">
+                    <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="font-black text-xl text-gray-900 mb-2">Transaksi Berhasil!</h3>
+                    <p class="text-sm text-gray-500 mb-6">Pilih format untuk mencetak bukti pembayaran ini.</p>
+                    
+                    <div class="space-y-3">
+                        <button @click="cetakStruk('thermal')" class="w-full flex items-center justify-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl transition-colors">
+                            <i class="fas fa-receipt text-primary-500 text-lg"></i> Cetak Struk Thermal
+                        </button>
+                        <button @click="cetakStruk('invoice')" class="w-full flex items-center justify-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl transition-colors">
+                            <i class="fas fa-file-invoice-dollar text-primary-500 text-lg"></i> Cetak Invoice A4
+                        </button>
+                        <button @click="isCetakModalOpen = false" class="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors mt-2">
+                            Tidak Dicetak (Tutup)
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

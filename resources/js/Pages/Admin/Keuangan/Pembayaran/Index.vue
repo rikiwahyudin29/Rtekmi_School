@@ -41,7 +41,7 @@ watch(search, (newSearch) => {
                 <!-- Search Box -->
                 <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto relative group focus-within:ring-4 focus-within:ring-primary-500/20 transition-all">
                     <i class="fas fa-search absolute left-6 top-6 text-gray-400 text-xl group-focus-within:text-primary-500 transition-colors"></i>
-                    <input type="text" v-model="search" autofocus placeholder="Masukkan NISN, NIS, atau Nama Siswa..." class="w-full pl-14 pr-4 py-3 border-none bg-transparent focus:ring-0 text-lg text-gray-900 dark:text-white placeholder-gray-400">
+                    <input type="text" v-model="search" autofocus placeholder="Masukkan NISN atau Nama Siswa..." class="w-full pl-14 pr-4 py-3 border-none bg-transparent focus:ring-0 text-lg text-gray-900 dark:text-white placeholder-gray-400">
                     
                     <div v-if="search && search.length > 0 && (!siswa || siswa.length === 0)" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 p-6 text-center z-10">
                         <i class="fas fa-user-slash text-gray-300 text-4xl mb-2"></i>
@@ -55,7 +55,7 @@ watch(search, (newSearch) => {
                             </div>
                             <div class="flex-1">
                                 <h4 class="font-bold text-gray-900 dark:text-white text-base group-hover/item:text-primary-700 transition-colors">{{ s.nama_lengkap }}</h4>
-                                <p class="text-sm text-gray-500 font-medium">NIS: {{ s.nis || '-' }} <span class="mx-1">•</span> <span class="text-primary-600">{{ s.kelas?.nama_kelas || '-' }}</span></p>
+                                <p class="text-sm text-gray-500 font-medium">NISN: {{ s.nisn || '-' }} <span class="mx-1">•</span> <span class="text-primary-600">{{ s.kelas?.nama_kelas || '-' }}</span></p>
                             </div>
                             <div class="text-primary-400 group-hover/item:text-primary-600 group-hover/item:translate-x-1 transition-all">
                                 <i class="fas fa-chevron-right"></i>
