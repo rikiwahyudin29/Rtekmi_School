@@ -47,7 +47,7 @@
         <!-- Header -->
         <div class="text-center">
             @if($sekolah && $sekolah->logo)
-                <img src="{{ asset('uploads/sekolah/' . $sekolah->logo) }}" alt="Logo" class="logo">
+                <img src="{{ asset('uploads/identitas/' . $sekolah->logo) }}" alt="Logo" class="logo">
             @endif
             <div class="font-bold">{{ $sekolah->nama_sekolah ?? 'SIAKAD' }}</div>
             <div style="font-size: 10px;">{{ $sekolah->alamat ?? '' }}</div>
@@ -76,10 +76,28 @@
         <!-- Rincian -->
         <div>
             <div class="font-bold mb-1">Tagihan Dibayar:</div>
-            <div>{{ $trx->tagihan->jenisBayar->posBayar->nama_pos ?? 'Tagihan' }} {{ $trx->tagihan->keterangan }}</div>
+            @php
+                $pos = $trx->tagihan->jenisBayar->posBayar->nama_pos ?? 'Tagihan';
+                $ket = $trx->tagihan->keterangan;
+                $desc = (strtolower($pos) == strtolower($ket)) ? $pos : $pos . ' - ' . $ket;
+                $ta = $trx->tagihan->jenisBayar->tahunAjaran->tahun_ajaran ?? '-';
+                
+                $statusTagihan = $trx->tagihan->status_bayar;
+                $sisa = $trx->tagihan->nominal_tagihan - $trx->tagihan->nominal_terbayar;
+            @endphp
+            <div>{{ $desc }}</div>
+            <div style="font-size: 10px; color: #555;">Tahun Ajaran: {{ $ta }}</div>
+            
             <div class="flex mt-2 font-bold" style="font-size: 14px;">
-                <span>TOTAL:</span> 
+                <span>BAYAR:</span> 
                 <span>Rp {{ number_format($trx->jumlah_bayar, 0, ',', '.') }}</span>
+            </div>
+            
+            <div class="mt-2" style="font-size: 11px;">
+                <div class="flex"><span>Status Tagihan:</span> <span>{{ $statusTagihan }}</span></div>
+                @if($statusTagihan != 'LUNAS')
+                <div class="flex"><span>Sisa Tagihan:</span> <span>Rp {{ number_format($sisa, 0, ',', '.') }}</span></div>
+                @endif
             </div>
         </div>
         

@@ -122,11 +122,11 @@
         <!-- Kop Surat -->
         <div class="kop-surat">
             @if($sekolah && $sekolah->kop_surat)
-                <img src="{{ asset('uploads/sekolah/' . $sekolah->kop_surat) }}" alt="Kop Surat">
+                <img src="{{ asset('uploads/identitas/' . $sekolah->kop_surat) }}" alt="Kop Surat">
             @else
                 <!-- Fallback if no kop surat uploaded -->
                 @if($sekolah && $sekolah->logo)
-                    <img src="{{ asset('uploads/sekolah/' . $sekolah->logo) }}" alt="Logo" style="height: 80px; margin-bottom:10px;">
+                    <img src="{{ asset('uploads/identitas/' . $sekolah->logo) }}" alt="Logo" style="height: 80px; margin-bottom:10px;">
                 @endif
                 <h2 style="margin: 0;">{{ $sekolah->nama_sekolah ?? 'NAMA SEKOLAH' }}</h2>
                 <p style="margin: 5px 0 0 0;">{{ $sekolah->alamat ?? 'Alamat Sekolah' }}</p>
@@ -181,16 +181,31 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $pos = $trx->tagihan->jenisBayar->posBayar->nama_pos ?? 'Tagihan';
+                    $ket = $trx->tagihan->keterangan;
+                    $desc = (strtolower($pos) == strtolower($ket)) ? $pos : $pos . ' - ' . $ket;
+                    $ta = $trx->tagihan->jenisBayar->tahunAjaran->tahun_ajaran ?? '-';
+                    
+                    $statusTagihan = $trx->tagihan->status_bayar;
+                    $sisa = $trx->tagihan->nominal_tagihan - $trx->tagihan->nominal_terbayar;
+                @endphp
                 <tr>
                     <td class="text-center">1</td>
                     <td>
-                        <strong>{{ $trx->tagihan->jenisBayar->posBayar->nama_pos ?? 'Tagihan' }}</strong><br>
-                        <span style="color: #666; font-size: 12px;">{{ $trx->tagihan->keterangan }}</span>
+                        <strong>{{ $desc }}</strong><br>
+                        <span style="color: #666; font-size: 12px;">Tahun Ajaran: {{ $ta }}</span><br>
+                        <span style="color: #666; font-size: 12px;">
+                            Status Tagihan: <strong>{{ $statusTagihan }}</strong>
+                            @if($statusTagihan != 'LUNAS')
+                                | Sisa Tagihan: Rp {{ number_format($sisa, 0, ',', '.') }}
+                            @endif
+                        </span>
                     </td>
                     <td class="text-right">Rp {{ number_format($trx->jumlah_bayar, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td colspan="2" class="text-right">TOTAL PEMBAYARAN</td>
+                    <td colspan="2" class="text-right">JUMLAH DIBAYAR</td>
                     <td class="text-right">Rp {{ number_format($trx->jumlah_bayar, 0, ',', '.') }}</td>
                 </tr>
             </tbody>

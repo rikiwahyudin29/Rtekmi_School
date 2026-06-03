@@ -132,7 +132,7 @@ class PembayaranController extends Controller
 
     public function cetakThermal($id)
     {
-        $trx = Transaksi::with(['tagihan.jenisBayar.posBayar', 'siswa.kelas', 'petugas'])->findOrFail($id);
+        $trx = Transaksi::with(['tagihan.jenisBayar.posBayar', 'tagihan.jenisBayar.tahunAjaran', 'siswa.kelas', 'petugas'])->findOrFail($id);
         $sekolah = Sekolah::first();
         
         return view('keuangan.cetak_thermal', compact('trx', 'sekolah'));
@@ -140,7 +140,7 @@ class PembayaranController extends Controller
 
     public function cetakInvoice($id)
     {
-        $trx = Transaksi::with(['tagihan.jenisBayar.posBayar', 'siswa.kelas', 'petugas'])->findOrFail($id);
+        $trx = Transaksi::with(['tagihan.jenisBayar.posBayar', 'tagihan.jenisBayar.tahunAjaran', 'siswa.kelas', 'petugas'])->findOrFail($id);
         $sekolah = Sekolah::first();
         
         return view('keuangan.cetak_invoice', compact('trx', 'sekolah'));
