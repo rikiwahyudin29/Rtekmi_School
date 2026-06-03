@@ -96,15 +96,9 @@ class NotifTagihanController extends Controller
             }
         }
 
-        LogKeuangan::create([
-            'aksi' => "Blast Tagihan WA Kelas " . ($siswa->first()->kelas->nama_kelas ?? 'Unknown') . " (Berhasil: $berhasil, Gagal: $gagal)",
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+        \App\Services\LogKeuanganService::catat(
+            "Blast Tagihan WA Kelas " . ($siswa->first()->kelas->nama_kelas ?? 'Unknown') . " (Berhasil: $berhasil, Gagal: $gagal)"
+        );
 
         return back()->with('message', "Proses Selesai! Pesan WA berhasil dikirim ke $berhasil Orang Tua. (Lewati/Lunas/Gagal: $gagal siswa)");
     }

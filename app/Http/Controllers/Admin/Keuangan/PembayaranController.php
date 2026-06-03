@@ -95,16 +95,9 @@ class PembayaranController extends Controller
             'status_bayar'     => $status_baru
         ]);
 
-        // Note: WA can be implemented later or via Observers.
-        \App\Models\LogKeuangan::create([
-            'aksi' => "Menerima Pembayaran {$tagihan->jenisBayar->posBayar->nama_pos} sejumlah Rp " . number_format($bayar, 0, ',', '.') . " dari " . ($tagihan->siswa->nama_lengkap ?? 'Siswa'),
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+        \App\Services\LogKeuanganService::catat(
+            "Menerima Pembayaran {$tagihan->jenisBayar->posBayar->nama_pos} sejumlah Rp " . number_format($bayar, 0, ',', '.') . " dari " . ($tagihan->siswa->nama_lengkap ?? 'Siswa')
+        );
 
         return redirect()->route('admin.keuangan.pembayaran.transaksi', $request->id_siswa)->with('message', 'Pembayaran berhasil disimpan.');
     }
@@ -136,15 +129,9 @@ class PembayaranController extends Controller
 
         $trx->delete();
 
-        \App\Models\LogKeuangan::create([
-            'aksi' => "MENGHAPUS/BATAL Transaksi {$trx->kode_transaksi} sebesar Rp " . number_format($trx->jumlah_bayar, 0, ',', '.') . " milik " . ($tagihan->siswa->nama_lengkap ?? 'Siswa'),
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+        \App\Services\LogKeuanganService::catat(
+            "MENGHAPUS/BATAL Transaksi {$trx->kode_transaksi} sebesar Rp " . number_format($trx->jumlah_bayar, 0, ',', '.') . " milik " . ($tagihan->siswa->nama_lengkap ?? 'Siswa')
+        );
 
         return back()->with('message', 'Transaksi berhasil dibatalkan. Saldo tagihan dikembalikan.');
     }

@@ -59,17 +59,10 @@ class PengeluaranController extends Controller
             'petugas_id' => auth()->id()
         ]);
 
-        // Rekam Log Aktivitas
         $rp = number_format($nominal, 0, ',', '.');
-        LogKeuangan::create([
-            'aksi' => "Mencatat Pengeluaran: {$request->judul_pengeluaran} sebesar Rp $rp",
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+        \App\Services\LogKeuanganService::catat(
+            "Mencatat Pengeluaran: {$request->judul_pengeluaran} sebesar Rp $rp"
+        );
 
         return back()->with('message', 'Pengeluaran berhasil dicatat.');
     }
@@ -82,17 +75,8 @@ class PengeluaranController extends Controller
         $rp = number_format($pengeluaran->nominal, 0, ',', '.');
 
         $pengeluaran->delete();
-        
-        // Rekam Log
-        LogKeuangan::create([
-            'aksi' => "MENGHAPUS Pengeluaran: $judul (Rp $rp)",
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+
+        \App\Services\LogKeuanganService::catat("MENGHAPUS Pengeluaran: $judul (Rp $rp)");
 
         return back()->with('message', 'Pengeluaran berhasil dihapus.');
     }
@@ -102,15 +86,7 @@ class PengeluaranController extends Controller
         $request->validate(['nama_divisi' => 'required|string|max:255']);
         Divisi::create(['nama_divisi' => $request->nama_divisi]);
 
-        LogKeuangan::create([
-            'aksi' => "Menambah Master Divisi: {$request->nama_divisi}",
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+        \App\Services\LogKeuanganService::catat("Menambah Master Divisi: {$request->nama_divisi}");
 
         return back()->with('message', 'Divisi baru ditambahkan.');
     }
@@ -120,15 +96,7 @@ class PengeluaranController extends Controller
         $request->validate(['nama_jenis' => 'required|string|max:255']);
         JenisPengeluaran::create(['nama_jenis' => $request->nama_jenis]);
 
-        LogKeuangan::create([
-            'aksi' => "Menambah Master Jenis Pengeluaran: {$request->nama_jenis}",
-            'user_id' => auth()->id(),
-            'nama_user' => auth()->user()->nama_lengkap ?? auth()->user()->username,
-            'role' => auth()->user()->role,
-            'ip_address' => request()->ip(),
-            'device_info' => request()->header('User-Agent'),
-            'created_at' => now()
-        ]);
+        \App\Services\LogKeuanganService::catat("Menambah Master Jenis Pengeluaran: {$request->nama_jenis}");
 
         return back()->with('message', 'Jenis Pengeluaran baru ditambahkan.');
     }
