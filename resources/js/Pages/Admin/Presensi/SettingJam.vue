@@ -9,6 +9,8 @@ const props = defineProps({
 
 const form = useForm({
     jam_masuk_mulai: props.jam.jam_masuk_mulai || '06:00:00',
+    jam_masuk_mulai_terlambat: props.jam.jam_masuk_mulai_terlambat || '07:00:00',
+    batas_scan_masuk: props.jam.batas_scan_masuk || '07:30:00',
     jam_masuk_akhir: props.jam.jam_masuk_akhir || '07:15:00',
     jam_pulang_mulai: props.jam.jam_pulang_mulai || '14:00:00',
     latitude: props.jam.latitude || '-6.200000',
@@ -174,8 +176,16 @@ onMounted(() => {
                                         <input v-model="form.jam_masuk_mulai" type="time" step="1" class="block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-2">Batas Terlambat</label>
-                                        <input v-model="form.jam_masuk_akhir" type="time" step="1" class="block w-full rounded-xl border-red-300 dark:border-red-700 dark:bg-red-900/20 text-red-700 dark:text-red-300 shadow-sm focus:border-red-500 focus:ring-red-500 bg-red-50">
+                                        <label class="block text-xs font-bold text-orange-500 dark:text-orange-400 uppercase tracking-wider mb-2">Jam Mulai Terlambat</label>
+                                        <input v-model="form.jam_masuk_mulai_terlambat" type="time" step="1" class="block w-full rounded-xl border-orange-300 dark:border-orange-700 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 bg-orange-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-2">Batas Akhir Scan Masuk</label>
+                                        <input v-model="form.batas_scan_masuk" type="time" step="1" class="block w-full rounded-xl border-red-300 dark:border-red-700 dark:bg-red-900/20 text-red-700 dark:text-red-300 shadow-sm focus:border-red-500 focus:ring-red-500 bg-red-50">
+                                    </div>
+                                    <div class="hidden">
+                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Jam Masuk Akhir (Legacy)</label>
+                                        <input v-model="form.jam_masuk_akhir" type="time" step="1" class="block w-full rounded-xl">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider mb-2">Jam Buka Scan Pulang</label>

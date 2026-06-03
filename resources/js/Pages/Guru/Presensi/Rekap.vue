@@ -6,7 +6,8 @@ const props = defineProps({
     bulan: String,
     map: Object,
     total: Object,
-    jml_hari: [String, Number]
+    dates: Array,
+    format_terlambat: String
 });
 
 const form = useForm({
@@ -65,40 +66,43 @@ const cetakRekap = () => {
                                 <div class="text-3xl font-bold text-red-600">{{ total.A }}</div>
                                 <div class="text-sm font-semibold text-red-800">Alpha</div>
                             </div>
-                            <div class="bg-orange-100 p-4 rounded-lg text-center border border-orange-200">
+                            <div class="bg-orange-100 p-4 rounded-lg text-center border border-orange-200 flex flex-col justify-center relative">
                                 <div class="text-3xl font-bold text-orange-600">{{ total.T }}</div>
                                 <div class="text-sm font-semibold text-orange-800">Terlambat</div>
+                                <div v-if="format_terlambat" class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-orange-600 text-white text-xs px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
+                                    {{ format_terlambat }}
+                                </div>
                             </div>
                         </div>
 
                         <h3 class="text-lg font-bold mb-4">Detail Harian</h3>
                         <div class="grid grid-cols-4 sm:grid-cols-7 lg:grid-cols-10 gap-2">
-                            <div v-for="d in parseInt(jml_hari)" :key="d" 
+                            <div v-for="dateStr in dates" :key="dateStr" 
                                 class="p-3 border rounded-lg text-center flex flex-col items-center justify-center min-h-[80px]"
                                 :class="{
-                                    'bg-green-50 border-green-200': map[d] === 'Hadir',
-                                    'bg-orange-50 border-orange-200': map[d] === 'Terlambat',
-                                    'bg-yellow-50 border-yellow-200': map[d] === 'Sakit' || map[d] === 'Izin',
-                                    'bg-indigo-50 border-indigo-200': map[d] === 'Dinas Luar',
-                                    'bg-red-50 border-red-200': map[d] === 'Alpha',
-                                    'bg-gray-100 border-gray-200': map[d] === '-'
+                                    'bg-green-50 border-green-200': map[dateStr] === 'Hadir',
+                                    'bg-orange-50 border-orange-200': map[dateStr] === 'Terlambat',
+                                    'bg-yellow-50 border-yellow-200': map[dateStr] === 'Sakit' || map[dateStr] === 'Izin',
+                                    'bg-indigo-50 border-indigo-200': map[dateStr] === 'Dinas Luar',
+                                    'bg-red-50 border-red-200': map[dateStr] === 'Alpha',
+                                    'bg-gray-100 border-gray-200': map[dateStr] === '-'
                                 }">
-                                <div class="text-xs font-bold text-gray-500 mb-1">Tgl {{ d }}</div>
+                                <div class="text-xs font-bold text-gray-500 mb-1">Tgl {{ dateStr.substring(8, 10) }}</div>
                                 <div class="font-bold text-sm"
                                     :class="{
-                                        'text-green-600': map[d] === 'Hadir',
-                                        'text-orange-600': map[d] === 'Terlambat',
-                                        'text-yellow-600': map[d] === 'Sakit' || map[d] === 'Izin',
-                                        'text-indigo-600': map[d] === 'Dinas Luar',
-                                        'text-red-600': map[d] === 'Alpha',
-                                        'text-gray-400': map[d] === '-'
+                                        'text-green-600': map[dateStr] === 'Hadir',
+                                        'text-orange-600': map[dateStr] === 'Terlambat',
+                                        'text-yellow-600': map[dateStr] === 'Sakit' || map[dateStr] === 'Izin',
+                                        'text-indigo-600': map[dateStr] === 'Dinas Luar',
+                                        'text-red-600': map[dateStr] === 'Alpha',
+                                        'text-gray-400': map[dateStr] === '-'
                                     }">
-                                    <span v-if="map[d] === 'Hadir'">H</span>
-                                    <span v-else-if="map[d] === 'Terlambat'">T</span>
-                                    <span v-else-if="map[d] === 'Sakit'">S</span>
-                                    <span v-else-if="map[d] === 'Izin'">I</span>
-                                    <span v-else-if="map[d] === 'Dinas Luar'">DL</span>
-                                    <span v-else-if="map[d] === 'Alpha'">A</span>
+                                    <span v-if="map[dateStr] === 'Hadir'">H</span>
+                                    <span v-else-if="map[dateStr] === 'Terlambat'">T</span>
+                                    <span v-else-if="map[dateStr] === 'Sakit'">S</span>
+                                    <span v-else-if="map[dateStr] === 'Izin'">I</span>
+                                    <span v-else-if="map[dateStr] === 'Dinas Luar'">DL</span>
+                                    <span v-else-if="map[dateStr] === 'Alpha'">A</span>
                                     <span v-else>-</span>
                                 </div>
                             </div>

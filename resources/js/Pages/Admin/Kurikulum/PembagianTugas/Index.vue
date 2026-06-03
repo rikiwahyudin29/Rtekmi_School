@@ -70,8 +70,14 @@ const getAssignedGuru = (id_kelas, id_mapel) => {
     return map ? map.id_guru : '';
 };
 
+// Get current Beban Jam
+const getAssignedBebanJam = (id_kelas, id_mapel) => {
+    const map = props.mapping.find(m => m.id_kelas === id_kelas && m.id_mapel === id_mapel);
+    return map ? map.beban_jam : 0;
+};
+
 // Auto Save Mapping
-const updateMapping = async (id_kelas, id_mapel, id_guru) => {
+const updateMapping = async (id_kelas, id_mapel, id_guru, beban_jam) => {
     isSaving.value = true;
     saveMessage.value = 'Menyimpan...';
     
@@ -79,16 +85,18 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
         const response = await axios.post('/admin/kurikulum/pembagian-tugas/update', {
             id_kelas: id_kelas,
             id_mapel: id_mapel,
-            id_guru: id_guru || null
+            id_guru: id_guru || null,
+            beban_jam: beban_jam || 0
         });
         
         // Update local mapping array to reflect changes immediately
         const existingIndex = props.mapping.findIndex(m => m.id_kelas === id_kelas && m.id_mapel === id_mapel);
-        if (id_guru) {
+        if (id_guru || beban_jam) {
             if (existingIndex >= 0) {
                 props.mapping[existingIndex].id_guru = id_guru;
+                props.mapping[existingIndex].beban_jam = beban_jam;
             } else {
-                props.mapping.push({ id_kelas, id_mapel, id_guru });
+                props.mapping.push({ id_kelas, id_mapel, id_guru, beban_jam });
             }
         } else {
             if (existingIndex >= 0) {
@@ -169,6 +177,7 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
                                             <th class="px-6 py-5 font-bold">Mata Pelajaran</th>
                                             <th class="px-6 py-5 font-bold">Kelompok</th>
                                             <th class="px-6 py-5 font-bold w-1/3">Guru Pengampu</th>
+                                            <th class="px-6 py-5 font-bold w-24">Beban Jam</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -186,7 +195,7 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
                                             <td class="px-6 py-4">
                                                 <select 
                                                     :value="getAssignedGuru(selectedKelas, m.id)" 
-                                                    @change="updateMapping(selectedKelas, m.id, $event.target.value)"
+                                                    @change="updateMapping(selectedKelas, m.id, $event.target.value, getAssignedBebanJam(selectedKelas, m.id))"
                                                     class="w-full border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2 pl-3 pr-8 cursor-pointer"
                                                     :class="{'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800': getAssignedGuru(selectedKelas, m.id)}"
                                                 >
@@ -194,9 +203,20 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
                                                     <option v-for="g in guru" :key="g.id" :value="g.id">{{ g.nama_lengkap }}</option>
                                                 </select>
                                             </td>
+                                            <td class="px-6 py-4">
+                                                <input 
+                                                    type="number" 
+                                                    min="0" 
+                                                    max="20"
+                                                    :value="getAssignedBebanJam(selectedKelas, m.id)"
+                                                    @change="updateMapping(selectedKelas, m.id, getAssignedGuru(selectedKelas, m.id), parseInt($event.target.value))"
+                                                    class="w-full border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2 px-3 text-center"
+                                                    :class="{'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800': getAssignedBebanJam(selectedKelas, m.id) > 0}"
+                                                >
+                                            </td>
                                         </tr>
                                         <tr v-if="filteredMapelForKelas.length === 0">
-                                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">Tidak ada mapel ditemukan untuk kelas ini.</td>
+                                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">Tidak ada mapel ditemukan untuk kelas ini.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -224,6 +244,7 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
                                             <th class="px-6 py-5 font-bold">Kelas</th>
                                             <th class="px-6 py-5 font-bold">Jurusan</th>
                                             <th class="px-6 py-5 font-bold w-1/3">Guru Pengampu</th>
+                                            <th class="px-6 py-5 font-bold w-24">Beban Jam</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -238,7 +259,7 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
                                             <td class="px-6 py-4">
                                                 <select 
                                                     :value="getAssignedGuru(k.id, selectedMapel)" 
-                                                    @change="updateMapping(k.id, selectedMapel, $event.target.value)"
+                                                    @change="updateMapping(k.id, selectedMapel, $event.target.value, getAssignedBebanJam(k.id, selectedMapel))"
                                                     class="w-full border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2 pl-3 pr-8 cursor-pointer"
                                                     :class="{'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800': getAssignedGuru(k.id, selectedMapel)}"
                                                 >
@@ -246,9 +267,20 @@ const updateMapping = async (id_kelas, id_mapel, id_guru) => {
                                                     <option v-for="g in guru" :key="g.id" :value="g.id">{{ g.nama_lengkap }}</option>
                                                 </select>
                                             </td>
+                                            <td class="px-6 py-4">
+                                                <input 
+                                                    type="number" 
+                                                    min="0" 
+                                                    max="20"
+                                                    :value="getAssignedBebanJam(k.id, selectedMapel)"
+                                                    @change="updateMapping(k.id, selectedMapel, getAssignedGuru(k.id, selectedMapel), parseInt($event.target.value))"
+                                                    class="w-full border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white py-2 px-3 text-center"
+                                                    :class="{'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800': getAssignedBebanJam(k.id, selectedMapel) > 0}"
+                                                >
+                                            </td>
                                         </tr>
                                         <tr v-if="filteredKelasForMapel.length === 0">
-                                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">Tidak ada kelas ditemukan untuk mapel ini.</td>
+                                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">Tidak ada kelas ditemukan untuk mapel ini.</td>
                                         </tr>
                                     </tbody>
                                 </table>

@@ -64,10 +64,32 @@ class PresensiGuruApiController extends Controller
         $cek = DB::table('tbl_presensi')->where(['user_id' => $id_guru, 'role' => 'guru', 'tanggal' => $today])->first();
 
         if (!$cek) {
+            // HITUNG KETERLAMBATAN & STATUS
+            $batas_scan = $setting->batas_scan_masuk ?? $setting->jam_masuk_akhir;
+            $mulai_terlambat = $setting->jam_masuk_mulai_terlambat ?? '07:00:00';
+
+            if ($now > $batas_scan) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Batas waktu absen masuk telah lewat (' . $batas_scan . ').'
+                ], 400);
+            }
+
+            $status = 'Hadir';
+            $menit_terlambat = 0;
+
+            if ($now > $mulai_terlambat) {
+                $status = 'Terlambat';
+                $mulai_time = strtotime($mulai_terlambat);
+                $sekarang_time = strtotime($now);
+                $menit_terlambat = floor(($sekarang_time - $mulai_time) / 60);
+            }
+
             DB::table('tbl_presensi')->insert([
                 'user_id' => $id_guru, 'role' => 'guru', 'tanggal' => $today, 'jam_masuk' => $now,
                 'latitude' => $lat_user, 'longitude' => $long_user,
-                'bukti_izin' => 'QR_CODE_SCAN', 'status_kehadiran' => 'Hadir', 'metode' => 'QRCode/Geo', 'status_verifikasi' => 'Terverifikasi'
+                'status_kehadiran' => $status, 'menit_terlambat' => $menit_terlambat,
+                'bukti_izin' => 'QR_CODE_SCAN', 'metode' => 'QRCode/Geo', 'status_verifikasi' => 'Terverifikasi'
             ]);
             return response()->json(['status' => true, 'message' => "Berhasil Absen Masuk Jam $now"], 200);
         } else {

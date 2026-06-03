@@ -17,7 +17,9 @@ class JamPresensiController extends Controller
             $jam = JamSekolah::create([
                 'id' => 1,
                 'jam_masuk_mulai' => '06:00:00',
-                'jam_masuk_akhir' => '07:15:00',
+                'jam_masuk_mulai_terlambat' => '07:00:00',
+                'batas_scan_masuk' => '07:30:00',
+                'jam_masuk_akhir' => '07:15:00', // Keep for compatibility if needed, but not primarily used anymore
                 'jam_pulang_mulai' => '14:00:00',
                 'latitude' => '-6.200000',
                 'longitude' => '106.816666',
@@ -35,6 +37,8 @@ class JamPresensiController extends Controller
     {
         $request->validate([
             'jam_masuk_mulai' => 'required',
+            'jam_masuk_mulai_terlambat' => 'required',
+            'batas_scan_masuk' => 'required',
             'jam_masuk_akhir' => 'required',
             'jam_pulang_mulai' => 'required',
             'latitude' => 'required',
@@ -47,6 +51,8 @@ class JamPresensiController extends Controller
         if ($jam) {
             $jam->update([
                 'jam_masuk_mulai' => $request->jam_masuk_mulai,
+                'jam_masuk_mulai_terlambat' => $request->jam_masuk_mulai_terlambat,
+                'batas_scan_masuk' => $request->batas_scan_masuk,
                 'jam_masuk_akhir' => $request->jam_masuk_akhir,
                 'jam_pulang_mulai' => $request->jam_pulang_mulai,
                 'latitude' => $request->latitude,

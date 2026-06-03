@@ -99,8 +99,24 @@ class PresensiController extends Controller
 
         if (!$cekAbsen) {
             // MASUK
-            $batas_masuk = $jamSetting->jam_masuk_akhir;
-            $status = ($jam_sekarang > $batas_masuk) ? 'Terlambat' : 'Hadir';
+            $batas_scan = $jamSetting->batas_scan_masuk ?? $jamSetting->jam_masuk_akhir;
+            $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
+
+            if ($jam_sekarang > $batas_scan) {
+                return response()->json([
+                    'status' => 'error', 'message' => 'Batas waktu scan absen masuk telah lewat (' . $batas_scan . ').'
+                ]);
+            }
+
+            $status = 'Hadir';
+            $menit_terlambat = 0;
+
+            if ($jam_sekarang > $mulai_terlambat) {
+                $status = 'Terlambat';
+                $mulai_time = strtotime($mulai_terlambat);
+                $sekarang_time = strtotime($jam_sekarang);
+                $menit_terlambat = floor(($sekarang_time - $mulai_time) / 60);
+            }
 
             Presensi::create([
                 'user_id' => $userID,
@@ -108,6 +124,7 @@ class PresensiController extends Controller
                 'tanggal' => $tgl_hari_ini,
                 'jam_masuk' => $jam_sekarang,
                 'status_kehadiran' => $status,
+                'menit_terlambat' => $menit_terlambat,
                 'metode' => $tipe_input,
                 'status_verifikasi' => 'Disetujui'
             ]);
@@ -275,7 +292,7 @@ class PresensiController extends Controller
         ]);
     }
 
-    // 5. REKAP BULANAN
+    // 5. REKAP BULANAN (Tgl 19 Bulan Sebelumnya - Tgl 18 Bulan Terpilih)
     public function rekap(Request $request)
     {
         $bulan = $request->get('bulan') ?? date('Y-m');
@@ -283,9 +300,22 @@ class PresensiController extends Controller
         $role = $request->get('role') ?? 'siswa';
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
 
+        // Tentukan Rentang Tanggal (19 prev month s/d 18 current month)
+        $selected_time = strtotime($bulan . '-01');
+        $prev_month_time = strtotime('-1 month', $selected_time);
+        
+        $start_date = date('Y-m', $prev_month_time) . '-19';
+        $end_date = $bulan . '-18';
+
+        $period = \Carbon\CarbonPeriod::create($start_date, $end_date);
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
+
         if ($role === 'siswa' && !$id_kelas) {
             return Inertia::render('Admin/Presensi/Rekap', [
-                'kelas' => $kelas, 'bulan' => $bulan, 'filter_kelas' => '', 'filter_role' => $role, 'data_rekap' => [], 'jml_hari' => date('t', strtotime($bulan))
+                'kelas' => $kelas, 'bulan' => $bulan, 'filter_kelas' => '', 'filter_role' => $role, 'data_rekap' => [], 'dates' => $dates
             ]);
         }
 
@@ -296,24 +326,25 @@ class PresensiController extends Controller
         }
         
         $presensi = Presensi::where('role', $role)
-                            ->where('tanggal', 'like', "$bulan%")
+                            ->whereBetween('tanggal', [$start_date, $end_date])
                             ->get();
 
         $absen_map = [];
         foreach ($presensi as $p) {
-            $tgl = (int) date('d', strtotime($p->tanggal));
-            $absen_map[$p->user_id][$tgl] = ['status' => $p->status_kehadiran, 'verif' => $p->status_verifikasi];
+            $absen_map[$p->user_id][$p->tanggal] = [
+                'status' => $p->status_kehadiran, 
+                'verif' => $p->status_verifikasi,
+                'menit' => $p->menit_terlambat ?? 0
+            ];
         }
 
         $libur_array = [];
-        // TODO: Handle hari libur if table exists
-        $liburs = \App\Models\HariLibur::where('tanggal', 'like', "$bulan%")->get();
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
         foreach ($liburs as $lbr) {
-            $libur_array[] = (int) date('d', strtotime($lbr->tanggal));
+            $libur_array[] = $lbr->tanggal;
         }
 
         $data_rekap = [];
-        $jumlah_hari = date('t', strtotime($bulan));
         $hari_ini_real = date('Y-m-d');
 
         foreach ($pengguna as $s) {
@@ -322,28 +353,32 @@ class PresensiController extends Controller
                 'identitas' => $role === 'siswa' ? $s->nis : ($s->nik ?? '-'),
                 'harian' => [],
                 'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0, 'DL' => 0],
+                'total_menit_terlambat' => 0,
                 'persen' => 0
             ];
 
-            for ($d = 1; $d <= $jumlah_hari; $d++) {
-                $tanggal_loop = $bulan . '-' . str_pad($d, 2, '0', STR_PAD_LEFT);
-                $kode_hari = date('N', strtotime($tanggal_loop));
+            foreach ($dates as $tgl) {
+                $kode_hari = date('N', strtotime($tgl));
                 $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-                $is_libur_nasional = in_array($d, $libur_array);
-                $is_future = (strtotime($tanggal_loop) > strtotime($hari_ini_real));
+                $is_libur_nasional = in_array($tgl, $libur_array);
+                $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
-                $data_tgl = $absen_map[$s->id][$d] ?? null;
+                $data_tgl = $absen_map[$s->id][$tgl] ?? null;
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
                     $verif = $data_tgl['verif'];
+                    // Jika Izin/Sakit/Dinas Luar ditolak maka Alfa
                     $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    if ($status_final == 'Terlambat') {
+                        $row['total_menit_terlambat'] += $data_tgl['menit'];
+                    }
                 } else {
                     $status_final = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'Alpha';
                 }
 
-                $row['harian'][$d] = $status_final;
+                $row['harian'][$tgl] = $status_final;
 
                 if ($status_final == 'Hadir') $row['total']['H']++;
                 if ($status_final == 'Terlambat') { $row['total']['T']++; $row['total']['H']++; }
@@ -352,13 +387,26 @@ class PresensiController extends Controller
                 if ($status_final == 'Alpha') $row['total']['A']++;
                 if ($status_final == 'Dinas Luar') $row['total']['DL']++;
             }
+            // Izin dan Sakit hitung Alfa presentasenya (Hanya Hadir dan DL yang efektif)
+            // Wait, the user said "ya kalo sakit ya sakit gak alfa tapi presentasi pemotongan nya ya sama kayak alfa"
+            // So they do not contribute to 'Hadir'.
+            // total_efektif = days that should have been attended.
+            // H + S + I + A + DL
             $total_efektif = $row['total']['H'] + $row['total']['S'] + $row['total']['I'] + $row['total']['A'] + $row['total']['DL'];
-            $row['persen'] = ($total_efektif > 0) ? round(($row['total']['H'] / $total_efektif) * 100) : 0;
+            // Persentase hanya dihitung dari H dan DL
+            $total_hadir = $row['total']['H'] + $row['total']['DL'];
+            $row['persen'] = ($total_efektif > 0) ? round(($total_hadir / $total_efektif) * 100) : 0;
+            
+            // Format menit ke jam & menit
+            $jam_t = floor($row['total_menit_terlambat'] / 60);
+            $menit_t = $row['total_menit_terlambat'] % 60;
+            $row['format_terlambat'] = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
+
             $data_rekap[] = $row;
         }
 
         return Inertia::render('Admin/Presensi/Rekap', [
-            'kelas' => $kelas, 'bulan' => $bulan, 'filter_kelas' => $id_kelas, 'filter_role' => $role, 'data_rekap' => $data_rekap, 'jml_hari' => $jumlah_hari
+            'kelas' => $kelas, 'bulan' => $bulan, 'filter_kelas' => $id_kelas, 'filter_role' => $role, 'data_rekap' => $data_rekap, 'dates' => $dates
         ]);
     }
 
@@ -437,34 +485,47 @@ class PresensiController extends Controller
 
         $kelas = Kelas::find($id_kelas);
         $siswa = Siswa::where('kelas_id', $id_kelas)->orderBy('nama_lengkap', 'asc')->get();
-        $presensi = Presensi::where('role', 'siswa')->where('tanggal', 'like', "$bulan%")->get();
+        
+        $selected_time = strtotime($bulan . '-01');
+        $prev_month_time = strtotime('-1 month', $selected_time);
+        
+        $start_date = date('Y-m', $prev_month_time) . '-19';
+        $end_date = $bulan . '-18';
+
+        $period = \Carbon\CarbonPeriod::create($start_date, $end_date);
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
+
+        $presensi = Presensi::where('role', 'siswa')->whereBetween('tanggal', [$start_date, $end_date])->get();
 
         $absen_map = [];
         foreach ($presensi as $p) {
-            $tgl = (int) date('d', strtotime($p->tanggal));
-            $absen_map[$p->user_id][$tgl] = ['status' => $p->status_kehadiran, 'verif' => $p->status_verifikasi];
+            $absen_map[$p->user_id][$p->tanggal] = ['status' => $p->status_kehadiran, 'verif' => $p->status_verifikasi, 'menit' => $p->menit_terlambat ?? 0];
         }
 
         $data_rekap = [];
-        $jumlah_hari = date('t', strtotime($bulan));
         $hari_ini_real = date('Y-m-d');
 
         foreach ($siswa as $s) {
-            $row = ['nama' => $s->nama_lengkap, 'nis' => $s->nis, 'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0]];
+            $row = ['nama' => $s->nama_lengkap, 'nis' => $s->nis, 'total' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0], 'total_menit' => 0];
 
-            for ($d = 1; $d <= $jumlah_hari; $d++) {
-                $tanggal_loop = $bulan . '-' . str_pad($d, 2, '0', STR_PAD_LEFT);
-                $kode_hari = date('N', strtotime($tanggal_loop));
+            foreach ($dates as $tgl) {
+                $kode_hari = date('N', strtotime($tgl));
                 $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-                $is_future = (strtotime($tanggal_loop) > strtotime($hari_ini_real));
+                $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
-                $data_tgl = $absen_map[$s->id][$d] ?? null;
+                $data_tgl = $absen_map[$s->id][$tgl] ?? null;
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
                     if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
                     $verif = $data_tgl['verif'];
-                    $status_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    if ($status_final == 'Terlambat') {
+                        $row['total_menit'] += $data_tgl['menit'];
+                    }
                 } else {
                     $status_final = ($is_weekend || $is_future) ? '-' : 'Alpha';
                 }
@@ -475,64 +536,80 @@ class PresensiController extends Controller
                 if ($status_final == 'Izin') $row['total']['I']++;
                 if ($status_final == 'Alpha') $row['total']['A']++;
             }
+            
+            $jam_t = floor($row['total_menit'] / 60);
+            $menit_t = $row['total_menit'] % 60;
+            $row['format_terlambat'] = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
+            
             $data_rekap[] = $row;
         }
 
         return view('presensi.cetak_rekap', [
-            'tipe' => 'siswa', 'data_rekap' => $data_rekap, 'kelas' => $kelas, 'bulan' => $bulan, 'jml_hari' => $jumlah_hari, 'sekolah' => Sekolah::find(1)
+            'tipe' => 'siswa', 'data_rekap' => $data_rekap, 'kelas' => $kelas, 'bulan' => $bulan, 'sekolah' => Sekolah::find(1)
         ]);
     }
 
     public function cetakMatrix(Request $request)
     {
-        // ... (We will use the similar rekap logic for the matrix view)
         $bulanStr = $request->get('bulan');
         $id_kelas = $request->get('id_kelas');
         if (empty($bulanStr) || empty($id_kelas)) return redirect()->back()->with('error', 'Pilih Bulan dan Kelas!');
 
         $kelas = Kelas::find($id_kelas);
         $siswa = Siswa::where('kelas_id', $id_kelas)->orderBy('nama_lengkap', 'asc')->get();
-        $absensi = Presensi::where('role', 'siswa')->where('tanggal', 'like', "$bulanStr%")->get();
+        
+        $selected_time = strtotime($bulanStr . '-01');
+        $prev_month_time = strtotime('-1 month', $selected_time);
+        
+        $start_date = date('Y-m', $prev_month_time) . '-19';
+        $end_date = $bulanStr . '-18';
+
+        $period = \Carbon\CarbonPeriod::create($start_date, $end_date);
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
+
+        $absensi = Presensi::where('role', 'siswa')->whereBetween('tanggal', [$start_date, $end_date])->get();
 
         $absen_map = [];
         foreach ($absensi as $row) {
-            $tgl = (int) date('d', strtotime($row->tanggal));
-            $absen_map[$row->user_id][$tgl] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi];
+            $absen_map[$row->user_id][$row->tanggal] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi, 'menit' => $row->menit_terlambat ?? 0];
         }
 
-        $jml_hari = date('t', strtotime($bulanStr));
         $hari_ini_real = date('Y-m-d');
         $data_matrix = [];
+        $data_menit = [];
 
         foreach ($siswa as $s) {
-            for ($d = 1; $d <= $jml_hari; $d++) {
-                $tanggal_loop = $bulanStr . '-' . str_pad($d, 2, '0', STR_PAD_LEFT);
-                $kode_hari = date('N', strtotime($tanggal_loop));
+            $data_menit[$s->id] = 0;
+            foreach ($dates as $tgl) {
+                $kode_hari = date('N', strtotime($tgl));
                 $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-                $is_future = (strtotime($tanggal_loop) > strtotime($hari_ini_real));
+                $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
-                $data_tgl = $absen_map[$s->id][$d] ?? null;
+                $data_tgl = $absen_map[$s->id][$tgl] ?? null;
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
                     $verif = $data_tgl['verif'];
 
                     $status = 'A';
                     if ($st_asli == 'Hadir') $status = 'H';
-                    if ($st_asli == 'Terlambat') $status = 'T';
+                    if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$s->id] += $data_tgl['menit']; }
                     if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
                     if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
 
-                    $data_matrix[$s->id][$d] = $status;
+                    $data_matrix[$s->id][$tgl] = $status;
                 } else {
-                    $data_matrix[$s->id][$d] = ($is_weekend || $is_future) ? '-' : 'A';
+                    $data_matrix[$s->id][$tgl] = ($is_weekend || $is_future) ? '-' : 'A';
                 }
             }
         }
 
         return view('presensi.cetak_matrix', [
-            'tipe' => 'siswa', 'siswa' => $siswa, 'matrix' => $data_matrix, 'jml_hari' => $jml_hari, 'bulan' => $bulanStr, 'kelas' => $kelas, 'sekolah' => Sekolah::find(1)
+            'tipe' => 'siswa', 'siswa' => $siswa, 'matrix' => $data_matrix, 'dates' => $dates, 'data_menit' => $data_menit, 'bulan' => $bulanStr, 'kelas' => $kelas, 'sekolah' => Sekolah::find(1)
         ]);
     }
 
@@ -599,48 +676,60 @@ class PresensiController extends Controller
         if (empty($bulanStr)) return redirect()->back()->with('error', 'Pilih Bulan terlebih dahulu!');
 
         $guru = Guru::orderBy('nama_lengkap', 'asc')->get();
-        $absensi = Presensi::where('role', 'guru')->where('tanggal', 'like', "$bulanStr%")->get();
+        
+        $selected_time = strtotime($bulanStr . '-01');
+        $prev_month_time = strtotime('-1 month', $selected_time);
+        
+        $start_date = date('Y-m', $prev_month_time) . '-19';
+        $end_date = $bulanStr . '-18';
+
+        $period = \Carbon\CarbonPeriod::create($start_date, $end_date);
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
+        
+        $absensi = Presensi::where('role', 'guru')->whereBetween('tanggal', [$start_date, $end_date])->get();
 
         $absen_map = [];
         foreach ($absensi as $row) {
-            $tgl = (int) date('d', strtotime($row->tanggal));
-            $absen_map[$row->user_id][$tgl] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi];
+            $absen_map[$row->user_id][$row->tanggal] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi, 'menit' => $row->menit_terlambat ?? 0];
         }
 
-        $jml_hari = date('t', strtotime($bulanStr));
         $hari_ini_real = date('Y-m-d');
         $data_matrix = [];
+        $data_menit = [];
 
         foreach ($guru as $g) {
-            for ($d = 1; $d <= $jml_hari; $d++) {
-                $tanggal_loop = $bulanStr . '-' . str_pad($d, 2, '0', STR_PAD_LEFT);
-                $kode_hari = date('N', strtotime($tanggal_loop));
+            $data_menit[$g->id] = 0;
+            foreach ($dates as $tgl) {
+                $kode_hari = date('N', strtotime($tgl));
                 $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-                $is_future = (strtotime($tanggal_loop) > strtotime($hari_ini_real));
+                $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
-                $data_tgl = $absen_map[$g->id][$d] ?? null;
+                $data_tgl = $absen_map[$g->id][$tgl] ?? null;
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
+                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
                     $verif = $data_tgl['verif'];
 
                     $status = 'A';
                     if ($st_asli == 'Hadir') $status = 'H';
-                    if ($st_asli == 'Terlambat') $status = 'T';
+                    if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$g->id] += $data_tgl['menit']; }
                     if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
                     if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
                     if ($st_asli == 'Dinas Luar' && $verif == 'Disetujui') $status = 'DL';
 
-                    $data_matrix[$g->id][$d] = $status;
+                    $data_matrix[$g->id][$tgl] = $status;
                 } else {
-                    $data_matrix[$g->id][$d] = ($is_weekend || $is_future) ? '-' : 'A';
+                    $data_matrix[$g->id][$tgl] = ($is_weekend || $is_future) ? '-' : 'A';
                 }
             }
         }
 
         return view('presensi.cetak_matrix', [
-            'tipe' => 'guru', 'siswa' => $guru, 'matrix' => $data_matrix, 'jml_hari' => $jml_hari, 'bulan' => $bulanStr, 'kelas' => (object)['nama_kelas'=>'GURU & STAFF'], 'sekolah' => Sekolah::find(1)
+            'tipe' => 'guru', 'siswa' => $guru, 'matrix' => $data_matrix, 'dates' => $dates, 'data_menit' => $data_menit, 'bulan' => $bulanStr, 'kelas' => (object)['nama_kelas'=>'GURU & STAFF'], 'sekolah' => Sekolah::find(1)
         ]);
     }
 }

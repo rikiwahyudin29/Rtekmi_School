@@ -76,12 +76,41 @@ class PresensiApiController extends Controller
         if (!$cek) {
             // PROSES ABSEN MASUK
             if ($jam_sekarang < $setting->jam_masuk_mulai) return response()->json(['status' => false, 'message' => 'Belum waktunya absen masuk.'], 400);
-            if ($jam_sekarang > $setting->jam_masuk_akhir) return response()->json(['status' => false, 'message' => 'Batas absen masuk sudah habis.'], 400);
+            
+            // HITUNG KETERLAMBATAN & STATUS
+            $batas_scan = $setting->jam_masuk_akhir;
+            $mulai_terlambat = $setting->jam_masuk_mulai_terlambat ?? '07:00:00';
+
+            if ($jam_sekarang > $batas_scan) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Batas waktu absen masuk telah lewat (' . $batas_scan . ').'
+                ], 400);
+            }
+
+            $status = 'Hadir';
+            $menit_terlambat = 0;
+
+            if ($jam_sekarang > $mulai_terlambat) {
+                $status = 'Terlambat';
+                $mulai_time = strtotime($mulai_terlambat);
+                $sekarang_time = strtotime($jam_sekarang);
+                $menit_terlambat = floor(($sekarang_time - $mulai_time) / 60);
+            }
 
             DB::table('tbl_presensi')->insert([
-                'user_id' => $id_siswa, 'role' => 'siswa', 'tanggal' => $hari_ini, 'jam_masuk' => $jam_sekarang,
-                'latitude' => $lat_user, 'longitude' => $long_user, 'jarak_meter' => $jarak_meter,
-                'bukti_izin' => 'QR_CODE_SCAN', 'status_kehadiran' => 'Hadir', 'metode' => 'Online', 'status_verifikasi' => 'Disetujui'
+                'user_id' => $id_siswa, 
+                'role' => 'siswa', 
+                'tanggal' => $hari_ini, 
+                'jam_masuk' => $jam_sekarang,
+                'latitude' => $lat_user, 
+                'longitude' => $long_user, 
+                'jarak_meter' => $jarak_meter,
+                'status_kehadiran' => $status,
+                'menit_terlambat' => $menit_terlambat,
+                'bukti_izin' => 'QR_CODE_SCAN', 
+                'metode' => 'Online', 
+                'status_verifikasi' => 'Disetujui'
             ]);
             return response()->json(['status' => true, 'message' => 'Absen Masuk Berhasil!'], 200);
         } else {

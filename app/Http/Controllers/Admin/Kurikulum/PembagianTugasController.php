@@ -47,6 +47,7 @@ class PembagianTugasController extends Controller
             'id_kelas' => 'required|integer',
             'id_mapel' => 'required|integer',
             'id_guru' => 'nullable|integer',
+            'beban_jam' => 'nullable|integer',
         ]);
 
         $tahunAktif = TahunAjaran::where('status', 'Aktif')->first();
@@ -54,8 +55,8 @@ class PembagianTugasController extends Controller
             return response()->json(['error' => 'Tahun ajaran aktif tidak ditemukan'], 400);
         }
 
-        if (empty($request->id_guru)) {
-            // Remove mapping if guru is empty/unselected
+        if (empty($request->id_guru) && empty($request->beban_jam)) {
+            // Remove mapping if guru is empty/unselected and beban jam is 0/empty
             PembagianTugas::where('id_tahun_ajaran', $tahunAktif->id)
                 ->where('id_kelas', $request->id_kelas)
                 ->where('id_mapel', $request->id_mapel)
@@ -72,7 +73,8 @@ class PembagianTugasController extends Controller
                 'id_mapel' => $request->id_mapel,
             ],
             [
-                'id_guru' => $request->id_guru
+                'id_guru' => $request->id_guru,
+                'beban_jam' => $request->beban_jam ?? 0
             ]
         );
 

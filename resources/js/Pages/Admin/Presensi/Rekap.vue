@@ -8,7 +8,7 @@ const props = defineProps({
     filter_kelas: [String, Number],
     filter_role: String,
     data_rekap: Array,
-    jml_hari: [String, Number]
+    dates: Array
 });
 
 const filterForm = useForm({
@@ -127,17 +127,18 @@ const cetakMatrix = () => {
                                     <tr>
                                         <th rowspan="2" class="px-4 py-3 text-left font-bold uppercase tracking-wider text-xs border-r border-gray-200 dark:border-gray-700">No</th>
                                         <th rowspan="2" class="px-4 py-3 text-left font-bold uppercase tracking-wider text-xs border-r border-gray-200 dark:border-gray-700 w-48">Nama Lengkap</th>
-                                        <th :colspan="jml_hari" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Tanggal</th>
-                                        <th colspan="5" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Total</th>
+                                        <th :colspan="dates?.length || 0" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Tanggal (19-18)</th>
+                                        <th colspan="6" class="px-2 py-2 text-center font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700 border-r border-gray-200 dark:border-gray-700">Total</th>
                                         <th rowspan="2" class="px-2 py-3 text-center font-bold uppercase tracking-wider text-xs border-r border-gray-200 dark:border-gray-700">%</th>
                                     </tr>
                                     <tr>
-                                        <th v-for="n in parseInt(jml_hari)" :key="n" class="px-1 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-[10px] w-6">{{ n }}</th>
-                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-green-600 dark:text-green-400 font-bold">H</th>
-                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-yellow-600 dark:text-yellow-400 font-bold">S</th>
-                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-blue-600 dark:text-blue-400 font-bold">I</th>
-                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-red-600 dark:text-red-400 font-bold">A</th>
-                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-purple-600 dark:text-purple-400 font-bold">DL</th>
+                                        <th v-for="dateStr in dates" :key="dateStr" class="px-1 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-[10px] w-6">{{ dateStr.substring(8, 10) }}</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-green-600 dark:text-green-400 font-bold" title="Hadir">H</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-yellow-600 dark:text-yellow-400 font-bold" title="Sakit">S</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-blue-600 dark:text-blue-400 font-bold" title="Izin">I</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-red-600 dark:text-red-400 font-bold" title="Alpha">A</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-8 text-purple-600 dark:text-purple-400 font-bold" title="Dinas Luar">DL</th>
+                                        <th class="px-2 py-1 text-center border-r border-gray-200 dark:border-gray-700 text-xs w-16 text-orange-600 dark:text-orange-400 font-bold" title="Total Keterlambatan">Menit Terlambat</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -146,22 +147,22 @@ const cetakMatrix = () => {
                                         <td class="px-4 py-2 border-r border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium truncate max-w-[200px]" :title="item.nama">{{ item.nama }}</td>
                                         
                                         <!-- Tanggal Loop -->
-                                        <td v-for="n in parseInt(jml_hari)" :key="n" class="px-1 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-semibold text-xs"
+                                        <td v-for="dateStr in dates" :key="dateStr" class="px-1 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-semibold text-xs"
                                             :class="{
-                                                'bg-green-500 text-white': item.harian[n] == 'Hadir',
-                                                'bg-orange-400 text-white': item.harian[n] == 'Terlambat',
-                                                'bg-blue-500 text-white': item.harian[n] == 'Sakit',
-                                                'bg-cyan-500 text-white': item.harian[n] == 'Izin',
-                                                'bg-red-500 text-white': item.harian[n] == 'Alpha',
-                                                'bg-purple-500 text-white': item.harian[n] == 'Dinas Luar',
-                                                'text-gray-300 dark:text-gray-600': !['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha', 'Dinas Luar'].includes(item.harian[n])
+                                                'bg-green-500 text-white': item.harian[dateStr] == 'Hadir',
+                                                'bg-orange-400 text-white': item.harian[dateStr] == 'Terlambat',
+                                                'bg-blue-500 text-white': item.harian[dateStr] == 'Sakit',
+                                                'bg-cyan-500 text-white': item.harian[dateStr] == 'Izin',
+                                                'bg-red-500 text-white': item.harian[dateStr] == 'Alpha',
+                                                'bg-purple-500 text-white': item.harian[dateStr] == 'Dinas Luar',
+                                                'text-gray-300 dark:text-gray-600': !['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha', 'Dinas Luar'].includes(item.harian[dateStr])
                                             }">
-                                            <span v-if="item.harian[n] == 'Hadir'">H</span>
-                                            <span v-else-if="item.harian[n] == 'Terlambat'">T</span>
-                                            <span v-else-if="item.harian[n] == 'Sakit'">S</span>
-                                            <span v-else-if="item.harian[n] == 'Izin'">I</span>
-                                            <span v-else-if="item.harian[n] == 'Alpha'">A</span>
-                                            <span v-else-if="item.harian[n] == 'Dinas Luar'">DL</span>
+                                            <span v-if="item.harian[dateStr] == 'Hadir'">H</span>
+                                            <span v-else-if="item.harian[dateStr] == 'Terlambat'">T</span>
+                                            <span v-else-if="item.harian[dateStr] == 'Sakit'">S</span>
+                                            <span v-else-if="item.harian[dateStr] == 'Izin'">I</span>
+                                            <span v-else-if="item.harian[dateStr] == 'Alpha'">A</span>
+                                            <span v-else-if="item.harian[dateStr] == 'Dinas Luar'">DL</span>
                                             <span v-else>-</span>
                                         </td>
                                         
@@ -171,6 +172,7 @@ const cetakMatrix = () => {
                                         <td class="px-2 py-2 text-center font-bold text-white bg-cyan-500 border-r border-white dark:border-gray-700">{{ item.total.I }}</td>
                                         <td class="px-2 py-2 text-center font-bold text-white bg-red-500 border-r border-white dark:border-gray-700">{{ item.total.A }}</td>
                                         <td class="px-2 py-2 text-center font-bold text-white bg-purple-500 border-r border-white dark:border-gray-700">{{ item.total.DL }}</td>
+                                        <td class="px-2 py-2 text-center font-bold text-white bg-orange-500 border-r border-white dark:border-gray-700">{{ item.format_terlambat || '-' }}</td>
                                         
                                         <!-- Persentase -->
                                         <td class="px-2 py-2 text-center font-bold border-r border-gray-200 dark:border-gray-700" :class="item.persen < 80 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
@@ -178,7 +180,7 @@ const cetakMatrix = () => {
                                         </td>
                                     </tr>
                                     <tr v-if="data_rekap.length === 0">
-                                        <td :colspan="parseInt(jml_hari) + 8" class="px-6 py-8 text-center text-gray-500">
+                                        <td :colspan="(dates?.length || 0) + 9" class="px-6 py-8 text-center text-gray-500">
                                             Data tidak ditemukan.
                                         </td>
                                     </tr>

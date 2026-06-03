@@ -53,18 +53,19 @@
             <tr>
                 <th rowspan="2" width="2%">No</th>
                 <th rowspan="2" width="15%" class="text-left">Nama Lengkap</th>
-                <th colspan="{{ $jml_hari }}">Tanggal</th>
-                <th colspan="5">Total</th>
+                <th colspan="{{ count($dates) }}">Tanggal (19-18)</th>
+                <th colspan="6">Total</th>
             </tr>
             <tr>
-                @for($i=1; $i<=$jml_hari; $i++)
-                <th>{{ $i }}</th>
-                @endfor
+                @foreach($dates as $dateStr)
+                <th>{{ substr($dateStr, 8, 2) }}</th>
+                @endforeach
                 <th width="2%">H</th>
                 <th width="2%">T</th>
                 <th width="2%">S</th>
                 <th width="2%">I</th>
                 <th width="2%">A</th>
+                <th width="8%">Waktu Terlambat</th>
             </tr>
         </thead>
         <tbody>
@@ -75,9 +76,9 @@
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td class="text-left">{{ $s->nama_lengkap ?? $s->nama_guru }}</td>
-                @for($d=1; $d<=$jml_hari; $d++)
+                @foreach($dates as $dateStr)
                 @php
-                    $val = $matrix[$s->id][$d] ?? '-';
+                    $val = $matrix[$s->id][$dateStr] ?? '-';
                     $color = '';
                     if($val == 'H') { $color = 'background-color: #22c55e; color: white; font-weight: bold;'; $totH++; }
                     elseif($val == 'T') { $color = 'background-color: #f97316; color: white; font-weight: bold;'; $totT++; $totH++; }
@@ -88,12 +89,19 @@
                     elseif($val == '-') { $color = 'color: #ccc;'; }
                 @endphp
                 <td style="{{ $color }}">{{ $val }}</td>
-                @endfor
+                @endforeach
                 <td style="font-weight: bold; background-color: #22c55e; color: white;">{{ $totH }}</td>
                 <td style="font-weight: bold; background-color: #f97316; color: white;">{{ $totT }}</td>
                 <td style="font-weight: bold; background-color: #3b82f6; color: white;">{{ $totS }}</td>
                 <td style="font-weight: bold; background-color: #06b6d4; color: white;">{{ $totI }}</td>
                 <td style="font-weight: bold; background-color: #ef4444; color: white;">{{ $totA }}</td>
+                @php
+                    $menit = $data_menit[$s->id] ?? 0;
+                    $jam_t = floor($menit / 60);
+                    $menit_t = $menit % 60;
+                    $format = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
+                @endphp
+                <td style="font-weight: bold; background-color: #f97316; color: white;">{{ $format }}</td>
             </tr>
             @endforeach
         </tbody>
