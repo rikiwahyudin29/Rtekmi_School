@@ -777,7 +777,31 @@ class PresensiController extends Controller
 
         $absen_map = [];
         foreach ($absensi as $row) {
-            $absen_map[$row->user_id][$row->tanggal] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi, 'menit' => $row->menit_terlambat ?? 0];
+            $absen_map[$row->user_id][$row->tanggal] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi, 'menit' => $row->menit_terlambat ?? 0, 'jam_masuk' => $row->jam_masuk];
+        }
+
+        $libur_array = [];
+        $libur_map = [];
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = $lbr->tanggal;
+            $libur_map[$lbr->tanggal] = $lbr->keterangan;
+        }
+
+        $tahun = date('Y', strtotime($bulanStr . '-01'));
+        $libur_nasional = \App\Models\HariLibur::getLiburNasionalMap($tahun);
+
+        $info_libur = [];
+        foreach ($dates as $tgl) {
+            $kode_hari = date('N', strtotime($tgl));
+            if (isset($libur_map[$tgl])) {
+                $info_libur[$tgl] = $libur_map[$tgl];
+            } elseif (isset($libur_nasional[$tgl])) {
+                $info_libur[$tgl] = $libur_nasional[$tgl];
+                $libur_array[] = $tgl;
+            } elseif ($kode_hari == 6 || $kode_hari == 7) {
+                $info_libur[$tgl] = 'Libur Akhir Pekan';
+            }
         }
 
         $hari_ini_real = date('Y-m-d');
@@ -792,10 +816,26 @@ class PresensiController extends Controller
                 $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
                 $data_tgl = $absen_map[$s->id][$tgl] ?? null;
+                $jamSetting = JamSekolah::find(1);
+                $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
+
+                $is_libur_nasional = in_array($tgl, $libur_array);
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
                     if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
+
+                    // FIX: Retroactive calculation if previously saved incorrectly as Hadir
+                    if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
+                        if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
+                            $st_asli = 'Terlambat';
+                            $mulai_time = strtotime($mulai_terlambat);
+                            $sekarang_time = strtotime($data_tgl['jam_masuk']);
+                            $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
+                            if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
+                        }
+                    }
+
                     $verif = $data_tgl['verif'];
 
                     $status = 'A';
@@ -806,13 +846,13 @@ class PresensiController extends Controller
 
                     $data_matrix[$s->id][$tgl] = $status;
                 } else {
-                    $data_matrix[$s->id][$tgl] = ($is_weekend || $is_future) ? '-' : 'A';
+                    $data_matrix[$s->id][$tgl] = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'A';
                 }
             }
         }
 
         return view('presensi.cetak_matrix', [
-            'tipe' => 'siswa', 'siswa' => $siswa, 'matrix' => $data_matrix, 'dates' => $dates, 'data_menit' => $data_menit, 'bulan' => $bulanStr, 'kelas' => $kelas, 'sekolah' => Sekolah::find(1)
+            'tipe' => 'siswa', 'siswa' => $siswa, 'matrix' => $data_matrix, 'dates' => $dates, 'data_menit' => $data_menit, 'bulan' => $bulanStr, 'kelas' => $kelas, 'sekolah' => Sekolah::find(1), 'info_libur' => $info_libur
         ]);
     }
 
@@ -896,7 +936,31 @@ class PresensiController extends Controller
 
         $absen_map = [];
         foreach ($absensi as $row) {
-            $absen_map[$row->user_id][$row->tanggal] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi, 'menit' => $row->menit_terlambat ?? 0];
+            $absen_map[$row->user_id][$row->tanggal] = ['status' => $row->status_kehadiran, 'verif' => $row->status_verifikasi, 'menit' => $row->menit_terlambat ?? 0, 'jam_masuk' => $row->jam_masuk];
+        }
+
+        $libur_array = [];
+        $libur_map = [];
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = $lbr->tanggal;
+            $libur_map[$lbr->tanggal] = $lbr->keterangan;
+        }
+
+        $tahun = date('Y', strtotime($bulanStr . '-01'));
+        $libur_nasional = \App\Models\HariLibur::getLiburNasionalMap($tahun);
+
+        $info_libur = [];
+        foreach ($dates as $tgl) {
+            $kode_hari = date('N', strtotime($tgl));
+            if (isset($libur_map[$tgl])) {
+                $info_libur[$tgl] = $libur_map[$tgl];
+            } elseif (isset($libur_nasional[$tgl])) {
+                $info_libur[$tgl] = $libur_nasional[$tgl];
+                $libur_array[] = $tgl;
+            } elseif ($kode_hari == 6 || $kode_hari == 7) {
+                $info_libur[$tgl] = 'Libur Akhir Pekan';
+            }
         }
 
         $hari_ini_real = date('Y-m-d');
@@ -911,10 +975,26 @@ class PresensiController extends Controller
                 $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
                 $data_tgl = $absen_map[$g->id][$tgl] ?? null;
+                $jamSetting = JamSekolah::find(1);
+                $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
+
+                $is_libur_nasional = in_array($tgl, $libur_array);
 
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
                     if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
+
+                    // FIX: Retroactive calculation if previously saved incorrectly as Hadir
+                    if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
+                        if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
+                            $st_asli = 'Terlambat';
+                            $mulai_time = strtotime($mulai_terlambat);
+                            $sekarang_time = strtotime($data_tgl['jam_masuk']);
+                            $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
+                            if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
+                        }
+                    }
+
                     $verif = $data_tgl['verif'];
 
                     $status = 'A';
@@ -926,13 +1006,13 @@ class PresensiController extends Controller
 
                     $data_matrix[$g->id][$tgl] = $status;
                 } else {
-                    $data_matrix[$g->id][$tgl] = ($is_weekend || $is_future) ? '-' : 'A';
+                    $data_matrix[$g->id][$tgl] = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'A';
                 }
             }
         }
 
         return view('presensi.cetak_matrix', [
-            'tipe' => 'guru', 'siswa' => $guru, 'matrix' => $data_matrix, 'dates' => $dates, 'data_menit' => $data_menit, 'bulan' => $bulanStr, 'kelas' => (object)['nama_kelas'=>'GURU & STAFF'], 'sekolah' => Sekolah::find(1)
+            'tipe' => 'guru', 'siswa' => $guru, 'matrix' => $data_matrix, 'dates' => $dates, 'data_menit' => $data_menit, 'bulan' => $bulanStr, 'kelas' => (object)['nama_kelas'=>'GURU & STAFF'], 'sekolah' => Sekolah::find(1), 'info_libur' => $info_libur
         ]);
     }
 }

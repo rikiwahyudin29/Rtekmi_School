@@ -1,3 +1,8 @@
+<?php
+$pathKop = 'uploads/identitas/' . ($sekolah->kop_surat ?? 'default.png');
+$pakaiKopGambar = !empty($sekolah->kop_surat) && file_exists(public_path($pathKop));
+$pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas/' . $sekolah->logo)) ? asset('uploads/identitas/' . $sekolah->logo) : asset('assets/img/logo.png'); 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,12 +10,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Rekap Matrix Bulanan</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 10px; }
-        .kop { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .kop img { height: 70px; position: absolute; left: 20px; }
-        .kop h2 { margin: 0; font-size: 14px; }
-        .kop h3 { margin: 5px 0; font-size: 18px; }
-        .kop p { margin: 0; font-size: 10px; }
+        body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 20px; }
+        .kop-surat { width: 100%; margin-bottom: 20px; text-align: center; }
+        .kop-surat img.img-kop { width: 100%; height: auto; } 
+        .kop-surat-inner { border-bottom: 3px solid #000; padding-bottom: 10px; display: flex; width: 100%; align-items: center; border-bottom: 3px solid #000; margin-bottom: 2px;}
+        .kop-logo { width: 80px; height: 80px; object-fit: contain; margin-right: 20px; }
+        .kop-text { text-align: center; flex: 1; }
+        .kop-text h1, .kop-text h2, .kop-text h3 { margin: 0; font-weight: bold; }
+        .kop-text h2 { font-size: 14px; }
+        .kop-text h1 { font-size: 18px; margin: 5px 0; }
+        .kop-text p { margin: 0; font-size: 10px; }
         .judul { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 15px; }
         .info { margin-bottom: 10px; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
@@ -22,17 +31,24 @@
         .ttd { float: right; width: 250px; text-align: center; margin-top: 30px; font-size: 11px;}
         @media print {
             @page { size: landscape; margin: 1cm; }
+            body { padding: 0; }
         }
     </style>
 </head>
 <body onload="window.print()">
-    <div class="kop">
-        @if($sekolah && $sekolah->logo_sekolah)
-            <img src="{{ public_path('uploads/sekolah/' . $sekolah->logo_sekolah) }}" alt="Logo">
+    <div class="kop-surat">
+        @if($pakaiKopGambar)
+            <img src="{{ asset($pathKop) }}" alt="Kop Surat" class="img-kop">
+        @else
+            <div class="kop-surat-inner">
+                <img src="{{ $pathLogo }}" alt="Logo Sekolah" class="kop-logo">
+                <div class="kop-text">
+                    <h2>PEMERINTAH PROVINSI {{ strtoupper($sekolah->provinsi ?? 'JAWA BARAT') }}</h2>
+                    <h1>{{ strtoupper($sekolah->nama_sekolah ?? 'SMK NEGERI 1 CONTOH') }}</h1>
+                    <p>{{ $sekolah->alamat ?? 'Jl. Contoh Alamat No. 123' }} | Website: {{ $sekolah->website ?? '-' }} | Email: {{ $sekolah->email ?? '-' }}</p>
+                </div>
+            </div>
         @endif
-        <h2>PEMERINTAH PROVINSI {{ strtoupper($sekolah->provinsi ?? 'JAWA BARAT') }}</h2>
-        <h3>{{ strtoupper($sekolah->nama_sekolah ?? 'SMK NEGERI 1 CONTOH') }}</h3>
-        <p>{{ $sekolah->alamat ?? 'Jl. Contoh Alamat No. 123' }}</p>
     </div>
 
     <div class="judul">
@@ -58,7 +74,13 @@
             </tr>
             <tr>
                 @foreach($dates as $dateStr)
-                <th>{{ substr($dateStr, 8, 2) }}</th>
+                @php 
+                    $isLibur = false;
+                    if(isset($info_libur) && isset($info_libur[$dateStr])) {
+                        $isLibur = true;
+                    }
+                @endphp
+                <th style="{{ $isLibur ? 'background-color: #fca5a5; color: #991b1b;' : '' }}">{{ substr($dateStr, 8, 2) }}</th>
                 @endforeach
                 <th width="2%">H</th>
                 <th width="2%">T</th>
@@ -80,7 +102,15 @@
                 @php
                     $val = $matrix[$s->id][$dateStr] ?? '-';
                     $color = '';
-                    if($val == 'H') { $color = 'background-color: #22c55e; color: white; font-weight: bold;'; $totH++; }
+                    $isLibur = false;
+                    if(isset($info_libur) && isset($info_libur[$dateStr])) {
+                        $isLibur = true;
+                    }
+                    
+                    if($isLibur && $val == '-') { 
+                        $color = 'background-color: #fecaca; color: #ef4444; font-weight: bold; font-size: 8px;';
+                        $val = 'L'; // Tanda libur
+                    } elseif($val == 'H') { $color = 'background-color: #22c55e; color: white; font-weight: bold;'; $totH++; }
                     elseif($val == 'T') { $color = 'background-color: #f97316; color: white; font-weight: bold;'; $totT++; $totH++; }
                     elseif($val == 'S') { $color = 'background-color: #3b82f6; color: white; font-weight: bold;'; $totS++; }
                     elseif($val == 'I') { $color = 'background-color: #06b6d4; color: white; font-weight: bold;'; $totI++; }
