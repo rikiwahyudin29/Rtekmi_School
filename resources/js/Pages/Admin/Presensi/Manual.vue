@@ -1,57 +1,95 @@
 <script setup>
-import { ref } from 'vue';
-import { useForm, Link } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import { useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import axios from 'axios';
 
 const props = defineProps({
-    manualSiswa: Array,
-    manualGuru: Array,
-    tanggal: String,
-    kelas: Array,
-    guruList: Array
+    kelas: Array
 });
 
-// Modal State
-const showModal = ref(false);
-const siswaList = ref([]);
-
-const form = useForm({
+const filterForm = ref({
     role: 'siswa',
-    kelas_id: '',
-    id_siswa: '',
-    id_guru: '',
-    status: 'Hadir',
-    keterangan: '',
-    tanggal: props.tanggal,
-    jam_masuk: '07:00'
+    tanggal: new Date().toISOString().split('T')[0],
+    id_kelas: ''
 });
 
-const loadSiswa = async () => {
-    if (!form.kelas_id) {
-        siswaList.value = [];
+const listBelumAbsen = ref([]);
+const loadingList = ref(false);
+const messageError = ref('');
+const messageLibur = ref('');
+
+const loadBelumAbsen = async () => {
+    if (filterForm.value.role === 'siswa' && !filterForm.value.id_kelas) {
+        listBelumAbsen.value = [];
         return;
     }
-    const res = await axios.get(route('admin.presensi.get_siswa_by_kelas', form.kelas_id));
-    siswaList.value = res.data;
-};
-
-const submitManual = () => {
-    form.post(route('admin.presensi.simpan_manual'), {
-        onSuccess: () => {
-            showModal.value = false;
-            form.reset();
-            form.tanggal = props.tanggal;
-            form.jam_masuk = '07:00';
-            form.status = 'Hadir';
-            form.role = 'siswa';
+    
+    loadingList.value = true;
+    messageError.value = '';
+    messageLibur.value = '';
+    
+    try {
+        const res = await axios.get(route('admin.presensi.get_belum_absen'), { params: filterForm.value });
+        if (res.data.status === 'libur') {
+            messageLibur.value = res.data.message;
+            listBelumAbsen.value = [];
+        } else {
+            // Inisialisasi properti form per user
+            listBelumAbsen.value = res.data.data.map(u => ({
+                ...u,
+                formStatus: 'Hadir',
+                formJam: '07:00',
+                isSaving: false,
+                saveSuccess: false
+            }));
         }
-    });
+    } catch (e) {
+        messageError.value = 'Gagal mengambil data belum absen.';
+    } finally {
+        loadingList.value = false;
+    }
 };
 
-const hapusManual = (id) => {
-    if (confirm(`Anda yakin ingin menghapus data presensi manual ini?`)) {
-        form.delete(route('admin.presensi.hapus_manual', id));
+watch(filterForm, () => {
+    loadBelumAbsen();
+}, { deep: true });
+
+const simpanManual = async (user) => {
+    user.isSaving = true;
+    user.saveSuccess = false;
+    
+    try {
+        const payload = {
+            role: filterForm.value.role,
+            user_id: user.id,
+            status_kehadiran: user.formStatus,
+            tanggal: filterForm.value.tanggal,
+            jam_masuk: (user.formStatus === 'Hadir' || user.formStatus === 'Terlambat') ? user.formJam : null
+        };
+        
+        const res = await axios.post(route('admin.presensi.simpan_manual_ajax'), payload);
+        
+        if (res.data.success) {
+            user.saveSuccess = true;
+            // Hapus dari list setelah 1 detik
+            setTimeout(() => {
+                listBelumAbsen.value = listBelumAbsen.value.filter(u => u.id !== user.id);
+            }, 800);
+        } else {
+            alert(res.data.message);
+        }
+    } catch (e) {
+        alert('Terjadi kesalahan saat menyimpan presensi.');
+    } finally {
+        user.isSaving = false;
+    }
+};
+
+const handleStatusChange = (user) => {
+    if (user.formStatus !== 'Hadir' && user.formStatus !== 'Terlambat') {
+        // Langsung simpan jika bukan Hadir/Terlambat
+        simpanManual(user);
     }
 };
 </script>
@@ -61,191 +99,120 @@ const hapusManual = (id) => {
         <div class="py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
                 
-                <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-1">Input Presensi Manual</h1>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Kelola dan input data kehadiran secara manual jika siswa/guru lupa absen.</p>
-                    </div>
-                    <button @click="showModal = true" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2 text-sm">
-                        <i class="fas fa-plus"></i> Tambah Presensi
-                    </button>
+                <div class="mb-8">
+                    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-1">Input Manual (Bulk)</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Pilih Role dan Tanggal, lalu klik status untuk menyimpan otomatis secara instan.</p>
                 </div>
                 
-                <!-- Tabel Manual Siswa -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700">
-                    <div class="p-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-gray-700 pb-3 flex items-center gap-2">
-                            <i class="fas fa-user-graduate text-indigo-500"></i> Presensi Manual Siswa
-                        </h3>
-                        <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-900">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jam</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Siswa</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kelas</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Keterangan</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <tr v-for="item in manualSiswa" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ item.tanggal }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ item.jam_masuk ?? '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-bold">{{ item.siswa?.nama_lengkap }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ item.siswa?.kelas?.nama_kelas }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-lg" :class="item.status_kehadiran == 'Hadir' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : (item.status_kehadiran == 'Terlambat' ? 'bg-orange-100 text-orange-800' : (item.status_kehadiran == 'Alpha' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'))">
-                                                {{ item.status_kehadiran }}
-                                            </span>
-                                            <div v-if="item.menit_terlambat > 0" class="text-[10px] text-red-500 mt-1">Telat {{ item.menit_terlambat }}m</div>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ item.keterangan || '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button @click="hapusManual(item.id)" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"><i class="fas fa-trash"></i> Hapus</button>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="manualSiswa.length === 0">
-                                        <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">Belum ada input presensi manual.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                <!-- Filter Section -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Tipe Absen</label>
+                            <select v-model="filterForm.role" class="block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="siswa">Siswa</option>
+                                <option value="guru">Guru & Staff</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Tanggal</label>
+                            <input type="date" v-model="filterForm.tanggal" class="block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+
+                        <div v-if="filterForm.role === 'siswa'">
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Filter Kelas</label>
+                            <select v-model="filterForm.id_kelas" class="block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                <option value="">-- Pilih Kelas --</option>
+                                <option v-for="k in kelas" :key="k.id" :value="k.id">{{ k.nama_kelas }}</option>
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tabel Manual Guru -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700">
-                    <div class="p-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-gray-700 pb-3 flex items-center gap-2">
-                            <i class="fas fa-chalkboard-teacher text-teal-500"></i> Presensi Manual Guru
-                        </h3>
-                        <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-900">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jam</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Guru</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Keterangan</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <tr v-for="item in manualGuru" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ item.tanggal }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ item.jam_masuk ?? '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-bold">{{ item.guru?.nama_lengkap ?? item.guru?.nama_guru }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-lg" :class="item.status_kehadiran == 'Hadir' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : (item.status_kehadiran == 'Terlambat' ? 'bg-orange-100 text-orange-800' : (item.status_kehadiran == 'Alpha' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'))">
-                                                {{ item.status_kehadiran }}
-                                            </span>
-                                            <div v-if="item.menit_terlambat > 0" class="text-[10px] text-red-500 mt-1">Telat {{ item.menit_terlambat }}m</div>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ item.keterangan || '-' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button @click="hapusManual(item.id)" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"><i class="fas fa-trash"></i> Hapus</button>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="manualGuru.length === 0">
-                                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">Belum ada input presensi manual dari guru.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- Info Libur -->
+                <div v-if="messageLibur" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
+                    <i class="fas fa-calendar-times text-4xl text-red-500 mb-3"></i>
+                    <h3 class="text-lg font-bold text-red-700 dark:text-red-400">{{ messageLibur }}</h3>
+                    <p class="text-sm text-red-600 dark:text-red-300 mt-1">Sistem memblokir input absen untuk hari libur.</p>
+                </div>
+
+                <!-- Daftar Belum Absen -->
+                <div v-else-if="loadingList" class="text-center py-12 text-gray-500">
+                    <i class="fas fa-circle-notch fa-spin text-4xl mb-4 text-indigo-500"></i>
+                    <p>Memuat data yang belum absen...</p>
+                </div>
+
+                <div v-else-if="listBelumAbsen.length > 0" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-900 dark:text-white">Daftar {{ filterForm.role === 'siswa' ? 'Siswa' : 'Guru' }} Belum Absen</h3>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">{{ listBelumAbsen.length }} Orang</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/20">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Lengkap</th>
+                                    <th v-if="filterForm.role === 'siswa'" class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kelas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">Jam (Kalo Hadir)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr v-for="user in listBelumAbsen" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50" :class="{'bg-green-50 dark:bg-green-900/20': user.saveSuccess}">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-bold text-gray-900 dark:text-white">{{ user.nama_lengkap ?? user.nama_guru }}</div>
+                                        <div class="text-xs text-gray-500" v-if="user.nis">{{ user.nis }}</div>
+                                    </td>
+                                    <td v-if="filterForm.role === 'siswa'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                        {{ user.kelas?.nama_kelas }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <select v-model="user.formStatus" @change="handleStatusChange(user)" :disabled="user.isSaving || user.saveSuccess" class="block w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 sm:text-sm font-semibold"
+                                            :class="{'text-green-600': user.formStatus == 'Hadir', 'text-orange-600': user.formStatus == 'Terlambat', 'text-yellow-600': user.formStatus == 'Sakit' || user.formStatus == 'Izin', 'text-red-600': user.formStatus == 'Alpha', 'text-purple-600': user.formStatus == 'Dinas Luar'}">
+                                            <option value="Hadir">Hadir</option>
+                                            <option value="Terlambat">Terlambat</option>
+                                            <option value="Sakit">Sakit</option>
+                                            <option value="Izin">Izin</option>
+                                            <option value="Alpha">Alpha</option>
+                                            <option v-if="filterForm.role === 'guru'" value="Dinas Luar">Dinas Luar</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="time" v-if="user.formStatus === 'Hadir' || user.formStatus === 'Terlambat'" v-model="user.formJam" @keyup.enter="simpanManual(user)" :disabled="user.isSaving || user.saveSuccess" class="block w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 sm:text-sm text-center" title="Tekan Enter untuk menyimpan">
+                                        <span v-else class="text-xs text-gray-400 italic">Otomatis tersimpan</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button v-if="user.formStatus === 'Hadir' || user.formStatus === 'Terlambat'" @click="simpanManual(user)" :disabled="user.isSaving || user.saveSuccess" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center w-10 h-10">
+                                            <i v-if="user.isSaving" class="fas fa-circle-notch fa-spin"></i>
+                                            <i v-else-if="user.saveSuccess" class="fas fa-check"></i>
+                                            <i v-else class="fas fa-save"></i>
+                                        </button>
+                                        <div v-else-if="user.isSaving" class="text-indigo-600 flex items-center justify-center w-10 h-10">
+                                            <i class="fas fa-circle-notch fa-spin"></i>
+                                        </div>
+                                        <div v-else-if="user.saveSuccess" class="text-green-600 flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-            </div>
-        </div>
-
-        <!-- Modal Tambah Manual -->
-        <div v-if="showModal" class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showModal = false"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <form @submit.prevent="submitManual">
-                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Input Presensi Manual</h3>
-                            
-                            <div class="space-y-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Tanggal</label>
-                                        <input type="date" v-model="form.tanggal" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Jam Masuk (07:00)</label>
-                                        <input type="time" v-model="form.jam_masuk" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Role</label>
-                                    <select v-model="form.role" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                                        <option value="siswa">Siswa</option>
-                                        <option value="guru">Guru/Staff</option>
-                                    </select>
-                                </div>
-                                
-                                <div v-if="form.role === 'siswa'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Kelas</label>
-                                        <select v-model="form.kelas_id" @change="loadSiswa" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" :required="form.role === 'siswa'">
-                                            <option value="">-- Pilih Kelas --</option>
-                                            <option v-for="k in kelas" :key="k.id" :value="k.id">{{ k.nama_kelas }}</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Siswa</label>
-                                        <select v-model="form.id_siswa" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" :required="form.role === 'siswa'" :disabled="!form.kelas_id">
-                                            <option value="">-- Pilih Siswa --</option>
-                                            <option v-for="s in siswaList" :key="s.id" :value="s.id">{{ s.nama_lengkap }} ({{ s.nis }})</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div v-if="form.role === 'guru'">
-                                    <label class="block text-sm font-medium text-gray-700">Guru</label>
-                                    <select v-model="form.id_guru" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" :required="form.role === 'guru'">
-                                        <option value="">-- Pilih Guru --</option>
-                                        <option v-for="g in guruList" :key="g.id" :value="g.id">{{ g.nama_lengkap }}</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Status Kehadiran</label>
-                                    <select v-model="form.status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                                        <option value="Hadir">Hadir</option>
-                                        <option value="Terlambat">Terlambat</option>
-                                        <option value="Sakit">Sakit</option>
-                                        <option value="Izin">Izin</option>
-                                        <option value="Alpha">Alpha</option>
-                                        <option v-if="form.role === 'guru'" value="Dinas Luar">Dinas Luar</option>
-                                    </select>
-                                    <p class="text-[11px] text-gray-500 mt-1" v-if="form.status == 'Terlambat'">Jika Terlambat, pastikan "Jam Masuk" diisi melewati batas jam masuk agar sistem dapat menghitung akumulasi telat secara otomatis.</p>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Keterangan (Opsional)</label>
-                                    <textarea v-model="form.keterangan" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Alasan lupa absen / keterangan lain..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="submit" :disabled="form.processing" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                                Simpan Data
-                            </button>
-                            <button type="button" @click="showModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                                Batal
-                            </button>
-                        </div>
-                    </form>
+                <div v-else-if="!loadingList && filterForm.role === 'siswa' && !filterForm.id_kelas" class="text-center py-12 text-gray-500">
+                    <i class="fas fa-chalkboard text-4xl mb-4 text-gray-300"></i>
+                    <p>Silakan pilih kelas terlebih dahulu.</p>
                 </div>
+
+                <div v-else-if="!loadingList && listBelumAbsen.length === 0" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-8 text-center">
+                    <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                    <h3 class="text-xl font-bold text-green-700 dark:text-green-400">Semua Sudah Absen!</h3>
+                    <p class="text-sm text-green-600 dark:text-green-300 mt-2">Tidak ada {{ filterForm.role === 'siswa' ? 'siswa' : 'guru' }} yang belum absen pada tanggal ini.</p>
+                </div>
+
             </div>
         </div>
     </DashboardLayout>

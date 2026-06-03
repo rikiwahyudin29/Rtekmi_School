@@ -173,9 +173,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('izin', [\App\Http\Controllers\Admin\PresensiController::class, 'izin'])->name('izin');
             Route::post('simpan-izin', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanIzin'])->name('simpan_izin');
             Route::delete('hapus-izin/{id}', [\App\Http\Controllers\Admin\PresensiController::class, 'hapusIzin'])->name('hapus_izin');
-            Route::get('manual', [\App\Http\Controllers\Admin\PresensiController::class, 'manual'])->name('manual');
-            Route::post('simpan-manual', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanManual'])->name('simpan_manual');
-            Route::delete('hapus-manual/{id}', [\App\Http\Controllers\Admin\PresensiController::class, 'hapusManual'])->name('hapus_manual');
+            Route::get('/manual', [\App\Http\Controllers\Admin\PresensiController::class, 'manual'])->name('manual');
+            Route::get('/get-belum-absen', [\App\Http\Controllers\Admin\PresensiController::class, 'getBelumAbsen'])->name('get_belum_absen');
+            Route::post('/simpan-manual', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanManual'])->name('simpan_manual');
+            Route::post('/simpan-manual-ajax', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanManualAjax'])->name('simpan_manual_ajax');
+            Route::delete('/hapus-manual/{id}', [\App\Http\Controllers\Admin\PresensiController::class, 'hapusManual'])->name('hapus_manual');
             Route::get('verifikasi/{id}/{status}', [\App\Http\Controllers\Admin\PresensiController::class, 'verifikasi'])->name('verifikasi');
             Route::get('get-siswa/{id_kelas}', [\App\Http\Controllers\Admin\PresensiController::class, 'getSiswaByKelas'])->name('get_siswa_by_kelas');
             

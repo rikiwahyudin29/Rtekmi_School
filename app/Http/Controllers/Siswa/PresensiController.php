@@ -93,12 +93,10 @@ class PresensiController extends Controller
         }
 
         // CEK HARI LIBUR & WEEKEND
-        $kode_hari = date('N', strtotime($today));
-        $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-        $libur = \App\Models\HariLibur::where('tanggal', $today)->first();
+        $libur = \App\Models\HariLibur::cekIsLibur($today);
 
-        if ($is_weekend || $libur) {
-            return redirect()->route('siswa.presensi.absen_harian')->with('error', 'Hari ini libur (' . ($libur ? $libur->keterangan : 'Akhir Pekan') . '). Presensi ditutup!');
+        if ($libur) {
+            return redirect()->route('siswa.presensi.absen_harian')->with('error', 'Hari ini libur (' . $libur . '). Presensi ditutup!');
         }
 
         $cek = Presensi::where('user_id', $id_siswa)

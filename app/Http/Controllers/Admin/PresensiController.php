@@ -92,14 +92,12 @@ class PresensiController extends Controller
         }
 
         // C. CEK HARI LIBUR & WEEKEND
-        $kode_hari = date('N', strtotime($tgl_hari_ini));
-        $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-        $libur = \App\Models\HariLibur::where('tanggal', $tgl_hari_ini)->first();
+        $libur = \App\Models\HariLibur::cekIsLibur($tgl_hari_ini);
 
-        if ($is_weekend || $libur) {
+        if ($libur) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Hari ini libur (' . ($libur ? $libur->keterangan : 'Akhir Pekan') . '). Presensi ditutup!'
+                'message' => 'Hari ini libur (' . $libur . '). Presensi ditutup!'
             ]);
         }
 
@@ -272,64 +270,78 @@ class PresensiController extends Controller
     // 4. PRESENSI MANUAL
     public function manual(Request $request)
     {
-        $tanggal = $request->get('tanggal') ?? date('Y-m-d');
-
-        $manualSiswa = Presensi::with('siswa.kelas')
-            ->where('role', 'siswa')
-            ->where('metode', 'Manual')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $manualGuru = Presensi::with('guru')
-            ->where('role', 'guru')
-            ->where('metode', 'Manual')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
-        $guruList = Guru::orderBy('nama_lengkap', 'asc')->get(['id', 'nama_lengkap', 'nik']);
-
         return Inertia::render('Admin/Presensi/Manual', [
-            'manualSiswa' => $manualSiswa,
-            'manualGuru' => $manualGuru,
-            'tanggal' => $tanggal,
-            'kelas' => $kelas,
-            'guruList' => $guruList
+            'kelas' => $kelas
         ]);
     }
 
-    public function simpanManual(Request $request)
+    public function getBelumAbsen(Request $request)
+    {
+        $role = $request->get('role') ?? 'siswa';
+        $tanggal = $request->get('tanggal') ?? date('Y-m-d');
+        $id_kelas = $request->get('id_kelas');
+
+        // Cek Libur
+        $libur = \App\Models\HariLibur::cekIsLibur($tanggal);
+        if ($libur) {
+            return response()->json([
+                'status' => 'libur',
+                'message' => 'Tanggal ini adalah hari libur: ' . $libur,
+                'data' => []
+            ]);
+        }
+
+        $sudah_absen = Presensi::where('role', $role)->where('tanggal', $tanggal)->pluck('user_id')->toArray();
+
+        if ($role === 'siswa') {
+            if (!$id_kelas) {
+                return response()->json(['status' => 'success', 'data' => []]);
+            }
+            $belum_absen = Siswa::with('kelas')->where('kelas_id', $id_kelas)->whereNotIn('id', $sudah_absen)->orderBy('nama_lengkap', 'asc')->get();
+        } else {
+            $belum_absen = Guru::whereNotIn('id', $sudah_absen)->orderBy('nama_lengkap', 'asc')->get();
+        }
+
+        return response()->json(['status' => 'success', 'data' => $belum_absen]);
+    }
+
+    public function simpanManualAjax(Request $request)
     {
         $role = $request->input('role') ?? 'siswa';
-        $user_id = $role == 'guru' ? $request->input('id_guru') : $request->input('id_siswa');
-        $status = $request->input('status');
-        $keterangan = $request->input('keterangan');
+        $user_id = $request->input('user_id');
+        $status = $request->input('status_kehadiran');
         $tanggal = $request->input('tanggal') ?? date('Y-m-d');
-        $jam_masuk = $request->input('jam_masuk') ?? date('H:i:s');
+        $jam_masuk = $request->input('jam_masuk');
 
         $cek = Presensi::where('user_id', $user_id)
             ->where('role', $role)
             ->where('tanggal', $tanggal)
-            ->count();
+            ->first();
 
-        if ($cek > 0) {
-            return redirect()->back()->with('error', 'Orang ini sudah memiliki presensi pada hari tersebut.');
+        if ($cek) {
+            return response()->json(['success' => false, 'message' => 'Orang ini sudah memiliki presensi pada hari tersebut.']);
         }
 
         $menit_terlambat = 0;
-        if ($status == 'Terlambat') {
+        if ($status == 'Hadir' || $status == 'Terlambat') {
+            if (!$jam_masuk) $jam_masuk = date('H:i:s');
+            
             // Ambil setting jam
             $jamSetting = JamSekolah::find(1);
             $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
             
             if ($jam_masuk > $mulai_terlambat) {
+                $status = 'Terlambat';
                 $mulai_time = strtotime($mulai_terlambat);
                 $sekarang_time = strtotime($jam_masuk);
                 $menit_terlambat = floor(($sekarang_time - $mulai_time) / 60);
                 if ($menit_terlambat < 0) $menit_terlambat = 0;
             } else {
-                $status = 'Hadir'; // jika diinput terlambat tapi jam masuknya belum terlambat
+                $status = 'Hadir';
             }
+        } else {
+            $jam_masuk = null;
         }
 
         Presensi::create([
@@ -341,10 +353,9 @@ class PresensiController extends Controller
             'menit_terlambat' => $menit_terlambat,
             'metode' => 'Manual',
             'status_verifikasi' => 'Disetujui',
-            'keterangan' => $keterangan,
         ]);
 
-        return redirect()->back()->with('success', 'Data presensi manual berhasil ditambahkan.');
+        return response()->json(['success' => true, 'message' => 'Data tersimpan.']);
     }
 
     public function hapusManual($id)
@@ -457,11 +468,17 @@ class PresensiController extends Controller
             $libur_map[$lbr->tanggal] = $lbr->keterangan;
         }
 
+        $tahun = date('Y', strtotime($bulan . '-01'));
+        $libur_nasional = \App\Models\HariLibur::getLiburNasionalMap($tahun);
+
         $info_libur = [];
         foreach ($dates as $tgl) {
             $kode_hari = date('N', strtotime($tgl));
             if (isset($libur_map[$tgl])) {
                 $info_libur[$tgl] = $libur_map[$tgl];
+            } elseif (isset($libur_nasional[$tgl])) {
+                $info_libur[$tgl] = $libur_nasional[$tgl];
+                $libur_array[] = $tgl; // tambahkan agar di $status_final jadi '-' 
             } elseif ($kode_hari == 6 || $kode_hari == 7) {
                 $info_libur[$tgl] = 'Libur Akhir Pekan';
             }
@@ -636,11 +653,17 @@ class PresensiController extends Controller
             $libur_map[$lbr->tanggal] = $lbr->keterangan;
         }
 
+        $tahun = date('Y', strtotime($bulan . '-01'));
+        $libur_nasional = \App\Models\HariLibur::getLiburNasionalMap($tahun);
+
         $info_libur = [];
         foreach ($dates as $tgl) {
             $kode_hari = date('N', strtotime($tgl));
             if (isset($libur_map[$tgl])) {
                 $info_libur[$tgl] = $libur_map[$tgl];
+            } elseif (isset($libur_nasional[$tgl])) {
+                $info_libur[$tgl] = $libur_nasional[$tgl];
+                $libur_array[] = $tgl;
             } elseif ($kode_hari == 6 || $kode_hari == 7) {
                 $info_libur[$tgl] = 'Libur Akhir Pekan';
             }
