@@ -70,7 +70,7 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <th rowspan="2" width="2%">No</th>
                 <th rowspan="2" width="15%" class="text-left">Nama Lengkap</th>
                 <th colspan="{{ count($dates) }}">Tanggal (19-18)</th>
-                <th colspan="6">Total</th>
+                <th colspan="7">Total</th>
             </tr>
             <tr>
                 @foreach($dates as $dateStr)
@@ -83,17 +83,18 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                 <th style="{{ $isLibur ? 'background-color: #fca5a5; color: #991b1b;' : '' }}">{{ substr($dateStr, 8, 2) }}</th>
                 @endforeach
                 <th width="2%">H</th>
-                <th width="2%">T</th>
                 <th width="2%">S</th>
                 <th width="2%">I</th>
                 <th width="2%">A</th>
-                <th width="8%">Waktu Terlambat</th>
+                <th width="2%">DL</th>
+                <th width="6%">Waktu Terlambat</th>
+                <th width="3%">%</th>
             </tr>
         </thead>
         <tbody>
             @foreach($siswa as $index => $s)
             @php
-                $totH = 0; $totT = 0; $totS = 0; $totI = 0; $totA = 0;
+                $totH = 0; $totS = 0; $totI = 0; $totA = 0; $totDL = 0;
             @endphp
             <tr>
                 <td>{{ $index + 1 }}</td>
@@ -106,32 +107,43 @@ $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas
                     if(isset($info_libur) && isset($info_libur[$dateStr])) {
                         $isLibur = true;
                     }
-                    
-                    if($isLibur && $val == '-') { 
-                        $color = 'background-color: #fecaca; color: #ef4444; font-weight: bold; font-size: 8px;';
-                        $val = 'L'; // Tanda libur
-                    } elseif($val == 'H') { $color = 'background-color: #22c55e; color: white; font-weight: bold;'; $totH++; }
-                    elseif($val == 'T') { $color = 'background-color: #f97316; color: white; font-weight: bold;'; $totT++; $totH++; }
-                    elseif($val == 'S') { $color = 'background-color: #3b82f6; color: white; font-weight: bold;'; $totS++; }
-                    elseif($val == 'I') { $color = 'background-color: #06b6d4; color: white; font-weight: bold;'; $totI++; }
-                    elseif($val == 'DL') { $color = 'background-color: #a855f7; color: white; font-weight: bold;'; $totI++; } // Dinas luar digabung izin
-                    elseif($val == 'A') { $color = 'background-color: #ef4444; color: white; font-weight: bold;'; $totA++; }
-                    elseif($val == '-') { $color = 'color: #ccc;'; }
                 @endphp
-                <td style="{{ $color }}">{{ $val }}</td>
+                
+                @if($isLibur && $val == '-')
+                    @if($index == 0)
+                        <td rowspan="{{ count($siswa) }}" style="background-color: #fecaca; color: #b91c1c; font-weight: bold; font-size: 8px; vertical-align: middle; text-align: center; padding: 0;">
+                            <div style="writing-mode: vertical-rl; transform: rotate(180deg); margin: 0 auto; white-space: nowrap; height: 100%; max-height: 200px; display: inline-block;">{{ strtoupper($info_libur[$dateStr]) }}</div>
+                        </td>
+                    @endif
+                @else
+                    @php
+                        if($val == 'H') { $color = 'background-color: #22c55e; color: white; font-weight: bold;'; $totH++; }
+                        elseif($val == 'T') { $color = 'background-color: #f97316; color: white; font-weight: bold;'; $totH++; }
+                        elseif($val == 'S') { $color = 'background-color: #3b82f6; color: white; font-weight: bold;'; $totS++; }
+                        elseif($val == 'I') { $color = 'background-color: #06b6d4; color: white; font-weight: bold;'; $totI++; }
+                        elseif($val == 'DL') { $color = 'background-color: #a855f7; color: white; font-weight: bold;'; $totDL++; }
+                        elseif($val == 'A') { $color = 'background-color: #ef4444; color: white; font-weight: bold;'; $totA++; }
+                        elseif($val == '-') { $color = 'color: #ccc;'; }
+                    @endphp
+                    <td style="{{ $color }}">{{ $val }}</td>
+                @endif
                 @endforeach
                 <td style="font-weight: bold; background-color: #22c55e; color: white;">{{ $totH }}</td>
-                <td style="font-weight: bold; background-color: #f97316; color: white;">{{ $totT }}</td>
                 <td style="font-weight: bold; background-color: #3b82f6; color: white;">{{ $totS }}</td>
                 <td style="font-weight: bold; background-color: #06b6d4; color: white;">{{ $totI }}</td>
                 <td style="font-weight: bold; background-color: #ef4444; color: white;">{{ $totA }}</td>
+                <td style="font-weight: bold; background-color: #a855f7; color: white;">{{ $totDL }}</td>
                 @php
                     $menit = $data_menit[$s->id] ?? 0;
                     $jam_t = floor($menit / 60);
                     $menit_t = $menit % 60;
                     $format = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
+                    
+                    $total_efektif = $totH + $totS + $totI + $totA + $totDL;
+                    $persen = $total_efektif > 0 ? round((($totH + $totDL) / $total_efektif) * 100) : 0;
                 @endphp
                 <td style="font-weight: bold; background-color: #f97316; color: white;">{{ $format }}</td>
+                <td style="font-weight: bold; color: {{ $persen < 50 ? '#ef4444' : '#1f2937' }};">{{ $persen }}%</td>
             </tr>
             @endforeach
         </tbody>

@@ -821,32 +821,36 @@ class PresensiController extends Controller
 
                 $is_libur_nasional = in_array($tgl, $libur_array);
 
-                if ($data_tgl) {
-                    $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
-
-                    // FIX: Retroactive calculation if previously saved incorrectly as Hadir
-                    if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
-                        if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
-                            $st_asli = 'Terlambat';
-                            $mulai_time = strtotime($mulai_terlambat);
-                            $sekarang_time = strtotime($data_tgl['jam_masuk']);
-                            $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
-                            if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
-                        }
-                    }
-
-                    $verif = $data_tgl['verif'];
-
-                    $status = 'A';
-                    if ($st_asli == 'Hadir') $status = 'H';
-                    if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$s->id] += $data_tgl['menit']; }
-                    if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
-                    if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
-
-                    $data_matrix[$s->id][$tgl] = $status;
+                if ($is_weekend || $is_libur_nasional || $is_future) {
+                    $data_matrix[$s->id][$tgl] = '-';
                 } else {
-                    $data_matrix[$s->id][$tgl] = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'A';
+                    if ($data_tgl) {
+                        $st_asli = $data_tgl['status'];
+                        if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
+
+                        // FIX: Retroactive calculation if previously saved incorrectly as Hadir
+                        if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
+                            if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
+                                $st_asli = 'Terlambat';
+                                $mulai_time = strtotime($mulai_terlambat);
+                                $sekarang_time = strtotime($data_tgl['jam_masuk']);
+                                $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
+                                if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
+                            }
+                        }
+
+                        $verif = $data_tgl['verif'];
+
+                        $status = 'A';
+                        if ($st_asli == 'Hadir') $status = 'H';
+                        if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$s->id] += $data_tgl['menit']; }
+                        if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
+                        if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
+
+                        $data_matrix[$s->id][$tgl] = $status;
+                    } else {
+                        $data_matrix[$s->id][$tgl] = 'A';
+                    }
                 }
             }
         }
@@ -980,33 +984,37 @@ class PresensiController extends Controller
 
                 $is_libur_nasional = in_array($tgl, $libur_array);
 
-                if ($data_tgl) {
-                    $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
-
-                    // FIX: Retroactive calculation if previously saved incorrectly as Hadir
-                    if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
-                        if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
-                            $st_asli = 'Terlambat';
-                            $mulai_time = strtotime($mulai_terlambat);
-                            $sekarang_time = strtotime($data_tgl['jam_masuk']);
-                            $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
-                            if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
-                        }
-                    }
-
-                    $verif = $data_tgl['verif'];
-
-                    $status = 'A';
-                    if ($st_asli == 'Hadir') $status = 'H';
-                    if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$g->id] += $data_tgl['menit']; }
-                    if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
-                    if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
-                    if ($st_asli == 'Dinas Luar' && $verif == 'Disetujui') $status = 'DL';
-
-                    $data_matrix[$g->id][$tgl] = $status;
+                if ($is_weekend || $is_libur_nasional || $is_future) {
+                    $data_matrix[$g->id][$tgl] = '-';
                 } else {
-                    $data_matrix[$g->id][$tgl] = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'A';
+                    if ($data_tgl) {
+                        $st_asli = $data_tgl['status'];
+                        if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
+
+                        // FIX: Retroactive calculation if previously saved incorrectly as Hadir
+                        if ($st_asli == 'Hadir' && !empty($data_tgl['jam_masuk'])) {
+                            if ($data_tgl['jam_masuk'] > $mulai_terlambat) {
+                                $st_asli = 'Terlambat';
+                                $mulai_time = strtotime($mulai_terlambat);
+                                $sekarang_time = strtotime($data_tgl['jam_masuk']);
+                                $data_tgl['menit'] = floor(($sekarang_time - $mulai_time) / 60);
+                                if ($data_tgl['menit'] < 0) $data_tgl['menit'] = 0;
+                            }
+                        }
+
+                        $verif = $data_tgl['verif'];
+
+                        $status = 'A';
+                        if ($st_asli == 'Hadir') $status = 'H';
+                        if ($st_asli == 'Terlambat') { $status = 'T'; $data_menit[$g->id] += $data_tgl['menit']; }
+                        if ($st_asli == 'Sakit' && $verif == 'Disetujui') $status = 'S';
+                        if ($st_asli == 'Izin' && $verif == 'Disetujui') $status = 'I';
+                        if ($st_asli == 'Dinas Luar' && $verif == 'Disetujui') $status = 'DL';
+
+                        $data_matrix[$g->id][$tgl] = $status;
+                    } else {
+                        $data_matrix[$g->id][$tgl] = 'A';
+                    }
                 }
             }
         }
