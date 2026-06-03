@@ -91,7 +91,19 @@ class PresensiController extends Controller
             ]);
         }
 
-        // C. CEK PRESENSI
+        // C. CEK HARI LIBUR & WEEKEND
+        $kode_hari = date('N', strtotime($tgl_hari_ini));
+        $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
+        $libur = \App\Models\HariLibur::where('tanggal', $tgl_hari_ini)->first();
+
+        if ($is_weekend || $libur) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hari ini libur (' . ($libur ? $libur->keterangan : 'Akhir Pekan') . '). Presensi ditutup!'
+            ]);
+        }
+
+        // D. CEK PRESENSI
         $cekAbsen = Presensi::where('user_id', $userID)
                             ->where('role', $role)
                             ->where('tanggal', $tgl_hari_ini)
@@ -166,29 +178,32 @@ class PresensiController extends Controller
 
         $izinSiswa = Presensi::with('siswa.kelas')
             ->where('role', 'siswa')
-            ->whereIn('status_kehadiran', ['Izin', 'Sakit'])
+            ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Alpha', 'Hadir', 'Terlambat'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         $izinGuru = Presensi::with('guru')
             ->where('role', 'guru')
-            ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Dinas Luar'])
+            ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Dinas Luar', 'Alpha', 'Hadir', 'Terlambat'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $guruList = Guru::orderBy('nama_lengkap', 'asc')->get(['id', 'nama_lengkap', 'nik']);
 
         return Inertia::render('Admin/Presensi/Izin', [
             'izinSiswa' => $izinSiswa,
             'izinGuru' => $izinGuru,
             'tanggal' => $tanggal,
-            'kelas' => $kelas
+            'kelas' => $kelas,
+            'guruList' => $guruList
         ]);
     }
 
     public function simpanIzin(Request $request)
     {
-        $id_siswa = $request->input('id_siswa');
+        $role = $request->input('role') ?? 'siswa';
+        $user_id = $role == 'guru' ? $request->input('id_guru') : $request->input('id_siswa');
         $status = $request->input('status');
         $keterangan = $request->input('keterangan');
         $tanggal = $request->input('tanggal') ?? date('Y-m-d');
@@ -200,34 +215,43 @@ class PresensiController extends Controller
             $file->move(public_path('uploads/surat_izin'), $namaFile);
         }
 
-        $cek = Presensi::where('user_id', $id_siswa)
-            ->where('role', 'siswa')
+        $cek = Presensi::where('user_id', $user_id)
+            ->where('role', $role)
             ->where('tanggal', $tanggal)
             ->count();
 
         if ($cek > 0) {
-            return redirect()->back()->with('error', 'Siswa ini sudah memiliki presensi pada hari tersebut.');
+            return redirect()->back()->with('error', 'Orang ini sudah memiliki presensi pada hari tersebut.');
+        }
+
+        $menit_terlambat = 0;
+        if ($status == 'Terlambat') {
+            // Bisa diisi default atau sesuai setting, sementara diisi 0 karena manual input bisa disesuaikan nanti
+            $menit_terlambat = 15; 
         }
 
         Presensi::create([
-            'user_id' => $id_siswa,
-            'role' => 'siswa',
+            'user_id' => $user_id,
+            'role' => $role,
             'tanggal' => $tanggal,
             'jam_masuk' => date('H:i:s'),
             'status_kehadiran' => $status,
+            'menit_terlambat' => $menit_terlambat,
             'metode' => 'Manual',
             'status_verifikasi' => 'Disetujui',
             'keterangan' => $keterangan,
             'bukti_izin' => $namaFile
         ]);
 
-        $siswa = Siswa::find($id_siswa);
-        if ($siswa && !empty($siswa->no_hp_siswa)) {
-            $pesan = "📢 *INFO PRESENSI*\n\nStatus siswa a.n *$siswa->nama_lengkap* hari ini tercatat: *$status*.\n📝 Ket: $keterangan\n\n_Terima kasih._";
-            $this->wa->kirim($siswa->no_hp_siswa, $pesan);
+        if ($role == 'siswa') {
+            $siswa = Siswa::find($user_id);
+            if ($siswa && !empty($siswa->no_hp_siswa)) {
+                $pesan = "📢 *INFO PRESENSI*\n\nStatus siswa a.n *$siswa->nama_lengkap* tanggal $tanggal tercatat: *$status*.\n📝 Ket: $keterangan\n\n_Terima kasih._";
+                $this->wa->kirim($siswa->no_hp_siswa, $pesan);
+            }
         }
 
-        return redirect()->back()->with('success', 'Data Izin/Sakit manual berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Data presensi manual berhasil ditambahkan.');
     }
 
     public function hapusIzin($id)
@@ -243,6 +267,93 @@ class PresensiController extends Controller
             $presensi->delete();
         }
         return redirect()->back()->with('success', 'Data presensi berhasil dihapus.');
+    }
+
+    // 4. PRESENSI MANUAL
+    public function manual(Request $request)
+    {
+        $tanggal = $request->get('tanggal') ?? date('Y-m-d');
+
+        $manualSiswa = Presensi::with('siswa.kelas')
+            ->where('role', 'siswa')
+            ->where('metode', 'Manual')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $manualGuru = Presensi::with('guru')
+            ->where('role', 'guru')
+            ->where('metode', 'Manual')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $guruList = Guru::orderBy('nama_lengkap', 'asc')->get(['id', 'nama_lengkap', 'nik']);
+
+        return Inertia::render('Admin/Presensi/Manual', [
+            'manualSiswa' => $manualSiswa,
+            'manualGuru' => $manualGuru,
+            'tanggal' => $tanggal,
+            'kelas' => $kelas,
+            'guruList' => $guruList
+        ]);
+    }
+
+    public function simpanManual(Request $request)
+    {
+        $role = $request->input('role') ?? 'siswa';
+        $user_id = $role == 'guru' ? $request->input('id_guru') : $request->input('id_siswa');
+        $status = $request->input('status');
+        $keterangan = $request->input('keterangan');
+        $tanggal = $request->input('tanggal') ?? date('Y-m-d');
+        $jam_masuk = $request->input('jam_masuk') ?? date('H:i:s');
+
+        $cek = Presensi::where('user_id', $user_id)
+            ->where('role', $role)
+            ->where('tanggal', $tanggal)
+            ->count();
+
+        if ($cek > 0) {
+            return redirect()->back()->with('error', 'Orang ini sudah memiliki presensi pada hari tersebut.');
+        }
+
+        $menit_terlambat = 0;
+        if ($status == 'Terlambat') {
+            // Ambil setting jam
+            $jamSetting = JamSekolah::find(1);
+            $mulai_terlambat = $jamSetting->jam_masuk_mulai_terlambat ?? '07:00:00';
+            
+            if ($jam_masuk > $mulai_terlambat) {
+                $mulai_time = strtotime($mulai_terlambat);
+                $sekarang_time = strtotime($jam_masuk);
+                $menit_terlambat = floor(($sekarang_time - $mulai_time) / 60);
+                if ($menit_terlambat < 0) $menit_terlambat = 0;
+            } else {
+                $status = 'Hadir'; // jika diinput terlambat tapi jam masuknya belum terlambat
+            }
+        }
+
+        Presensi::create([
+            'user_id' => $user_id,
+            'role' => $role,
+            'tanggal' => $tanggal,
+            'jam_masuk' => $jam_masuk,
+            'status_kehadiran' => $status,
+            'menit_terlambat' => $menit_terlambat,
+            'metode' => 'Manual',
+            'status_verifikasi' => 'Disetujui',
+            'keterangan' => $keterangan,
+        ]);
+
+        return redirect()->back()->with('success', 'Data presensi manual berhasil ditambahkan.');
+    }
+
+    public function hapusManual($id)
+    {
+        $presensi = Presensi::find($id);
+        if ($presensi) {
+            $presensi->delete();
+        }
+        return redirect()->back()->with('success', 'Data presensi manual berhasil dihapus.');
     }
 
     public function verifikasi($id, $status)
@@ -339,9 +450,21 @@ class PresensiController extends Controller
         }
 
         $libur_array = [];
+        $libur_map = [];
         $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
         foreach ($liburs as $lbr) {
             $libur_array[] = $lbr->tanggal;
+            $libur_map[$lbr->tanggal] = $lbr->keterangan;
+        }
+
+        $info_libur = [];
+        foreach ($dates as $tgl) {
+            $kode_hari = date('N', strtotime($tgl));
+            if (isset($libur_map[$tgl])) {
+                $info_libur[$tgl] = $libur_map[$tgl];
+            } elseif ($kode_hari == 6 || $kode_hari == 7) {
+                $info_libur[$tgl] = 'Libur Akhir Pekan';
+            }
         }
 
         $data_rekap = [];
@@ -365,17 +488,21 @@ class PresensiController extends Controller
 
                 $data_tgl = $absen_map[$s->id][$tgl] ?? null;
 
-                if ($data_tgl) {
-                    $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
-                    $verif = $data_tgl['verif'];
-                    // Jika Izin/Sakit/Dinas Luar ditolak maka Alfa
-                    $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
-                    if ($status_final == 'Terlambat') {
-                        $row['total_menit_terlambat'] += $data_tgl['menit'];
-                    }
+                if ($is_weekend || $is_libur_nasional || $is_future) {
+                    $status_final = '-';
                 } else {
-                    $status_final = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'Alpha';
+                    if ($data_tgl) {
+                        $st_asli = $data_tgl['status'];
+                        if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir';
+                        $verif = $data_tgl['verif'];
+                        // Jika Izin/Sakit/Dinas Luar ditolak maka Alfa
+                        $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                        if ($status_final == 'Terlambat') {
+                            $row['total_menit_terlambat'] += $data_tgl['menit'];
+                        }
+                    } else {
+                        $status_final = 'Alpha';
+                    }
                 }
 
                 $row['harian'][$tgl] = $status_final;
@@ -406,7 +533,7 @@ class PresensiController extends Controller
         }
 
         return Inertia::render('Admin/Presensi/Rekap', [
-            'kelas' => $kelas, 'bulan' => $bulan, 'filter_kelas' => $id_kelas, 'filter_role' => $role, 'data_rekap' => $data_rekap, 'dates' => $dates
+            'kelas' => $kelas, 'bulan' => $bulan, 'filter_kelas' => $id_kelas, 'filter_role' => $role, 'data_rekap' => $data_rekap, 'dates' => $dates, 'info_libur' => $info_libur
         ]);
     }
 
@@ -427,7 +554,8 @@ class PresensiController extends Controller
         $kode_hari = date('N', strtotime($tanggal));
         $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
         $is_future = (strtotime($tanggal) > strtotime(date('Y-m-d')));
-        $is_libur = $is_weekend; // Tambahkan cek libur nasional jika perlu
+        $libur = \App\Models\HariLibur::where('tanggal', $tanggal)->first();
+        $is_libur = $is_weekend || $libur;
 
         $data_bermasalah = [];
 
@@ -500,6 +628,24 @@ class PresensiController extends Controller
 
         $presensi = Presensi::where('role', 'siswa')->whereBetween('tanggal', [$start_date, $end_date])->get();
 
+        $libur_array = [];
+        $libur_map = [];
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = $lbr->tanggal;
+            $libur_map[$lbr->tanggal] = $lbr->keterangan;
+        }
+
+        $info_libur = [];
+        foreach ($dates as $tgl) {
+            $kode_hari = date('N', strtotime($tgl));
+            if (isset($libur_map[$tgl])) {
+                $info_libur[$tgl] = $libur_map[$tgl];
+            } elseif ($kode_hari == 6 || $kode_hari == 7) {
+                $info_libur[$tgl] = 'Libur Akhir Pekan';
+            }
+        }
+
         $absen_map = [];
         foreach ($presensi as $p) {
             $absen_map[$p->user_id][$p->tanggal] = ['status' => $p->status_kehadiran, 'verif' => $p->status_verifikasi, 'menit' => $p->menit_terlambat ?? 0];
@@ -514,20 +660,25 @@ class PresensiController extends Controller
             foreach ($dates as $tgl) {
                 $kode_hari = date('N', strtotime($tgl));
                 $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
+                $is_libur_nasional = in_array($tgl, $libur_array);
                 $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
                 $data_tgl = $absen_map[$s->id][$tgl] ?? null;
 
-                if ($data_tgl) {
-                    $st_asli = $data_tgl['status'];
-                    if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
-                    $verif = $data_tgl['verif'];
-                    $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
-                    if ($status_final == 'Terlambat') {
-                        $row['total_menit'] += $data_tgl['menit'];
-                    }
+                if ($is_weekend || $is_libur_nasional || $is_future) {
+                    $status_final = '-';
                 } else {
-                    $status_final = ($is_weekend || $is_future) ? '-' : 'Alpha';
+                    if ($data_tgl) {
+                        $st_asli = $data_tgl['status'];
+                        if (empty($st_asli) || $st_asli == 'Tepat Waktu') $st_asli = 'Hadir'; // FIX BUG CI4
+                        $verif = $data_tgl['verif'];
+                        $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                        if ($status_final == 'Terlambat') {
+                            $row['total_menit'] += $data_tgl['menit'];
+                        }
+                    } else {
+                        $status_final = 'Alpha';
+                    }
                 }
 
                 if ($status_final == 'Hadir') $row['total']['H']++;
@@ -545,7 +696,7 @@ class PresensiController extends Controller
         }
 
         return view('presensi.cetak_rekap', [
-            'tipe' => 'siswa', 'data_rekap' => $data_rekap, 'kelas' => $kelas, 'bulan' => $bulan, 'sekolah' => Sekolah::find(1)
+            'tipe' => 'siswa', 'data_rekap' => $data_rekap, 'kelas' => $kelas, 'bulan' => $bulan, 'sekolah' => Sekolah::find(1), 'dates' => $dates, 'info_libur' => $info_libur
         ]);
     }
 

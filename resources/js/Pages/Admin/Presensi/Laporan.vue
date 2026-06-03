@@ -130,6 +130,7 @@ const cetakHarian = () => {
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             <span v-if="item.metode === 'QR'" class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1"><i class="fas fa-qrcode"></i> QR</span>
                                             <span v-else-if="item.metode === 'NFC'" class="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1"><i class="fas fa-wifi"></i> NFC</span>
+                                            <span v-else-if="item.metode === 'Location' || item.metode === 'Lokasi' || item.metode === 'Geo'" class="text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1"><i class="fas fa-map-marker-alt"></i> Akun Sendiri (Lokasi)</span>
                                             <span v-else class="text-gray-600 dark:text-gray-400 font-bold flex items-center gap-1"><i class="fas fa-keyboard"></i> Manual</span>
                                         </td>
                                     </tr>

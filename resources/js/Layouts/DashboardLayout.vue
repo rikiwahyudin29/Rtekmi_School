@@ -208,6 +208,7 @@ const menuItems = computed(() => {
                 { name: 'Scanner (QR/RFID)', icon: 'fas fa-qrcode', route: 'admin.presensi.scanner', active: route().current('admin.presensi.scanner') },
                 { name: 'Laporan Kehadiran', icon: 'fas fa-clipboard-user', route: 'admin.presensi.laporan', active: route().current('admin.presensi.laporan') },
                 { name: 'Data Izin/Sakit', icon: 'fas fa-envelope-open-text', route: 'admin.presensi.izin', active: route().current('admin.presensi.izin') },
+                { name: 'Input Manual', icon: 'fas fa-keyboard', route: 'admin.presensi.manual', active: route().current('admin.presensi.manual') },
                 { name: 'Rekap Kehadiran', icon: 'fas fa-calendar-check', route: 'admin.presensi.rekap', active: route().current('admin.presensi.rekap') },
                 { name: 'Setting Jam & QR', icon: 'fas fa-user-clock', route: 'admin.presensi.setting_jam', active: route().current('admin.presensi.setting_jam') },
                 { name: 'Hari Libur', icon: 'fas fa-calendar-times', route: 'admin.presensi.hari_libur.index', active: route().current('admin.presensi.hari_libur.*') },

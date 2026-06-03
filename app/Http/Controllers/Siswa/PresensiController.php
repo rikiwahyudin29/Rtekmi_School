@@ -92,6 +92,15 @@ class PresensiController extends Controller
             return redirect()->route('siswa.presensi.absen_harian')->with('error', "Gagal! Kamu di luar radius sekolah.");
         }
 
+        // CEK HARI LIBUR & WEEKEND
+        $kode_hari = date('N', strtotime($today));
+        $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
+        $libur = \App\Models\HariLibur::where('tanggal', $today)->first();
+
+        if ($is_weekend || $libur) {
+            return redirect()->route('siswa.presensi.absen_harian')->with('error', 'Hari ini libur (' . ($libur ? $libur->keterangan : 'Akhir Pekan') . '). Presensi ditutup!');
+        }
+
         $cek = Presensi::where('user_id', $id_siswa)
             ->where('role', 'siswa')
             ->where('tanggal', $today)
@@ -194,7 +203,10 @@ class PresensiController extends Controller
         }
 
         $libur_array = [];
-        // TODO: Handle hari libur if table exists
+        $liburs = \App\Models\HariLibur::where('tanggal', 'like', "$bulan%")->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = (int) date('d', strtotime($lbr->tanggal));
+        }
 
         $map = [];
         $total = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0];
@@ -210,12 +222,16 @@ class PresensiController extends Controller
 
             $data_tgl = $absen_map[$d] ?? null;
 
-            if ($data_tgl) {
-                $st_asli = $data_tgl['status'];
-                $verif = $data_tgl['verif'];
-                $st_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+            if ($is_weekend || $is_libur_nasional || $is_future) {
+                $st_final = '-';
             } else {
-                $st_final = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'Alpha';
+                if ($data_tgl) {
+                    $st_asli = $data_tgl['status'];
+                    $verif = $data_tgl['verif'];
+                    $st_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                } else {
+                    $st_final = 'Alpha';
+                }
             }
 
             $map[$d] = $st_final;
@@ -258,6 +274,10 @@ class PresensiController extends Controller
         }
 
         $libur_array = [];
+        $liburs = \App\Models\HariLibur::where('tanggal', 'like', "$bulan%")->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = (int) date('d', strtotime($lbr->tanggal));
+        }
 
         $map = [];
         $total = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0];
@@ -273,12 +293,16 @@ class PresensiController extends Controller
 
             $data_tgl = $absen_map[$d] ?? null;
 
-            if ($data_tgl) {
-                $st_asli = $data_tgl['status'];
-                $verif = $data_tgl['verif'];
-                $st_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+            if ($is_weekend || $is_libur_nasional || $is_future) {
+                $st_final = '-';
             } else {
-                $st_final = ($is_weekend || $is_libur_nasional || $is_future) ? '-' : 'Alpha';
+                if ($data_tgl) {
+                    $st_asli = $data_tgl['status'];
+                    $verif = $data_tgl['verif'];
+                    $st_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                } else {
+                    $st_final = 'Alpha';
+                }
             }
 
             $map[$d] = $st_final;

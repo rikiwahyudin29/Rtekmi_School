@@ -84,6 +84,15 @@ class PresensiController extends Controller
             return redirect()->route('guru.presensi.absen_harian')->with('error', "Gagal! Anda di luar radius ($jarak_meter meter).");
         }
 
+        // CEK HARI LIBUR & WEEKEND
+        $kode_hari = date('N', strtotime($today));
+        $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
+        $libur = \App\Models\HariLibur::where('tanggal', $today)->first();
+
+        if ($is_weekend || $libur) {
+            return redirect()->route('guru.presensi.absen_harian')->with('error', 'Hari ini libur (' . ($libur ? $libur->keterangan : 'Akhir Pekan') . '). Presensi ditutup!');
+        }
+
         $cek = Presensi::where('user_id', $id_guru)
             ->where('role', 'guru')
             ->where('tanggal', $today)
@@ -198,6 +207,10 @@ class PresensiController extends Controller
         }
 
         $libur_array = [];
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = $lbr->tanggal;
+        }
 
         $map = [];
         $total = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0];
@@ -212,17 +225,17 @@ class PresensiController extends Controller
 
             $data_tgl = $absen_db_map[$tgl] ?? null;
 
-            if ($data_tgl) {
-                $st_asli = $data_tgl['status'];
-                $verif = $data_tgl['verif'];
-                $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
-                
-                if ($status_final == 'Terlambat') {
-                    $total_menit += $data_tgl['menit'];
-                }
+            if ($is_weekend || $is_libur_nasional || $is_future) {
+                $status_final = '-';
             } else {
-                if ($is_weekend || $is_libur_nasional || $is_future) {
-                    $status_final = '-';
+                if ($data_tgl) {
+                    $st_asli = $data_tgl['status'];
+                    $verif = $data_tgl['verif'];
+                    $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    
+                    if ($status_final == 'Terlambat') {
+                        $total_menit += $data_tgl['menit'];
+                    }
                 } else {
                     $status_final = 'Alpha';
                 }
@@ -286,6 +299,10 @@ class PresensiController extends Controller
         }
 
         $libur_array = [];
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
+        foreach ($liburs as $lbr) {
+            $libur_array[] = $lbr->tanggal;
+        }
 
         $map = [];
         $total = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0];
@@ -300,17 +317,17 @@ class PresensiController extends Controller
 
             $data_tgl = $absen_db_map[$tgl] ?? null;
 
-            if ($data_tgl) {
-                $st_asli = $data_tgl['status'];
-                $verif = $data_tgl['verif'];
-                $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
-                
-                if ($status_final == 'Terlambat') {
-                    $total_menit += $data_tgl['menit'];
-                }
+            if ($is_weekend || $is_libur_nasional || $is_future) {
+                $status_final = '-';
             } else {
-                if ($is_weekend || $is_libur_nasional || $is_future) {
-                    $status_final = '-';
+                if ($data_tgl) {
+                    $st_asli = $data_tgl['status'];
+                    $verif = $data_tgl['verif'];
+                    $status_final = (in_array($st_asli, ['Izin', 'Sakit', 'Dinas Luar']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    
+                    if ($status_final == 'Terlambat') {
+                        $total_menit += $data_tgl['menit'];
+                    }
                 } else {
                     $status_final = 'Alpha';
                 }

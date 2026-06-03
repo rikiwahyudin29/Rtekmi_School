@@ -7,8 +7,10 @@ const props = defineProps({
     bulan: String,
     filter_kelas: [String, Number],
     filter_role: String,
+    filter_role: String,
     data_rekap: Array,
-    dates: Array
+    dates: Array,
+    info_libur: Object
 });
 
 const filterForm = useForm({
@@ -147,24 +149,41 @@ const cetakMatrix = () => {
                                         <td class="px-4 py-2 border-r border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium truncate max-w-[200px]" :title="item.nama">{{ item.nama }}</td>
                                         
                                         <!-- Tanggal Loop -->
-                                        <td v-for="dateStr in dates" :key="dateStr" class="px-1 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-semibold text-xs"
+                                        <!-- Tanggal Loop -->
+                                        <template v-for="dateStr in dates" :key="dateStr">
+                                        <td v-if="!info_libur || !info_libur[dateStr] || index === 0"
+                                            :rowspan="info_libur && info_libur[dateStr] ? (data_rekap.length || 1) : 1"
+                                            class="px-1 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-semibold text-xs relative"
                                             :class="{
-                                                'bg-green-500 text-white': item.harian[dateStr] == 'Hadir',
-                                                'bg-orange-400 text-white': item.harian[dateStr] == 'Terlambat',
-                                                'bg-blue-500 text-white': item.harian[dateStr] == 'Sakit',
-                                                'bg-cyan-500 text-white': item.harian[dateStr] == 'Izin',
-                                                'bg-red-500 text-white': item.harian[dateStr] == 'Alpha',
-                                                'bg-purple-500 text-white': item.harian[dateStr] == 'Dinas Luar',
-                                                'text-gray-300 dark:text-gray-600': !['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha', 'Dinas Luar'].includes(item.harian[dateStr])
+                                                'bg-red-200 dark:bg-red-900/30': info_libur && info_libur[dateStr],
+                                                'bg-green-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Hadir',
+                                                'bg-orange-400 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Terlambat',
+                                                'bg-blue-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Sakit',
+                                                'bg-cyan-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Izin',
+                                                'bg-red-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Alpha',
+                                                'bg-purple-500 text-white': !info_libur?.[dateStr] && item.harian[dateStr] == 'Dinas Luar',
+                                                'text-gray-300 dark:text-gray-600': !info_libur?.[dateStr] && !['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha', 'Dinas Luar'].includes(item.harian[dateStr])
                                             }">
-                                            <span v-if="item.harian[dateStr] == 'Hadir'">H</span>
-                                            <span v-else-if="item.harian[dateStr] == 'Terlambat'">T</span>
-                                            <span v-else-if="item.harian[dateStr] == 'Sakit'">S</span>
-                                            <span v-else-if="item.harian[dateStr] == 'Izin'">I</span>
-                                            <span v-else-if="item.harian[dateStr] == 'Alpha'">A</span>
-                                            <span v-else-if="item.harian[dateStr] == 'Dinas Luar'">DL</span>
-                                            <span v-else>-</span>
+                                            
+                                            <!-- Jika Libur (render sekali berkat rowspan) -->
+                                            <div v-if="info_libur && info_libur[dateStr]" class="absolute inset-0 flex items-center justify-center overflow-hidden">
+                                                <div style="writing-mode: vertical-rl; transform: rotate(180deg);" class="text-red-700 dark:text-red-400 font-extrabold text-[10px] whitespace-nowrap tracking-widest uppercase">
+                                                    {{ info_libur[dateStr] }}
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Jika Tidak Libur -->
+                                            <template v-else>
+                                                <span v-if="item.harian[dateStr] == 'Hadir'">H</span>
+                                                <span v-else-if="item.harian[dateStr] == 'Terlambat'">T</span>
+                                                <span v-else-if="item.harian[dateStr] == 'Sakit'">S</span>
+                                                <span v-else-if="item.harian[dateStr] == 'Izin'">I</span>
+                                                <span v-else-if="item.harian[dateStr] == 'Alpha'">A</span>
+                                                <span v-else-if="item.harian[dateStr] == 'Dinas Luar'">DL</span>
+                                                <span v-else>-</span>
+                                            </template>
                                         </td>
+                                        </template>
                                         
                                         <!-- Total -->
                                         <td class="px-2 py-2 text-center font-bold text-white bg-green-500 border-r border-white dark:border-gray-700">{{ item.total.H }}</td>
