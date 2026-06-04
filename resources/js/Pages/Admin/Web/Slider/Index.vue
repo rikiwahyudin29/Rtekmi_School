@@ -16,7 +16,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('web.slider.store'), {
+    form.post(route('admin.web.slider.store'), {
         preserveScroll: true,
         onSuccess: () => {
             isModalOpen.value = false;
@@ -28,7 +28,7 @@ const submit = () => {
 
 const deleteData = (id) => {
     if (confirm('Yakin ingin menghapus slider ini?')) {
-        router.delete(route('web.slider.destroy', id), {
+        router.delete(route('admin.web.slider.destroy', id), {
             preserveScroll: true,
         });
     }

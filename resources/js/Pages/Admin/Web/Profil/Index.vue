@@ -21,7 +21,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('web.profil.update'), {
+    form.post(route('admin.web.profil.update'), {
         preserveScroll: true,
         onSuccess: () => {
             alert('Profil berhasil diperbarui!');

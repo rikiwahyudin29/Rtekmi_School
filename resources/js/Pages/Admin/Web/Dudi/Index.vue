@@ -16,7 +16,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('web.dudi.store'), {
+    form.post(route('admin.web.dudi.store'), {
         preserveScroll: true,
         onSuccess: () => {
             isModalOpen.value = false;
@@ -28,7 +28,7 @@ const submit = () => {
 
 const deleteData = (id) => {
     if (confirm('Yakin ingin menghapus data mitra ini?')) {
-        router.delete(route('web.dudi.destroy', id), {
+        router.delete(route('admin.web.dudi.destroy', id), {
             preserveScroll: true,
         });
     }
