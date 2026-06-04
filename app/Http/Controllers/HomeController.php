@@ -40,12 +40,17 @@ class HomeController extends Controller
             'jurusan'   => Schema::hasTable('tbl_jurusan') ? DB::table('tbl_jurusan')->count() : 5 
         ];
 
+        $jurusanList = Schema::hasTable('tbl_jurusan')
+            ? DB::table('tbl_jurusan')->get()
+            : [];
+
         return Inertia::render('Welcome', [
             'web'     => $dataWeb,
             'sliders' => $sliders,
             'berita'  => $berita,
             'galeri'  => $galeri,
-            'stats'   => $stats
+            'stats'   => $stats,
+            'jurusanList' => $jurusanList
         ]);
     }
 
