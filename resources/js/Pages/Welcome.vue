@@ -8,8 +8,10 @@ const props = defineProps({
     sliders: Array,
     berita: Array,
     galeri: Array,
+    galeri: Array,
     stats: Object,
-    jurusanList: Array // New Prop for SMK Majors
+    jurusanList: Array,
+    dudiList: Array
 });
 
 // Setup Logo
@@ -140,16 +142,23 @@ onUnmounted(() => {
     if (carouselInterval) clearInterval(carouselInterval);
 });
 
-const mitraIndustri = [
-    { nama: 'PT Astra Honda Motor', icon: 'fa-cogs', color: 'text-red-500' },
-    { nama: 'Yamaha Indonesia', icon: 'fa-motorcycle', color: 'text-blue-600' },
-    { nama: 'Telkom Indonesia', icon: 'fa-satellite-dish', color: 'text-red-600' },
-    { nama: 'PLN Persero', icon: 'fa-bolt', color: 'text-yellow-500' },
-    { nama: 'Bank BNI', icon: 'fa-building-columns', color: 'text-orange-500' },
-    { nama: 'Epson Indonesia', icon: 'fa-print', color: 'text-blue-500' },
-    { nama: 'United Tractors', icon: 'fa-truck-monster', color: 'text-yellow-600' },
-    { nama: 'PT Panasonic Gobel', icon: 'fa-tv', color: 'text-blue-700' },
-];
+const mitraIndustri = computed(() => {
+    if (props.dudiList && props.dudiList.length > 0) {
+        return props.dudiList.map((m) => ({
+            nama: m.nama_dudi,
+            icon: m.logo ? `/uploads/dudi/${m.logo}` : null,
+            faIcon: 'fa-building',
+            color: 'text-emerald-500'
+        }));
+    }
+    // Fallback Dummy Data
+    return [
+        { nama: 'PT Astra Honda Motor', icon: null, faIcon: 'fa-cogs', color: 'text-red-500' },
+        { nama: 'Yamaha Indonesia', icon: null, faIcon: 'fa-motorcycle', color: 'text-blue-600' },
+        { nama: 'Telkom Indonesia', icon: null, faIcon: 'fa-satellite-dish', color: 'text-red-600' },
+        { nama: 'PLN Persero', icon: null, faIcon: 'fa-bolt', color: 'text-yellow-500' },
+    ];
+});
 
 const fallbackJurusan = [
     { nama_jurusan: 'Teknik Kendaraan Ringan', ikon: 'fa-car-side', singkatan: 'TKR' },
@@ -403,9 +412,13 @@ input[type="number"] { -moz-appearance: textfield; }
                     
                     <!-- Spot Foto PNG -->
                     <div class="absolute bottom-0 right-0 w-[120%] max-w-[600px] transform translate-x-12">
-                        <!-- Nanti user tinggal ganti file gambar-siswa.png di public/images -->
-                        <!-- Fallback ke placeholder online transparan jika local belum ada -->
-                        <img src="https://raw.githubusercontent.com/Rikiwahyudin29/assets/main/siswa-smk-praktek.png" 
+                        <!-- Gunakan foto dari database jika ada -->
+                        <img v-if="web.spot_hero_png" 
+                             :src="`/uploads/profil/${web.spot_hero_png}`" 
+                             alt="Siswa Praktek" 
+                             class="w-full h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] z-20 relative">
+                        <img v-else 
+                             src="https://raw.githubusercontent.com/Rikiwahyudin29/assets/main/siswa-smk-praktek.png" 
                              onerror="this.src='https://www.pngmart.com/files/22/Student-PNG-Photos.png'" 
                              alt="Siswa Praktek" 
                              class="w-full h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] z-20 relative">
@@ -466,12 +479,14 @@ input[type="number"] { -moz-appearance: textfield; }
             <div class="flex overflow-hidden group">
                 <div class="animate-marquee flex gap-12 items-center px-6">
                     <div v-for="(mitra, i) in mitraIndustri" :key="'A'+i" class="flex items-center gap-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
-                        <i class="fas text-4xl" :class="[mitra.icon, mitra.color]"></i>
+                        <img v-if="mitra.icon" :src="mitra.icon" class="h-10 object-contain">
+                        <i v-else class="fas text-4xl" :class="[mitra.faIcon, mitra.color]"></i>
                         <span class="text-xl font-bold text-slate-400">{{ mitra.nama }}</span>
                     </div>
                     <!-- Duplicate for infinite effect -->
                     <div v-for="(mitra, i) in mitraIndustri" :key="'B'+i" class="flex items-center gap-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
-                        <i class="fas text-4xl" :class="[mitra.icon, mitra.color]"></i>
+                        <img v-if="mitra.icon" :src="mitra.icon" class="h-10 object-contain">
+                        <i v-else class="fas text-4xl" :class="[mitra.faIcon, mitra.color]"></i>
                         <span class="text-xl font-bold text-slate-400">{{ mitra.nama }}</span>
                     </div>
                 </div>
@@ -484,7 +499,12 @@ input[type="number"] { -moz-appearance: textfield; }
             
             <!-- Transparent PNG Spot (Teacher/Admin) -->
             <div class="absolute bottom-0 left-0 w-[400px] h-[500px] hidden lg:block opacity-70 transform -translate-x-10">
-                <img src="https://raw.githubusercontent.com/Rikiwahyudin29/assets/main/guru-smk-png.png" 
+                <img v-if="web.spot_ppdb_png" 
+                     :src="`/uploads/profil/${web.spot_ppdb_png}`" 
+                     alt="Guru Admin PPDB" 
+                     class="w-full h-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] relative z-10">
+                <img v-else 
+                     src="https://raw.githubusercontent.com/Rikiwahyudin29/assets/main/guru-smk-png.png" 
                      onerror="this.src='https://www.pngmart.com/files/7/Teacher-PNG-Transparent.png'" 
                      alt="Guru Admin PPDB" 
                      class="w-full h-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] relative z-10">

@@ -231,16 +231,15 @@ const menuItems = computed(() => {
     if (isSuperAdmin || isHumas) {
         menus.push(
             { isHeader: true, name: 'Wakasek Humas & Hubin' },
-            { name: 'Website & Publikasi', icon: 'fas fa-globe', route: '#', active: false, children: [
-                { name: 'Slider Banner', icon: 'fas fa-images', route: '#', active: false },
-                { name: 'Berita & Artikel', icon: 'fas fa-newspaper', route: '#', active: false },
-                { name: 'Halaman Statis', icon: 'fas fa-file-alt', route: '#', active: false },
-                { name: 'Galeri Foto', icon: 'fas fa-camera-retro', route: '#', active: false },
-                { name: 'Konfigurasi Web', icon: 'fas fa-cogs', route: '#', active: false },
+            { name: 'Website & Publikasi', icon: 'fas fa-globe', route: '#', active: route().current('admin.web.*'), children: [
+                { name: 'Konfigurasi Web', icon: 'fas fa-cogs', route: 'admin.web.profil.index', active: route().current('admin.web.profil.*') },
+                { name: 'Slider Banner', icon: 'fas fa-images', route: 'admin.web.slider.index', active: route().current('admin.web.slider.*') },
+                { name: 'Berita & Artikel', icon: 'fas fa-newspaper', route: 'admin.web.berita.index', active: route().current('admin.web.berita.*') },
+                { name: 'Galeri Foto', icon: 'fas fa-camera-retro', route: 'admin.web.galeri.index', active: route().current('admin.web.galeri.*') },
             ]},
-            { name: 'Manajemen PKL', icon: 'fas fa-briefcase', route: '#', active: false, children: [
+            { name: 'Manajemen PKL & BKK', icon: 'fas fa-briefcase', route: '#', active: route().current('admin.pkl.*') || route().current('admin.web.dudi.*'), children: [
                 { name: 'Dashboard PKL', icon: 'fas fa-chart-pie', route: '#', active: false },
-                { name: 'Master DU/DI', icon: 'fas fa-building', route: '#', active: false },
+                { name: 'Master DU/DI & Mitra', icon: 'fas fa-building', route: 'admin.web.dudi.index', active: route().current('admin.web.dudi.*') },
                 { name: 'Mapping Siswa & Guru', icon: 'fas fa-project-diagram', route: '#', active: false },
             ]},
             { name: 'Surat & E-Office', icon: 'fas fa-envelope-open-text', route: '#', active: route().current('admin.surat.*'), children: [

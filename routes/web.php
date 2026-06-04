@@ -331,6 +331,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('notif-tagihan', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'index'])->name('notif.index');
             Route::post('notif-tagihan/kirim', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'kirimMassal'])->name('notif.kirim');
         });
+
+        // ==========================================
+        // WAKASEK HUMAS & HUBIN (WEBSITE & PUBLIKASI)
+        // ==========================================
+        Route::prefix('web')->name('web.')->group(function () {
+            // Profil Web (Konfigurasi)
+            Route::get('/profil', [\App\Http\Controllers\Admin\Web\WebProfilController::class, 'index'])->name('profil.index');
+            Route::post('/profil', [\App\Http\Controllers\Admin\Web\WebProfilController::class, 'update'])->name('profil.update');
+            
+            // Slider
+            Route::get('/slider', [\App\Http\Controllers\Admin\Web\SliderController::class, 'index'])->name('slider.index');
+            Route::post('/slider', [\App\Http\Controllers\Admin\Web\SliderController::class, 'store'])->name('slider.store');
+            Route::delete('/slider/{id}', [\App\Http\Controllers\Admin\Web\SliderController::class, 'destroy'])->name('slider.destroy');
+
+            // Dudi / Mitra
+            Route::get('/dudi', [\App\Http\Controllers\Admin\Web\DudiController::class, 'index'])->name('dudi.index');
+            Route::post('/dudi', [\App\Http\Controllers\Admin\Web\DudiController::class, 'store'])->name('dudi.store');
+            Route::delete('/dudi/{id}', [\App\Http\Controllers\Admin\Web\DudiController::class, 'destroy'])->name('dudi.destroy');
+
+            // Placeholder for Berita & Galeri (Controllers will be created if requested)
+            Route::get('/berita', function() { return inertia('Admin/Web/Berita/Index'); })->name('berita.index');
+            Route::get('/galeri', function() { return inertia('Admin/Web/Galeri/Index'); })->name('galeri.index');
+        });
+
     });
 
     // App Setting and Role Group
