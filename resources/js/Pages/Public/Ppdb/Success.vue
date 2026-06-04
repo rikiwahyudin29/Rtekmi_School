@@ -1,6 +1,5 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import html2pdf from 'html2pdf.js';
 
 const props = defineProps({
     pendaftar: Object,
@@ -8,16 +7,22 @@ const props = defineProps({
 });
 
 const downloadPDF = () => {
-    const element = document.getElementById('bukti-pendaftaran');
-    const opt = {
-        margin: 0.5,
-        filename: `Bukti_Pendaftaran_${props.pendaftar.no_pendaftaran}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
+    // Dynamically load html2pdf.js to avoid Vite build errors
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = () => {
+        const element = document.getElementById('bukti-pendaftaran');
+        const opt = {
+            margin: 0.5,
+            filename: `Bukti_Pendaftaran_${props.pendaftar.no_pendaftaran}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
 
-    html2pdf().set(opt).from(element).save();
+        window.html2pdf().set(opt).from(element).save();
+    };
+    document.head.appendChild(script);
 };
 </script>
 
@@ -74,9 +79,9 @@ const downloadPDF = () => {
             </div>
 
             <!-- Action Buttons -->
-            <div class="bg-slate-50 p-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4 justify-center">
+            <div class="print:hidden bg-slate-50 p-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4 justify-center">
                 <button @click="downloadPDF" class="px-6 py-3 rounded-xl bg-white border-2 border-emerald-500 text-emerald-600 font-bold hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-download"></i> Cetak Bukti PDF
+                    <i class="fas fa-download"></i> Cetak Bukti Pendaftaran
                 </button>
                 <Link href="/" class="px-6 py-3 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2">
                     <i class="fas fa-home"></i> Kembali ke Beranda
@@ -86,3 +91,22 @@ const downloadPDF = () => {
 
     </div>
 </template>
+
+<style scoped>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #bukti-pendaftaran, #bukti-pendaftaran * {
+        visibility: visible;
+    }
+    #bukti-pendaftaran {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+}
+</style>
