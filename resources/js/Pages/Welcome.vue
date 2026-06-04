@@ -322,30 +322,30 @@ input[type="number"] { -moz-appearance: textfield; }
 
         <!-- Tech/SMK Hero Section -->
         <section id="home" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-slate-950">
-            <!-- Dynamic Background -->
+            <!-- Dynamic Background Slider -->
             <div class="absolute inset-0 z-0 w-full h-full">
                 <template v-if="sliders && sliders.length > 0">
                     <transition-group name="fade" tag="div">
                         <div v-for="(slide, index) in sliders" :key="slide.id" v-show="activeSlide === index" class="absolute inset-0 duration-1000 ease-in-out">
-                            <img :src="`/uploads/slider/${slide.gambar}`" class="absolute block w-full h-full object-cover mix-blend-overlay opacity-60" :alt="slide.judul">
+                            <img :src="`/uploads/slider/${slide.gambar}`" class="absolute block w-full h-full object-cover opacity-30 mix-blend-luminosity" :alt="slide.judul">
                         </div>
                     </transition-group>
                 </template>
                 <template v-else>
-                    <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop" class="absolute block w-full h-full object-cover mix-blend-overlay opacity-50" alt="Tech Background">
+                    <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop" class="absolute block w-full h-full object-cover opacity-30 mix-blend-luminosity" alt="Tech Background">
                 </template>
                 <!-- Heavy Tech Gradient Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900/90 to-emerald-950/80"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-emerald-950/40"></div>
                 <div class="absolute inset-0 bg-tech-pattern opacity-20 pointer-events-none"></div>
             </div>
 
             <!-- Glowing Orbs -->
             <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-pulse"></div>
-            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20"></div>
 
-            <div class="relative z-20 px-4 md:px-8 mx-auto max-w-7xl text-center md:text-left grid grid-cols-1 md:grid-cols-2 gap-12 items-center w-full">
+            <div class="relative z-20 px-4 md:px-8 mx-auto max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-10">
                 
-                <div class="flex flex-col items-center md:items-start text-center md:text-left space-y-6">
+                <!-- Left: Text Content -->
+                <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-900/30 text-emerald-400 text-[10px] md:text-xs font-bold uppercase tracking-widest backdrop-blur-md">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -354,16 +354,16 @@ input[type="number"] { -moz-appearance: textfield; }
                         SMK Pusat Keunggulan
                     </div>
                     
-                    <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none text-white drop-shadow-2xl">
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none text-white drop-shadow-2xl relative z-10">
                         SMK <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">BISA</span><br>
                         SMK <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-500">HEBAT</span>
                     </h1>
                     
-                    <p class="text-base md:text-lg font-medium text-slate-400 max-w-xl leading-relaxed">
+                    <p class="text-base md:text-lg font-medium text-slate-300 max-w-xl leading-relaxed relative z-10">
                         {{ web.deskripsi_hero || 'Mencetak lulusan kompeten, siap kerja, santun, mandiri, dan kreatif. Dibekali skill industri terkini dan karakter profesional.' }}
                     </p>
                     
-                    <div class="flex flex-col sm:flex-row items-center gap-4 pt-4 w-full md:w-auto">
+                    <div class="flex flex-col sm:flex-row items-center gap-4 pt-4 w-full lg:w-auto relative z-10">
                         <Link href="/spmb/register" class="w-full sm:w-auto inline-flex justify-center items-center py-3.5 md:py-4 px-8 md:px-10 text-sm md:text-base font-black text-slate-900 uppercase tracking-widest rounded-xl bg-amber-400 hover:bg-amber-300 focus:ring-4 focus:ring-amber-500/30 transition-all shadow-lg shadow-amber-500/20 transform hover:-translate-y-1">
                             Daftar PPDB <i class="fas fa-rocket ml-3"></i>
                         </Link>
@@ -371,30 +371,59 @@ input[type="number"] { -moz-appearance: textfield; }
                             Lihat Jurusan <i class="fas fa-arrow-down ml-3 text-emerald-400"></i>
                         </a>
                     </div>
+                    
+                    <!-- Stats Badges (Moved under text for better layout) -->
+                    <div class="grid grid-cols-2 gap-4 mt-8 w-full max-w-md relative z-10">
+                        <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-900/50 flex items-center justify-center text-emerald-400 text-xl border border-emerald-500/30 shrink-0">
+                                <i class="fas fa-users-cog"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-2xl font-black text-white leading-none">{{ stats.siswa || 0 }}</h4>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Siswa Aktif</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-amber-900/50 flex items-center justify-center text-amber-400 text-xl border border-amber-500/30 shrink-0">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-2xl font-black text-white leading-none">{{ stats.jurusan || 4 }}</h4>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Program</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Stats Badges -->
-                <div class="hidden md:grid grid-cols-2 gap-4">
-                    <div class="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-6 rounded-2xl shadow-2xl flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:border-emerald-500/50">
-                        <div class="w-16 h-16 rounded-full bg-emerald-900/50 flex items-center justify-center text-emerald-400 text-2xl mb-4 border border-emerald-500/30">
-                            <i class="fas fa-users-cog"></i>
+                <!-- Right: Transparent PNG Spot -->
+                <div class="lg:col-span-5 relative hidden md:block h-full min-h-[500px]">
+                    <!-- Glowing Background for the PNG -->
+                    <div class="absolute bottom-0 right-0 w-full h-[80%] bg-emerald-500/20 rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-10 left-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
+                    
+                    <!-- Spot Foto PNG -->
+                    <div class="absolute bottom-0 right-0 w-[120%] max-w-[600px] transform translate-x-12">
+                        <!-- Nanti user tinggal ganti file gambar-siswa.png di public/images -->
+                        <!-- Fallback ke placeholder online transparan jika local belum ada -->
+                        <img src="https://raw.githubusercontent.com/Rikiwahyudin29/assets/main/siswa-smk-praktek.png" 
+                             onerror="this.src='https://www.pngmart.com/files/22/Student-PNG-Photos.png'" 
+                             alt="Siswa Praktek" 
+                             class="w-full h-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] z-20 relative">
+                        
+                        <!-- Accent Elements Floating Around the PNG -->
+                        <div class="absolute top-1/4 right-10 bg-slate-800/80 backdrop-blur-md p-3 rounded-xl border border-slate-600 shadow-xl z-30 animate-bounce" style="animation-duration: 3s;">
+                            <i class="fas fa-laptop-code text-amber-400 text-xl"></i>
                         </div>
-                        <h4 class="text-4xl font-black text-white mb-1">{{ stats.siswa || 0 }}</h4>
-                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Siswa Aktif</p>
-                    </div>
-                    <div class="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-6 rounded-2xl shadow-2xl flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:border-amber-500/50 mt-12">
-                        <div class="w-16 h-16 rounded-full bg-amber-900/50 flex items-center justify-center text-amber-400 text-2xl mb-4 border border-amber-500/30">
-                            <i class="fas fa-industry"></i>
+                        <div class="absolute top-1/2 left-0 bg-slate-800/80 backdrop-blur-md p-3 rounded-xl border border-slate-600 shadow-xl z-30 animate-bounce" style="animation-duration: 4s;">
+                            <i class="fas fa-cogs text-emerald-400 text-xl"></i>
                         </div>
-                        <h4 class="text-4xl font-black text-white mb-1">{{ stats.jurusan || 4 }}</h4>
-                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Program Keahlian</p>
                     </div>
                 </div>
                 
             </div>
             
             <!-- Bottom Fade -->
-            <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-900 to-transparent z-20"></div>
+            <div class="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-slate-900 to-transparent z-30 pointer-events-none"></div>
         </section>
 
         <!-- Program Keahlian (Jurusan) Section -->
@@ -450,10 +479,20 @@ input[type="number"] { -moz-appearance: textfield; }
         </section>
 
         <!-- PPDB / SPMB Section (Industrial Style) -->
-        <section id="spmb" class="py-24 relative bg-slate-900">
+        <section id="spmb" class="py-24 relative bg-slate-900 overflow-hidden">
             <div class="absolute inset-0 bg-tech-pattern opacity-10"></div>
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+            
+            <!-- Transparent PNG Spot (Teacher/Admin) -->
+            <div class="absolute bottom-0 left-0 w-[400px] h-[500px] hidden lg:block opacity-70 transform -translate-x-10">
+                <img src="https://raw.githubusercontent.com/Rikiwahyudin29/assets/main/guru-smk-png.png" 
+                     onerror="this.src='https://www.pngmart.com/files/7/Teacher-PNG-Transparent.png'" 
+                     alt="Guru Admin PPDB" 
+                     class="w-full h-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] relative z-10">
+                <div class="absolute bottom-0 left-20 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl z-0"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+                <div class="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-md border border-slate-700 rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative overflow-hidden lg:ml-64">
                     <!-- Accent Line -->
                     <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500"></div>
                     
@@ -490,13 +529,13 @@ input[type="number"] { -moz-appearance: textfield; }
                                 <div class="w-12 h-6 bg-slate-800 rounded-full p-1"><div class="w-4 h-4 bg-emerald-400 rounded-full translate-x-6"></div></div>
                             </div>
                             
-                            <div class="bg-slate-800 rounded-xl border border-slate-700 p-5 hover:border-emerald-500/50 transition-colors cursor-default">
+                            <div class="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-700 p-5 hover:border-emerald-500/50 transition-colors cursor-default">
                                 <i class="fas fa-laptop-house text-3xl text-emerald-400 mb-4 block"></i>
                                 <h4 class="text-white font-bold mb-1">Daftar Online</h4>
                                 <p class="text-xs text-slate-400">Isi formulir dari rumah</p>
                             </div>
                             
-                            <div class="bg-slate-800 rounded-xl border border-slate-700 p-5 hover:border-amber-500/50 transition-colors cursor-default">
+                            <div class="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-slate-700 p-5 hover:border-amber-500/50 transition-colors cursor-default">
                                 <i class="fas fa-file-signature text-3xl text-amber-400 mb-4 block"></i>
                                 <h4 class="text-white font-bold mb-1">Verifikasi</h4>
                                 <p class="text-xs text-slate-400">Pengecekan berkas digital</p>
