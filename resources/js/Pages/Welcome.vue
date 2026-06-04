@@ -651,7 +651,7 @@ input[type="number"] { -moz-appearance: textfield; }
                         <span class="text-emerald-500 font-bold uppercase tracking-widest text-xs mb-2 block">Informasi Terkini</span>
                         <h2 class="text-3xl md:text-4xl font-black text-white">Berita & Artikel</h2>
                     </div>
-                    <Link href="/berita" class="text-emerald-400 hover:text-white font-bold text-sm flex items-center gap-2 transition-colors">
+                    <Link :href="route('public.berita.index')" class="text-emerald-400 hover:text-white font-bold text-sm flex items-center gap-2 transition-colors">
                         Lihat Semua Berita <i class="fas fa-long-arrow-alt-right"></i>
                     </Link>
                 </div>
@@ -669,7 +669,7 @@ input[type="number"] { -moz-appearance: textfield; }
                                 {{ b.judul }}
                             </h3>
                             <div class="text-slate-400 text-sm line-clamp-3 mb-6 flex-1 leading-relaxed" v-html="b.isi.replace(/<[^>]*>?/gm, '')"></div>
-                            <Link :href="`/berita/detail/${b.slug}`" class="inline-flex items-center text-emerald-500 font-bold text-sm hover:text-white transition-colors">
+                            <Link :href="route('public.berita.show', b.slug)" class="inline-flex items-center text-emerald-500 font-bold text-sm hover:text-white transition-colors">
                                 Baca Selengkapnya <i class="fas fa-arrow-right ml-2 text-[10px]"></i>
                             </Link>
                         </div>

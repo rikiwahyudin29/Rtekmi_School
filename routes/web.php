@@ -62,8 +62,12 @@ Route::get('/test-jadwal-kelas/{id}', function ($id) {
     ]);
 });
 
-// Public Routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// Public Pages
+Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+// Portal Berita Publik
+Route::get('/berita', [\App\Http\Controllers\BeritaPublicController::class, 'index'])->name('public.berita.index');
+Route::get('/berita/{slug}', [\App\Http\Controllers\BeritaPublicController::class, 'show'])->name('public.berita.show');
 Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
 Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
 
@@ -350,9 +354,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/dudi', [\App\Http\Controllers\Admin\Web\DudiController::class, 'store'])->name('dudi.store');
             Route::delete('/dudi/{id}', [\App\Http\Controllers\Admin\Web\DudiController::class, 'destroy'])->name('dudi.destroy');
 
-            // Placeholder for Berita & Galeri (Controllers will be created if requested)
-            Route::get('/berita', function() { return inertia('Admin/Web/Berita/Index'); })->name('berita.index');
-            Route::get('/galeri', function() { return inertia('Admin/Web/Galeri/Index'); })->name('galeri.index');
+            // Berita
+            Route::get('/berita', [\App\Http\Controllers\Admin\Web\BeritaController::class, 'index'])->name('berita.index');
+            Route::get('/berita/create', [\App\Http\Controllers\Admin\Web\BeritaController::class, 'create'])->name('berita.create');
+            Route::post('/berita', [\App\Http\Controllers\Admin\Web\BeritaController::class, 'store'])->name('berita.store');
+            Route::get('/berita/{id}/edit', [\App\Http\Controllers\Admin\Web\BeritaController::class, 'edit'])->name('berita.edit');
+            Route::post('/berita/{id}', [\App\Http\Controllers\Admin\Web\BeritaController::class, 'update'])->name('berita.update');
+            Route::delete('/berita/{id}', [\App\Http\Controllers\Admin\Web\BeritaController::class, 'destroy'])->name('berita.destroy');
+
+            // Galeri
+            Route::get('/galeri', [\App\Http\Controllers\Admin\Web\GaleriController::class, 'index'])->name('galeri.index');
+            Route::post('/galeri', [\App\Http\Controllers\Admin\Web\GaleriController::class, 'store'])->name('galeri.store');
+            Route::delete('/galeri/{id}', [\App\Http\Controllers\Admin\Web\GaleriController::class, 'destroy'])->name('galeri.destroy');
         });
 
     });
