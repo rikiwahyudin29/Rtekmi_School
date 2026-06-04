@@ -51,7 +51,7 @@ class HomeController extends Controller
 
         // 3. STATISTIK REAL-TIME
         $stats = [
-            'siswa'     => Schema::hasTable('tbl_siswa') ? DB::table('tbl_siswa')->where('status', 'aktif')->count() : 500,
+            'siswa'     => Schema::hasTable('tbl_siswa') ? DB::table('tbl_siswa')->where('status_siswa', 'Aktif')->count() : 500,
             'guru'      => Schema::hasTable('tbl_guru') ? DB::table('tbl_guru')->count() : 45,
             'alumni'    => Schema::hasTable('tbl_alumni') ? DB::table('tbl_alumni')->count() : 1200,
             'jurusan'   => Schema::hasTable('tbl_jurusan') ? DB::table('tbl_jurusan')->count() : 5 
