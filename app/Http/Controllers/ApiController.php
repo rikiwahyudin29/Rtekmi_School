@@ -47,87 +47,51 @@ class ApiController extends Controller
     public function getProvinces()
     {
         try {
-            $response = Http::withHeaders([
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/provinces');
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-        } catch (\Exception $e) {}
-
-        return response()->json([]);
+            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/provinces', [
+                'size' => 100 // memastikan limit maksimal
+            ]);
+            return response()->json($response->json(), $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function getRegencies($provinceCode)
     {
         try {
-            // Coba dengan path param atau query param
-            $response = Http::withHeaders([
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/regencies', [
-                'province_code' => $provinceCode
-            ]);
-
-            // Fallback ke path jika 404
-            if ($response->status() == 404) {
-                $response = Http::withHeaders([
-                    'x-api-co-id' => $this->getApiKey()
-                ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/regencies/' . $provinceCode);
-            }
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-        } catch (\Exception $e) {}
-
-        return response()->json([]);
+            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/provinces/' . $provinceCode . '/regencies');
+            return response()->json($response->json(), $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function getDistricts($regencyCode)
     {
         try {
-            $response = Http::withHeaders([
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/districts', [
-                'regency_code' => $regencyCode
-            ]);
-
-            if ($response->status() == 404) {
-                $response = Http::withHeaders([
-                    'x-api-co-id' => $this->getApiKey()
-                ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/districts/' . $regencyCode);
-            }
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-        } catch (\Exception $e) {}
-
-        return response()->json([]);
+            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/regencies/' . $regencyCode . '/districts');
+            return response()->json($response->json(), $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function getVillages($districtCode)
     {
         try {
-            $response = Http::withHeaders([
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/villages', [
-                'district_code' => $districtCode
-            ]);
-
-            if ($response->status() == 404) {
-                $response = Http::withHeaders([
-                    'x-api-co-id' => $this->getApiKey()
-                ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/villages/' . $districtCode);
-            }
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-        } catch (\Exception $e) {}
-
-        return response()->json([]);
+            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/districts/' . $districtCode . '/villages');
+            return response()->json($response->json(), $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function getHolidays(Request $request)
