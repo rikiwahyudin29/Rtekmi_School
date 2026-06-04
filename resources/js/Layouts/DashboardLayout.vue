@@ -194,7 +194,8 @@ const menuItems = computed(() => {
         menus.push(
             { isHeader: true, name: 'Wakasek Kesiswaan' },
             { name: 'PPDB Online', icon: 'fas fa-user-plus', route: '#', active: route().current('admin.ppdb.*'), children: [
-                { name: 'Data Pendaftar', icon: 'fas fa-users', route: 'admin.ppdb.index', active: route().current('admin.ppdb.*') },
+                { name: 'Dashboard PPDB', icon: 'fas fa-chart-line', route: 'admin.ppdb.dashboard', active: route().current('admin.ppdb.dashboard') },
+                { name: 'Data Pendaftar', icon: 'fas fa-users', route: 'admin.ppdb.index', active: route().current('admin.ppdb.index') || route().current('admin.ppdb.show') },
             ]},
             { name: 'Manajemen Kesiswaan', icon: 'fas fa-layer-group', route: '#', active: false, children: [
                 { name: 'Buku Induk Siswa', icon: 'fas fa-book-reader', route: '#', active: false },

@@ -59,6 +59,46 @@ const submit = () => {
 const handleFile = (event, field) => {
     form[field] = event.target.files[0];
 };
+
+// Autocomplete Logic Asal Sekolah
+const searchQuery = ref('');
+const searchResults = ref([]);
+const isSearching = ref(false);
+const showDropdown = ref(false);
+
+const searchSekolah = async () => {
+    if (searchQuery.value.length < 3) {
+        searchResults.value = [];
+        showDropdown.value = false;
+        return;
+    }
+
+    isSearching.value = true;
+    try {
+        const res = await fetch(`/api/sekolah/search?q=${encodeURIComponent(searchQuery.value)}`);
+        const data = await res.json();
+        searchResults.value = data;
+        showDropdown.value = true;
+    } catch (e) {
+        console.error(e);
+    } finally {
+        isSearching.value = false;
+    }
+};
+
+let searchTimeout;
+const debounceSearch = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchSekolah();
+    }, 500);
+};
+
+const selectSekolah = (sekolah) => {
+    form.asal_sekolah = sekolah.nama;
+    searchQuery.value = sekolah.nama;
+    showDropdown.value = false;
+};
 </script>
 
 <template>
@@ -218,10 +258,26 @@ const handleFile = (event, field) => {
                     <div v-show="currentStep === 3" class="space-y-6">
                         <h3 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6">3. Data Orang Tua & Pendidikan</h3>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Asal Sekolah (SMP/MTs) <span class="text-red-500">*</span></label>
-                                <input v-model="form.asal_sekolah" type="text" required placeholder="SMP Negeri 1 Contoh" class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100 relative z-20">
+                            <div class="relative">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Asal Sekolah (Ketik min 3 huruf) <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <input v-model="searchQuery" @input="debounceSearch" type="text" required placeholder="Contoh: SMPN 1 SUBANG" class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 uppercase" autocomplete="off">
+                                    <i v-if="isSearching" class="fas fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500"></i>
+                                </div>
+                                <!-- Dropdown Autocomplete -->
+                                <div v-if="showDropdown && searchResults.length > 0" class="absolute w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
+                                    <div v-for="sek in searchResults" :key="sek.id" @click="selectSekolah(sek)" class="p-3 hover:bg-emerald-50 border-b border-slate-50 cursor-pointer transition-colors">
+                                        <div class="font-bold text-slate-800 text-sm">{{ sek.nama }}</div>
+                                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ sek.lokasi }}</div>
+                                    </div>
+                                </div>
+                                <div v-if="showDropdown && searchResults.length === 0 && searchQuery.length >= 3" class="absolute w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-4 text-center">
+                                    <div class="text-sm text-slate-500 mb-2">Sekolah tidak ditemukan di database pusat.</div>
+                                    <button type="button" @click="selectSekolah({nama: searchQuery.toUpperCase(), lokasi: 'Input Manual'})" class="text-xs font-bold bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-slate-700">
+                                        Gunakan "{{ searchQuery.toUpperCase() }}"
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-2">Pilihan Jurusan <span class="text-red-500">*</span></label>

@@ -9,9 +9,36 @@ use App\Models\Pendaftar;
 use App\Models\Siswa;
 use App\Services\WaService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class PpdbController extends Controller
 {
+    public function dashboard()
+    {
+        $stats = [
+            'total' => Pendaftar::count(),
+            'pending' => Pendaftar::where('status_pendaftaran', 'Pending')->count(),
+            'diterima' => Pendaftar::where('status_pendaftaran', 'Diterima')->count(),
+            'ditolak' => Pendaftar::where('status_pendaftaran', 'Ditolak')->count(),
+        ];
+
+        $jurusanData = Pendaftar::select('jurusan_minat', DB::raw('count(*) as total'))
+            ->groupBy('jurusan_minat')
+            ->get();
+
+        $asalSekolahData = Pendaftar::select('asal_sekolah', DB::raw('count(*) as total'))
+            ->groupBy('asal_sekolah')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Admin/Kesiswaan/Ppdb/Dashboard', [
+            'stats' => $stats,
+            'jurusanData' => $jurusanData,
+            'asalSekolahData' => $asalSekolahData
+        ]);
+    }
+
     public function index(Request $request)
     {
         $status = $request->query('status');
@@ -143,5 +170,29 @@ class PpdbController extends Controller
             DB::rollBack();
             return back()->with('error', 'Gagal memigrasi data: ' . $e->getMessage());
         }
+    }
+
+    public function destroy($id)
+    {
+        $pendaftar = Pendaftar::findOrFail($id);
+
+        if ($pendaftar->is_migrated) {
+            return back()->with('error', 'Tidak bisa menghapus pendaftar yang sudah dimigrasi ke Siswa Aktif.');
+        }
+
+        // Hapus file
+        if ($pendaftar->foto && File::exists(public_path('uploads/ppdb/foto/' . $pendaftar->foto))) {
+            File::delete(public_path('uploads/ppdb/foto/' . $pendaftar->foto));
+        }
+        if ($pendaftar->berkas_kk && File::exists(public_path('uploads/ppdb/dokumen/' . $pendaftar->berkas_kk))) {
+            File::delete(public_path('uploads/ppdb/dokumen/' . $pendaftar->berkas_kk));
+        }
+        if ($pendaftar->berkas_ijazah && File::exists(public_path('uploads/ppdb/dokumen/' . $pendaftar->berkas_ijazah))) {
+            File::delete(public_path('uploads/ppdb/dokumen/' . $pendaftar->berkas_ijazah));
+        }
+
+        $pendaftar->delete();
+
+        return back()->with('message', 'Data pendaftar berhasil dihapus!');
     }
 }

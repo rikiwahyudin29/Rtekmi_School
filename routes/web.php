@@ -73,6 +73,7 @@ Route::get('/berita/{slug}', [\App\Http\Controllers\BeritaPublicController::clas
 Route::get('/spmb/register', [\App\Http\Controllers\PpdbPublicController::class, 'create'])->name('public.ppdb.create');
 Route::post('/spmb/register', [\App\Http\Controllers\PpdbPublicController::class, 'store'])->name('public.ppdb.store');
 Route::get('/spmb/success', [\App\Http\Controllers\PpdbPublicController::class, 'success'])->name('public.ppdb.success');
+Route::get('/api/sekolah/search', [\App\Http\Controllers\PpdbPublicController::class, 'searchSekolah'])->name('api.sekolah.search');
 
 Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
 Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
@@ -347,10 +348,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ==========================================
         
         // PPDB
+        Route::get('ppdb/dashboard', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'dashboard'])->name('ppdb.dashboard');
         Route::get('ppdb', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'index'])->name('ppdb.index');
         Route::get('ppdb/{id}', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'show'])->name('ppdb.show');
         Route::post('ppdb/{id}/status', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'updateStatus'])->name('ppdb.updateStatus');
         Route::post('ppdb/{id}/migrate', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'migrateToSiswa'])->name('ppdb.migrateToSiswa');
+        Route::delete('ppdb/{id}', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'destroy'])->name('ppdb.destroy');
 
         // ==========================================
         // WAKASEK HUMAS & HUBIN (WEBSITE & PUBLIKASI)

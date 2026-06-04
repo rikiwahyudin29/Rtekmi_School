@@ -131,4 +131,52 @@ class PpdbPublicController extends Controller
             'web' => $dataWeb
         ]);
     }
+
+    public function searchSekolah(Request $request)
+    {
+        $keyword = strtolower(trim($request->query('q', '')));
+        if (strlen($keyword) < 3) {
+            return response()->json([]);
+        }
+
+        // Cari dari data API Sekolah Indonesia atau Mock
+        // Sebenarnya jika kita memakai API Sekolah Indonesia, kita bisa menggunakan endpoint per kabupaten.
+        // Namun demi kemudahan, kita buat dummy seolah-olah ditarik dari API, atau lakukan pencarian dari DB lokal jika ada.
+        // Karena sistem belum memiliki tabel sekolah SMP terintegrasi, kita fetch secara live via API Jendela Kemdikbud
+        // atau kita gunakan mock yang sangat relevan.
+        // Di sini kita fetch langsung dari Kemdikbud Dapo.
+        try {
+            // Karena dapo.kemdikbud sering down/CORS, kita proxy dari backend
+            // Menggunakan open API dummy/mock untuk keperluan ini
+            $response = \Illuminate\Support\Facades\Http::timeout(3)->get('https://api-sekolah-indonesia.vercel.app/sekolah/smp?perPage=500');
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                $sekolahList = $data['dataSekolah'] ?? [];
+                
+                // Filter manual di backend berdasarkan keyword
+                $filtered = array_filter($sekolahList, function($item) use ($keyword) {
+                    return strpos(strtolower($item['sekolah']), $keyword) !== false;
+                });
+                
+                // Format ulang ke array simple
+                $results = array_map(function($item) {
+                    return [
+                        'id' => $item['npsn'],
+                        'nama' => $item['sekolah'],
+                        'lokasi' => $item['kabupaten_kota'] . ', ' . $item['propinsi']
+                    ];
+                }, array_slice($filtered, 0, 10)); // limit 10
+                
+                return response()->json(array_values($results));
+            }
+        } catch (\Exception $e) {
+            // Fallback jika API down
+            return response()->json([
+                ['id' => '001', 'nama' => strtoupper($keyword) . ' (Input Manual)', 'lokasi' => 'Pencarian Lokal']
+            ]);
+        }
+
+        return response()->json([]);
+    }
 }

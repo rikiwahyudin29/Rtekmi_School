@@ -30,6 +30,14 @@ const formatDate = (dateString) => {
         day: 'numeric', month: 'short', year: 'numeric'
     });
 };
+
+const hapusData = (id) => {
+    if (confirm('Apakah Anda yakin ingin menghapus data pendaftar ini beserta seluruh berkasnya? Aksi ini tidak dapat dibatalkan.')) {
+        router.delete(route('admin.ppdb.destroy', id), {
+            preserveScroll: true
+        });
+    }
+};
 </script>
 
 <template>
@@ -136,9 +144,14 @@ const formatDate = (dateString) => {
                                         <div v-if="item.is_migrated" class="mt-1 text-[10px] text-emerald-600 font-bold"><i class="fas fa-user-check"></i> Sudah Aktif</div>
                                     </td>
                                     <td class="p-4 text-center">
-                                        <Link :href="route('admin.ppdb.show', item.id)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors">
-                                            <i class="fas fa-search"></i>
-                                        </Link>
+                                        <div class="flex items-center justify-center gap-2">
+                                            <Link :href="route('admin.ppdb.show', item.id)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" title="Lihat Detail">
+                                                <i class="fas fa-search"></i>
+                                            </Link>
+                                            <button @click="hapusData(item.id)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors" title="Hapus Data">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr v-if="pendaftar.data.length === 0">
