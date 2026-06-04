@@ -173,25 +173,32 @@ class PresensiController extends Controller
     public function izin(Request $request)
     {
         $tanggal = $request->get('tanggal') ?? date('Y-m-d');
+        $filter_role = $request->get('role') ?? 'siswa';
+        $per_page = $request->get('per_page') ?? 10;
 
-        $izinSiswa = Presensi::with('siswa.kelas')
-            ->where('role', 'siswa')
-            ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Alpha', 'Hadir', 'Terlambat'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $izinGuru = Presensi::with('guru')
-            ->where('role', 'guru')
-            ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Dinas Luar', 'Alpha', 'Hadir', 'Terlambat'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        if ($filter_role == 'guru') {
+            $dataIzin = Presensi::with('guru')
+                ->where('role', 'guru')
+                ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Dinas Luar', 'Alpha', 'Hadir', 'Terlambat'])
+                ->orderBy('created_at', 'desc')
+                ->paginate($per_page)
+                ->withQueryString();
+        } else {
+            $dataIzin = Presensi::with('siswa.kelas')
+                ->where('role', 'siswa')
+                ->whereIn('status_kehadiran', ['Izin', 'Sakit', 'Alpha', 'Hadir', 'Terlambat'])
+                ->orderBy('created_at', 'desc')
+                ->paginate($per_page)
+                ->withQueryString();
+        }
 
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
         $guruList = Guru::orderBy('nama_lengkap', 'asc')->get(['id', 'nama_lengkap', 'nik']);
 
         return Inertia::render('Admin/Presensi/Izin', [
-            'izinSiswa' => $izinSiswa,
-            'izinGuru' => $izinGuru,
+            'dataIzin' => $dataIzin,
+            'filterRole' => $filter_role,
+            'perPage' => $per_page,
             'tanggal' => $tanggal,
             'kelas' => $kelas,
             'guruList' => $guruList
