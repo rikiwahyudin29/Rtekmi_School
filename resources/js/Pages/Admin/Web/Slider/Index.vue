@@ -41,18 +41,16 @@ const handleFileUpload = (event) => {
 
 <template>
     <DashboardLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-bold text-xl text-slate-800 leading-tight">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="font-bold text-2xl text-slate-800 leading-tight">
                     <i class="fas fa-images mr-2 text-emerald-600"></i> Slider Banner Depan
                 </h2>
                 <button @click="isModalOpen = true" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-sm shadow-md flex items-center gap-2">
                     <i class="fas fa-plus"></i> Tambah Banner
                 </button>
             </div>
-        </template>
 
-        <div class="max-w-7xl mx-auto py-8">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-6">
                     <p class="text-sm text-slate-500 mb-6">Kelola foto-foto yang akan muncul sebagai background slider di halaman depan website.</p>

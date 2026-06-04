@@ -36,15 +36,13 @@ const handleFileUpload = (event, field) => {
 
 <template>
     <DashboardLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-bold text-xl text-slate-800 leading-tight">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="font-bold text-2xl text-slate-800 leading-tight">
                     <i class="fas fa-cogs mr-2 text-emerald-600"></i> Konfigurasi Website
                 </h2>
             </div>
-        </template>
 
-        <div class="max-w-7xl mx-auto py-8">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <form @submit.prevent="submit" class="p-6 md:p-8 space-y-8">
                     
