@@ -8,7 +8,6 @@ const props = defineProps({
     sliders: Array,
     berita: Array,
     galeri: Array,
-    galeri: Array,
     stats: Object,
     jurusanList: Array,
     dudiList: Array
