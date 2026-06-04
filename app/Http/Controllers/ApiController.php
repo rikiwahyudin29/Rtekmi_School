@@ -49,12 +49,16 @@ class ApiController extends Controller
         try {
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/provinces', [
-                'size' => 100 // memastikan limit maksimal
+            ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/provinces', [
+                'size' => 100
             ]);
-            return response()->json($response->json(), $response->status());
+            
+            if (!$response->successful()) {
+                return response()->json(['error' => 'API Error: ' . $response->body()], $response->status());
+            }
+            return response()->json($response->json());
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'PHP Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -63,10 +67,23 @@ class ApiController extends Controller
         try {
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/provinces/' . $provinceCode . '/regencies');
-            return response()->json($response->json(), $response->status());
+            ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/regencies', [
+                'province_code' => $provinceCode,
+                'size' => 100
+            ]);
+            
+            if ($response->status() == 404) {
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'x-api-co-id' => $this->getApiKey()
+                ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/provinces/' . $provinceCode . '/regencies');
+            }
+            
+            if (!$response->successful()) {
+                return response()->json(['error' => 'API Error: ' . $response->body()], $response->status());
+            }
+            return response()->json($response->json());
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'PHP Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -75,10 +92,23 @@ class ApiController extends Controller
         try {
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/regencies/' . $regencyCode . '/districts');
-            return response()->json($response->json(), $response->status());
+            ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/districts', [
+                'regency_code' => $regencyCode,
+                'size' => 100
+            ]);
+            
+            if ($response->status() == 404) {
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'x-api-co-id' => $this->getApiKey()
+                ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/regencies/' . $regencyCode . '/districts');
+            }
+
+            if (!$response->successful()) {
+                return response()->json(['error' => 'API Error: ' . $response->body()], $response->status());
+            }
+            return response()->json($response->json());
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'PHP Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -87,10 +117,23 @@ class ApiController extends Controller
         try {
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(10)->get($this->getBaseUrl() . '/regional/indonesia/districts/' . $districtCode . '/villages');
-            return response()->json($response->json(), $response->status());
+            ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/villages', [
+                'district_code' => $districtCode,
+                'size' => 100
+            ]);
+            
+            if ($response->status() == 404) {
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'x-api-co-id' => $this->getApiKey()
+                ])->timeout(15)->get($this->getBaseUrl() . '/regional/indonesia/districts/' . $districtCode . '/villages');
+            }
+
+            if (!$response->successful()) {
+                return response()->json(['error' => 'API Error: ' . $response->body()], $response->status());
+            }
+            return response()->json($response->json());
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'PHP Error: ' . $e->getMessage()], 500);
         }
     }
 
