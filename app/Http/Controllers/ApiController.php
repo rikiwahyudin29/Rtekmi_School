@@ -62,9 +62,19 @@ class ApiController extends Controller
     public function getRegencies($provinceCode)
     {
         try {
+            // Coba dengan path param atau query param
             $response = Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/regencies/' . $provinceCode);
+            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/regencies', [
+                'province_code' => $provinceCode
+            ]);
+
+            // Fallback ke path jika 404
+            if ($response->status() == 404) {
+                $response = Http::withHeaders([
+                    'x-api-co-id' => $this->getApiKey()
+                ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/regencies/' . $provinceCode);
+            }
 
             if ($response->successful()) {
                 return response()->json($response->json());
@@ -79,7 +89,15 @@ class ApiController extends Controller
         try {
             $response = Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/districts/' . $regencyCode);
+            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/districts', [
+                'regency_code' => $regencyCode
+            ]);
+
+            if ($response->status() == 404) {
+                $response = Http::withHeaders([
+                    'x-api-co-id' => $this->getApiKey()
+                ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/districts/' . $regencyCode);
+            }
 
             if ($response->successful()) {
                 return response()->json($response->json());
@@ -94,7 +112,15 @@ class ApiController extends Controller
         try {
             $response = Http::withHeaders([
                 'x-api-co-id' => $this->getApiKey()
-            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/villages/' . $districtCode);
+            ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/villages', [
+                'district_code' => $districtCode
+            ]);
+
+            if ($response->status() == 404) {
+                $response = Http::withHeaders([
+                    'x-api-co-id' => $this->getApiKey()
+                ])->timeout(5)->get($this->getBaseUrl() . '/regional/indonesia/villages/' . $districtCode);
+            }
 
             if ($response->successful()) {
                 return response()->json($response->json());
