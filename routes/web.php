@@ -68,6 +68,12 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('h
 // Portal Berita Publik
 Route::get('/berita', [\App\Http\Controllers\BeritaPublicController::class, 'index'])->name('public.berita.index');
 Route::get('/berita/{slug}', [\App\Http\Controllers\BeritaPublicController::class, 'show'])->name('public.berita.show');
+
+// Portal PPDB Publik
+Route::get('/spmb/register', [\App\Http\Controllers\PpdbPublicController::class, 'create'])->name('public.ppdb.create');
+Route::post('/spmb/register', [\App\Http\Controllers\PpdbPublicController::class, 'store'])->name('public.ppdb.store');
+Route::get('/spmb/success', [\App\Http\Controllers\PpdbPublicController::class, 'success'])->name('public.ppdb.success');
+
 Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
 Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
 
@@ -335,6 +341,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('notif-tagihan', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'index'])->name('notif.index');
             Route::post('notif-tagihan/kirim', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'kirimMassal'])->name('notif.kirim');
         });
+
+        // ==========================================
+        // WAKASEK KESISWAAN
+        // ==========================================
+        
+        // PPDB
+        Route::get('ppdb', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'index'])->name('ppdb.index');
+        Route::get('ppdb/{id}', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'show'])->name('ppdb.show');
+        Route::post('ppdb/{id}/status', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'updateStatus'])->name('ppdb.updateStatus');
+        Route::post('ppdb/{id}/migrate', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'migrateToSiswa'])->name('ppdb.migrateToSiswa');
 
         // ==========================================
         // WAKASEK HUMAS & HUBIN (WEBSITE & PUBLIKASI)
