@@ -64,7 +64,7 @@ Route::get('/test-jadwal-kelas/{id}', function ($id) {
 
 // Public Pages
 Route::get('/sitemap.xml', function () {
-    $berita = \Illuminate\Support\Facades\DB::table('tbl_berita')->where('status', 'Publish')->orderBy('created_at', 'desc')->get();
+    $berita = \Illuminate\Support\Facades\DB::table('tbl_berita')->where('is_published', 1)->orderBy('created_at', 'desc')->get();
     return response()->view('sitemap', ['berita' => $berita])->header('Content-Type', 'text/xml');
 });
 
