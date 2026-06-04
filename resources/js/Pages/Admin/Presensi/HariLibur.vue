@@ -13,7 +13,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('admin.presensi.hari_libur.store'), {
+    form.post(route('presensi.hari_libur.store'), {
         onSuccess: () => {
             form.reset();
             alert('Hari libur berhasil ditambahkan!');
@@ -23,9 +23,26 @@ const submit = () => {
 
 const hapus = (id) => {
     if (confirm('Hapus Hari Libur? Data yang dihapus tidak bisa dikembalikan!')) {
-        router.delete(route('admin.presensi.hari_libur.destroy', id), {
+        router.delete(route('presensi.hari_libur.destroy', id), {
             onSuccess: () => {
                 alert('Hari libur telah dihapus.');
+            }
+        });
+    }
+};
+
+const syncApi = () => {
+    if (confirm('Sinkronisasi hari libur dari API.CO.ID? Tindakan ini akan mengambil data hari libur nasional tahun ini dan menyimpannya ke database.')) {
+        router.post(route('presensi.hari_libur.sync'), {}, {
+            onSuccess: (page) => {
+                if (page.props.flash.success) {
+                    alert(page.props.flash.success);
+                }
+            },
+            onError: (errors) => {
+                if (errors.error) {
+                    alert(errors.error);
+                }
             }
         });
     }
@@ -41,6 +58,11 @@ const hapus = (id) => {
                     <div>
                         <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-1">Pengaturan Hari Libur</h1>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Atur kalender libur sekolah agar mesin presensi otomatis mengabaikan Alpha.</p>
+                    </div>
+                    <div>
+                        <button @click="syncApi" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2 text-sm">
+                            <i class="fas fa-sync"></i> Sync dari Pusat (API.CO.ID)
+                        </button>
                     </div>
                 </div>
 

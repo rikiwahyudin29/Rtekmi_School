@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
     web: Object,
@@ -60,6 +60,94 @@ const handleFile = (event, field) => {
     form[field] = event.target.files[0];
 };
 
+// ==========================================
+// API Wilayah Indonesia (Emsifa)
+// ==========================================
+const region = ref({
+    provinces: [],
+    regencies: [],
+    districts: [],
+    villages: []
+});
+
+const selectedRegionId = ref({
+    provinsi: '',
+    kabupaten: '',
+    kecamatan: '',
+    desa: ''
+});
+
+onMounted(async () => {
+    try {
+        const res = await fetch('/api/regional/provinces');
+        const data = await res.json();
+        region.value.provinces = data.data || data || [];
+    } catch (e) {
+        console.error('Gagal memuat data provinsi', e);
+    }
+});
+
+const onProvinsiChange = async () => {
+    // Reset child
+    selectedRegionId.value.kabupaten = '';
+    selectedRegionId.value.kecamatan = '';
+    selectedRegionId.value.desa = '';
+    region.value.regencies = [];
+    region.value.districts = [];
+    region.value.villages = [];
+    
+    // Simpan nama provinsi ke form
+    const prov = region.value.provinces.find(p => (p.code || p.id) == selectedRegionId.value.provinsi);
+    form.provinsi = prov ? prov.name : '';
+
+    if (selectedRegionId.value.provinsi) {
+        try {
+            const res = await fetch(`/api/regional/regencies/${selectedRegionId.value.provinsi}`);
+            const data = await res.json();
+            region.value.regencies = data.data || data || [];
+        } catch (e) {}
+    }
+};
+
+const onKabupatenChange = async () => {
+    selectedRegionId.value.kecamatan = '';
+    selectedRegionId.value.desa = '';
+    region.value.districts = [];
+    region.value.villages = [];
+
+    const kab = region.value.regencies.find(k => (k.code || k.id) == selectedRegionId.value.kabupaten);
+    form.kabupaten = kab ? kab.name : '';
+
+    if (selectedRegionId.value.kabupaten) {
+        try {
+            const res = await fetch(`/api/regional/districts/${selectedRegionId.value.kabupaten}`);
+            const data = await res.json();
+            region.value.districts = data.data || data || [];
+        } catch (e) {}
+    }
+};
+
+const onKecamatanChange = async () => {
+    selectedRegionId.value.desa = '';
+    region.value.villages = [];
+
+    const kec = region.value.districts.find(k => (k.code || k.id) == selectedRegionId.value.kecamatan);
+    form.kecamatan = kec ? kec.name : '';
+
+    if (selectedRegionId.value.kecamatan) {
+        try {
+            const res = await fetch(`/api/regional/villages/${selectedRegionId.value.kecamatan}`);
+            const data = await res.json();
+            region.value.villages = data.data || data || [];
+        } catch (e) {}
+    }
+};
+
+const onDesaChange = () => {
+    const desa = region.value.villages.find(d => (d.code || d.id) == selectedRegionId.value.desa);
+    form.desa_kelurahan = desa ? desa.name : '';
+};
+
 // Autocomplete Logic Asal Sekolah
 const searchQuery = ref('');
 const searchResults = ref([]);
@@ -75,9 +163,10 @@ const searchSekolah = async () => {
 
     isSearching.value = true;
     try {
-        const res = await fetch(`/api/sekolah/search?q=${encodeURIComponent(searchQuery.value)}`);
+        const res = await fetch(`/api/sekolah/search?name=${encodeURIComponent(searchQuery.value)}`);
         const data = await res.json();
-        searchResults.value = data;
+        // Extract array from api.co.id data format
+        searchResults.value = data.data || data || [];
         showDropdown.value = true;
     } catch (e) {
         console.error(e);
@@ -213,34 +302,48 @@ const selectSekolah = (sekolah) => {
                     <div v-show="currentStep === 2" class="space-y-6">
                         <h3 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6">2. Alamat & Kontak</h3>
                         
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Jalan / Dusun <span class="text-red-500">*</span></label>
-                            <input v-model="form.alamat_jalan" type="text" required placeholder="Jl. Raya Utama No. 12" class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                        </div>
-
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <div class="col-span-2 md:col-span-1">
-                                <label class="block text-sm font-bold text-slate-700 mb-2">RT / RW <span class="text-red-500">*</span></label>
-                                <input v-model="form.rt_rw" type="text" required placeholder="001/002" class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                            </div>
-                            <div class="col-span-2 md:col-span-3">
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Desa / Kelurahan <span class="text-red-500">*</span></label>
-                                <input v-model="form.desa_kelurahan" type="text" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Kecamatan <span class="text-red-500">*</span></label>
-                                <input v-model="form.kecamatan" type="text" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Provinsi <span class="text-red-500">*</span></label>
+                                <select v-model="selectedRegionId.provinsi" @change="onProvinsiChange" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                    <option value="" disabled>-- Pilih Provinsi --</option>
+                                    <option v-for="prov in region.provinces" :key="prov.code || prov.id" :value="prov.code || prov.id">{{ prov.name }}</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-2">Kabupaten / Kota <span class="text-red-500">*</span></label>
-                                <input v-model="form.kabupaten" type="text" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                <select v-model="selectedRegionId.kabupaten" @change="onKabupatenChange" :disabled="!selectedRegionId.provinsi" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400">
+                                    <option value="" disabled>-- Pilih Kabupaten/Kota --</option>
+                                    <option v-for="kab in region.regencies" :key="kab.code || kab.id" :value="kab.code || kab.id">{{ kab.name }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Kecamatan <span class="text-red-500">*</span></label>
+                                <select v-model="selectedRegionId.kecamatan" @change="onKecamatanChange" :disabled="!selectedRegionId.kabupaten" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400">
+                                    <option value="" disabled>-- Pilih Kecamatan --</option>
+                                    <option v-for="kec in region.districts" :key="kec.code || kec.id" :value="kec.code || kec.id">{{ kec.name }}</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Provinsi <span class="text-red-500">*</span></label>
-                                <input v-model="form.provinsi" type="text" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Desa / Kelurahan <span class="text-red-500">*</span></label>
+                                <select v-model="selectedRegionId.desa" @change="onDesaChange" :disabled="!selectedRegionId.kecamatan" required class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-400">
+                                    <option value="" disabled>-- Pilih Desa/Kelurahan --</option>
+                                    <option v-for="desa in region.villages" :key="desa.code || desa.id" :value="desa.code || desa.id">{{ desa.name }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            <div class="col-span-2 md:col-span-3">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Jalan / Dusun <span class="text-red-500">*</span></label>
+                                <input v-model="form.alamat_jalan" type="text" required placeholder="Jl. Raya Utama No. 12" class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                            </div>
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">RT / RW <span class="text-red-500">*</span></label>
+                                <input v-model="form.rt_rw" type="text" required placeholder="001/002" class="w-full rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
                             </div>
                         </div>
 
@@ -267,9 +370,9 @@ const selectSekolah = (sekolah) => {
                                 </div>
                                 <!-- Dropdown Autocomplete -->
                                 <div v-if="showDropdown && searchResults.length > 0" class="absolute w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
-                                    <div v-for="sek in searchResults" :key="sek.id" @click="selectSekolah(sek)" class="p-3 hover:bg-emerald-50 border-b border-slate-50 cursor-pointer transition-colors">
-                                        <div class="font-bold text-slate-800 text-sm">{{ sek.nama }}</div>
-                                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ sek.lokasi }}</div>
+                                    <div v-for="sek in searchResults" :key="sek.npsn" @click="selectSekolah({nama: sek.name, lokasi: (sek.district_name || sek.regency_name || '') + ', ' + (sek.province_name || '')})" class="p-3 hover:bg-emerald-50 border-b border-slate-50 cursor-pointer transition-colors">
+                                        <div class="font-bold text-slate-800 text-sm">{{ sek.name }}</div>
+                                        <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{ sek.district_name || sek.regency_name || '' }}, {{ sek.province_name || '' }} (NPSN: {{ sek.npsn }})</div>
                                     </div>
                                 </div>
                                 <div v-if="showDropdown && searchResults.length === 0 && searchQuery.length >= 3" class="absolute w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-4 text-center">

@@ -73,7 +73,14 @@ Route::get('/berita/{slug}', [\App\Http\Controllers\BeritaPublicController::clas
 Route::get('/spmb/register', [\App\Http\Controllers\PpdbPublicController::class, 'create'])->name('public.ppdb.create');
 Route::post('/spmb/register', [\App\Http\Controllers\PpdbPublicController::class, 'store'])->name('public.ppdb.store');
 Route::get('/spmb/success', [\App\Http\Controllers\PpdbPublicController::class, 'success'])->name('public.ppdb.success');
-Route::get('/api/sekolah/search', [\App\Http\Controllers\PpdbPublicController::class, 'searchSekolah'])->name('api.sekolah.search');
+
+// API.CO.ID Proxy
+Route::get('/api/sekolah/search', [\App\Http\Controllers\ApiController::class, 'searchSekolah'])->name('api.sekolah.search');
+Route::get('/api/regional/provinces', [\App\Http\Controllers\ApiController::class, 'getProvinces'])->name('api.regional.provinces');
+Route::get('/api/regional/regencies/{province}', [\App\Http\Controllers\ApiController::class, 'getRegencies'])->name('api.regional.regencies');
+Route::get('/api/regional/districts/{regency}', [\App\Http\Controllers\ApiController::class, 'getDistricts'])->name('api.regional.districts');
+Route::get('/api/regional/villages/{district}', [\App\Http\Controllers\ApiController::class, 'getVillages'])->name('api.regional.villages');
+Route::get('/api/holidays', [\App\Http\Controllers\ApiController::class, 'getHolidays'])->name('api.holidays');
 
 Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
 Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
@@ -176,6 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('proses-scan', [\App\Http\Controllers\Admin\PresensiController::class, 'prosesScan'])->name('proses_scan');
             Route::get('/hari_libur', [\App\Http\Controllers\Admin\HariLiburController::class, 'index'])->name('hari_libur.index');
             Route::post('/hari_libur', [\App\Http\Controllers\Admin\HariLiburController::class, 'store'])->name('hari_libur.store');
+            Route::post('/hari_libur/sync', [\App\Http\Controllers\Admin\HariLiburController::class, 'syncApi'])->name('hari_libur.sync');
             Route::delete('/hari_libur/{id}', [\App\Http\Controllers\Admin\HariLiburController::class, 'destroy'])->name('hari_libur.destroy');
             Route::get('/kartu', [\App\Http\Controllers\Admin\KartuController::class, 'index'])->name('kartu.index');
             Route::get('/kartu/cetak-siswa', [\App\Http\Controllers\Admin\KartuController::class, 'cetakSiswa'])->name('kartu.cetak_siswa');

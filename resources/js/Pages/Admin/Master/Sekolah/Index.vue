@@ -32,6 +32,7 @@ const form = useForm({
     google_client_secret: props.sekolah.google_client_secret || '',
     wa_api_url: props.sekolah.wa_api_url || '',
     wa_api_token: props.sekolah.wa_api_token || '',
+    api_co_id_key: props.sekolah.api_co_id_key || '',
     tele_bot_token: props.sekolah.tele_bot_token || '',
     tele_chat_id: props.sekolah.tele_chat_id || '',
     tripay_api_key: props.sekolah.tripay_api_key || '',
@@ -247,6 +248,20 @@ const activeTab = ref('utama');
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp API Token</label>
                                             <input v-model="form.wa_api_token" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- API.CO.ID (Sekolah, Regional, Hari Libur) -->
+                                <div class="bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30 mb-8">
+                                    <h4 class="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                        <i class="fas fa-database text-purple-500"></i> API.CO.ID (Pusat Data Nasional)
+                                    </h4>
+                                    <div class="grid grid-cols-1 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key (x-api-co-id)</label>
+                                            <input v-model="form.api_co_id_key" type="text" placeholder="Masukkan API Key dari api.co.id" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                            <p class="text-xs text-gray-500 mt-2">Dibutuhkan untuk pencarian data Sekolah SMP/MTS Nasional, Regional, dan Hari Libur.</p>
                                         </div>
                                     </div>
                                 </div>

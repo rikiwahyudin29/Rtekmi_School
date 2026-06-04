@@ -39,4 +39,43 @@ class HariLiburController extends Controller
 
         return redirect()->back()->with('success', 'Hari libur berhasil dihapus!');
     }
+
+    public function syncApi()
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'x-api-co-id' => \App\Models\Sekolah::first()->api_co_id_key ?? ''
+            ])->timeout(10)->get('https://use.api.co.id/indonesian-holidays', [
+                'year' => date('Y')
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $holidays = $data['data'] ?? $data;
+                $inserted = 0;
+
+                foreach ($holidays as $holiday) {
+                    $tanggal = $holiday['date'] ?? $holiday['tanggal'] ?? null;
+                    $keterangan = $holiday['name'] ?? $holiday['keterangan'] ?? 'Libur Nasional';
+
+                    if ($tanggal) {
+                        $exists = HariLibur::where('tanggal', $tanggal)->exists();
+                        if (!$exists) {
+                            HariLibur::create([
+                                'tanggal' => $tanggal,
+                                'keterangan' => $keterangan
+                            ]);
+                            $inserted++;
+                        }
+                    }
+                }
+
+                return redirect()->back()->with('success', "Berhasil sinkronisasi $inserted hari libur dari Pusat Data Nasional.");
+            } else {
+                return redirect()->back()->withErrors(['error' => 'Gagal mengambil data dari API. Pastikan API Key valid.']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Koneksi ke API terputus.']);
+        }
+    }
 }

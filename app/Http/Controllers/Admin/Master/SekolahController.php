@@ -46,6 +46,7 @@ class SekolahController extends Controller
             'google_client_secret' => 'nullable|string',
             'wa_api_url' => 'nullable|string',
             'wa_api_token' => 'nullable|string',
+            'api_co_id_key' => 'nullable|string',
             'tele_bot_token' => 'nullable|string',
             'tele_chat_id' => 'nullable|string|max:100',
             'tripay_api_key' => 'nullable|string',
