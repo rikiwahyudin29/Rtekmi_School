@@ -21,20 +21,25 @@ class HomeController extends Controller
         // 1. DATA IDENTITAS SEKOLAH & WEB PROFIL
         $sekolah = DB::table('tbl_sekolah')->where('id', 1)->first() ?? (object)[];
         
-        $webProfil = WebProfil::first() ?? (object) [
-            'deskripsi_hero' => null,
-            'nama_kepsek' => null,
-            'sambutan_kepsek' => null,
-            'foto_kepsek' => null,
-            'spot_hero_png' => null,
-            'spot_ppdb_png' => null,
-            'link_fb' => null,
-            'link_ig' => null,
-            'link_yt' => null,
-            'link_map' => null,
-        ];
+        $webProfil = WebProfil::first();
+        if ($webProfil) {
+            $webProfilArray = $webProfil->toArray();
+        } else {
+            $webProfilArray = [
+                'deskripsi_hero' => null,
+                'nama_kepsek' => null,
+                'sambutan_kepsek' => null,
+                'foto_kepsek' => null,
+                'spot_hero_png' => null,
+                'spot_ppdb_png' => null,
+                'link_fb' => null,
+                'link_ig' => null,
+                'link_yt' => null,
+                'link_map' => null,
+            ];
+        }
 
-        $dataWeb = (object) array_merge((array) $sekolah, (array) $webProfil);
+        $dataWeb = (object) array_merge((array) $sekolah, $webProfilArray);
 
         // 2. DATA CMS
         $sliders = Slider::where('is_active', 1)->orderBy('urutan', 'ASC')->get();
