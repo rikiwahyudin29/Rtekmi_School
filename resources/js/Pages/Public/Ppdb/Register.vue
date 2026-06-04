@@ -104,8 +104,17 @@ const onProvinsiChange = async () => {
         try {
             const res = await fetch(`/api/regional/regencies/${selectedRegionId.value.provinsi}`);
             const data = await res.json();
-            region.value.regencies = data.data || data || [];
-        } catch (e) {}
+            if (Array.isArray(data.data)) {
+                region.value.regencies = data.data;
+            } else if (Array.isArray(data)) {
+                region.value.regencies = data;
+            } else {
+                console.error("API returned invalid data for regencies:", data);
+                region.value.regencies = [];
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 };
 
@@ -122,8 +131,17 @@ const onKabupatenChange = async () => {
         try {
             const res = await fetch(`/api/regional/districts/${selectedRegionId.value.kabupaten}`);
             const data = await res.json();
-            region.value.districts = data.data || data || [];
-        } catch (e) {}
+            if (Array.isArray(data.data)) {
+                region.value.districts = data.data;
+            } else if (Array.isArray(data)) {
+                region.value.districts = data;
+            } else {
+                console.error("API returned invalid data for districts:", data);
+                region.value.districts = [];
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 };
 
@@ -138,8 +156,17 @@ const onKecamatanChange = async () => {
         try {
             const res = await fetch(`/api/regional/villages/${selectedRegionId.value.kecamatan}`);
             const data = await res.json();
-            region.value.villages = data.data || data || [];
-        } catch (e) {}
+            if (Array.isArray(data.data)) {
+                region.value.villages = data.data;
+            } else if (Array.isArray(data)) {
+                region.value.villages = data;
+            } else {
+                console.error("API returned invalid data for villages:", data);
+                region.value.villages = [];
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 };
 
