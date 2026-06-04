@@ -10,7 +10,11 @@
             $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first();
             $favicon = $web && $web->logo ? (str_contains($web->logo, 'default') ? asset('images/' . $web->logo) : asset('uploads/identitas/' . $web->logo)) : asset('favicon.ico');
         @endphp
+        <!-- Favicon Standards for Google Search & Browsers -->
         <link rel="icon" href="{{ $favicon }}">
+        <link rel="shortcut icon" href="{{ $favicon }}">
+        <link rel="apple-touch-icon" href="{{ $favicon }}">
+        <meta itemprop="image" content="{{ $favicon }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
