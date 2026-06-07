@@ -21,8 +21,8 @@
         <meta property="og:site_name" content="{{ $site_name }}">
         <script type="application/ld+json">
         {
-          "@context": "https://schema.org",
-          "@type": "WebSite",
+          "@@context": "https://schema.org",
+          "@@type": "WebSite",
           "name": "{{ $site_name }}",
           "url": "{{ url('/') }}"
         }
