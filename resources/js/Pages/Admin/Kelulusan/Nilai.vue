@@ -11,6 +11,7 @@ const props = defineProps({
 
 const selectedKelas = ref('');
 const search = ref('');
+const ttdManual = ref(false);
 
 const filterKelas = () => {
     router.get(route('admin.kelulusan.nilai'), { kelas_id: selectedKelas.value }, { preserveState: true });
