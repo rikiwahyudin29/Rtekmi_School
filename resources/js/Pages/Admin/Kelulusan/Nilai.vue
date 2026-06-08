@@ -49,11 +49,15 @@ const filteredSiswa = computed(() => {
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <h3 class="font-bold text-gray-700 dark:text-gray-300">Daftar Rekap Nilai</h3>
-                <div class="flex flex-wrap gap-2">
-                    <a :href="route('admin.kelulusan.cetak_semua_transkrip', { kelas_id: selectedKelas })" target="_blank" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer mr-2 bg-gray-100 dark:bg-gray-600 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-500 font-medium">
+                        <input type="checkbox" v-model="ttdManual" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4">
+                        TTD Manual
+                    </label>
+                    <a :href="route('admin.kelulusan.cetak_semua_transkrip', { kelas_id: selectedKelas, ttd_manual: ttdManual ? 1 : 0 })" target="_blank" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
                         <i class="fas fa-file-invoice"></i> Cetak Semua Transkrip
                     </a>
-                    <a :href="route('admin.kelulusan.cetak_semua_skl', { kelas_id: selectedKelas })" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+                    <a :href="route('admin.kelulusan.cetak_semua_skl', { kelas_id: selectedKelas, ttd_manual: ttdManual ? 1 : 0 })" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
                         <i class="fas fa-graduation-cap"></i> Cetak Semua SKL
                     </a>
                     <a :href="route('admin.kelulusan.download_template')" target="_blank" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
@@ -109,10 +113,10 @@ const filteredSiswa = computed(() => {
                                     <button @click="router.get(route('admin.kelulusan.input_nilai', s.id))" class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 flex items-center justify-center transition-colors" title="Input Nilai Manual">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a :href="route('admin.kelulusan.cetak_transkrip', s.id)" target="_blank" class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center justify-center transition-colors" title="Cetak Transkrip">
+                                    <a :href="route('admin.kelulusan.cetak_transkrip', { id: s.id, ttd_manual: ttdManual ? 1 : 0 })" target="_blank" class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center justify-center transition-colors" title="Cetak Transkrip">
                                         <i class="fas fa-file-invoice"></i>
                                     </a>
-                                    <a :href="route('admin.kelulusan.cetak_skl', s.id)" target="_blank" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition-colors" title="Cetak SKL">
+                                    <a :href="route('admin.kelulusan.cetak_skl', { id: s.id, ttd_manual: ttdManual ? 1 : 0 })" target="_blank" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition-colors" title="Cetak SKL">
                                         <i class="fas fa-graduation-cap"></i>
                                     </a>
                                 </div>

@@ -118,6 +118,17 @@
                         <td style="width: 50%; padding-left: 20px;">
                             {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $setting->tgl_pengumuman ? \Carbon\Carbon::parse($setting->tgl_pengumuman)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}<br>
                             
+                            @if(request()->has('ttd_manual') && request('ttd_manual') == 1)
+                            <table style="border: none; width: 240px; padding: 4px; margin-top: 6px;">
+                                <tr>
+                                    <td style="font-family: Arial, sans-serif; font-size: 10pt; text-align: left; vertical-align: middle; padding-left: 5px;">
+                                        KEPALA SEKOLAH,<br><br><br><br><br>
+                                        <b>{{ $sekolah->nama_kepsek ?? '...........................................' }}</b><br>
+                                        NIP. {{ $sekolah->nip_kepsek ?? '.......................' }}
+                                    </td>
+                                </tr>
+                            </table>
+                            @else
                             <table style="border: 1px solid #000; border-radius: 8px; margin-top: 6px; background-color: #fff; width: 240px; padding: 4px;">
                                 <tr>
                                     <td style="width: 50px; text-align: center; vertical-align: middle;">
@@ -133,12 +144,14 @@
                                     </td>
                                 </tr>
                             </table>
+                            @endif
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
 
+        @if(!(request()->has('ttd_manual') && request('ttd_manual') == 1))
         <div class="footer-arsip hindari-terpotong">
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -157,6 +170,7 @@
                 </tr>
             </table>
         </div>
+        @endif
     </div>
 </body>
 </html>

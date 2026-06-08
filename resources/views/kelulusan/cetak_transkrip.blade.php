@@ -129,27 +129,40 @@
                         <td style="width: 50%; padding-left: 20px; font-size: 10pt; vertical-align: top;">
                             {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $setting->tgl_pengumuman ? \Carbon\Carbon::parse($setting->tgl_pengumuman)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}<br>
                             
-                            <table style="border: 1px solid #000; border-radius: 8px; margin-top: 6px; background-color: #fff; width: 240px; padding: 4px;">
-                                <tr>
-                                    <td style="width: 50px; text-align: center; vertical-align: middle;">
-                                        @php
-                                            $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas/' . $sekolah->logo)) ? asset('uploads/identitas/' . $sekolah->logo) : asset('images/logo.png');
-                                        @endphp
-                                        <img src="{{ $pathLogo }}" alt="Logo Sekolah" style="width: 45px; height: 45px;">
-                                    </td>
-                                    <td style="font-family: Arial, sans-serif; font-size: 8pt; text-align: left; vertical-align: middle; padding-left: 5px;">
-                                        Ditandatangani secara elektronik oleh:<br>
-                                        KEPALA SEKOLAH,<br><br>
-                                        <b>{{ $sekolah->nama_kepsek ?? '...........................................' }}</b>
-                                    </td>
-                                </tr>
-                            </table>
+                                @if(request()->has('ttd_manual') && request('ttd_manual') == 1)
+                                <table style="border: none; width: 240px; padding: 4px; margin-top: 6px;">
+                                    <tr>
+                                        <td style="font-family: Arial, sans-serif; font-size: 10pt; text-align: left; vertical-align: middle; padding-left: 5px;">
+                                            KEPALA SEKOLAH,<br><br><br><br><br>
+                                            <b>{{ $sekolah->nama_kepsek ?? '...........................................' }}</b><br>
+                                            NIP. {{ $sekolah->nip_kepsek ?? '.......................' }}
+                                        </td>
+                                    </tr>
+                                </table>
+                                @else
+                                <table style="border: 1px solid #000; border-radius: 8px; margin-top: 6px; background-color: #fff; width: 240px; padding: 4px;">
+                                    <tr>
+                                        <td style="width: 50px; text-align: center; vertical-align: middle;">
+                                            @php
+                                                $pathLogo = !empty($sekolah->logo) && file_exists(public_path('uploads/identitas/' . $sekolah->logo)) ? asset('uploads/identitas/' . $sekolah->logo) : asset('images/logo.png');
+                                            @endphp
+                                            <img src="{{ $pathLogo }}" alt="Logo Sekolah" style="width: 45px; height: 45px;">
+                                        </td>
+                                        <td style="font-family: Arial, sans-serif; font-size: 8pt; text-align: left; vertical-align: middle; padding-left: 5px;">
+                                            Ditandatangani secara elektronik oleh:<br>
+                                            KEPALA SEKOLAH,<br><br>
+                                            <b>{{ $sekolah->nama_kepsek ?? '...........................................' }}</b>
+                                        </td>
+                                    </tr>
+                                </table>
+                                @endif
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
 
+        @if(!(request()->has('ttd_manual') && request('ttd_manual') == 1))
         <div class="footer-arsip hindari-terpotong">
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -168,6 +181,7 @@
                 </tr>
             </table>
         </div>
+        @endif
 
     </div>
 </body>
