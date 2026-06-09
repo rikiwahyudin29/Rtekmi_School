@@ -47,6 +47,44 @@ const submitNilai = () => {
         }
     });
 };
+
+// Excel Import Logic
+const isImportModalOpen = ref(false);
+const formImport = useForm({
+    tp_id: '',
+    file_excel: null,
+});
+
+const openImportModal = () => {
+    formImport.tp_id = formFilter.tp_id;
+    formImport.file_excel = null;
+    isImportModalOpen.value = true;
+};
+
+const closeImportModal = () => {
+    isImportModalOpen.value = false;
+};
+
+const submitImport = () => {
+    formImport.post(route('guru.penilaian.formatif.import'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeImportModal();
+            filterData();
+        }
+    });
+};
+
+const downloadTemplate = () => {
+    if(!formFilter.tp_id || !formFilter.kelas_id) {
+        alert('Pilih Kelas dan Tujuan Pembelajaran (TP) terlebih dahulu!');
+        return;
+    }
+    window.location.href = route('guru.penilaian.formatif.template', {
+        kelas_id: formFilter.kelas_id,
+        tp_id: formFilter.tp_id
+    });
+};
 </script>
 
 <template>
@@ -107,7 +145,14 @@ const submitNilai = () => {
                 <form @submit.prevent="submitNilai">
                     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
                         <h3 class="font-bold text-gray-900 dark:text-white">Form Input Nilai: {{ tp_list.find(t => t.id == formFilter.tp_id)?.kode_tp }}</h3>
-                        <span class="text-sm text-gray-500">Rentang Nilai: 0 - 100</span>
+                        <div class="flex items-center gap-3">
+                            <button type="button" @click="downloadTemplate" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors text-sm flex items-center gap-2">
+                                <i class="fas fa-file-excel"></i> Download Template
+                            </button>
+                            <button type="button" @click="openImportModal" class="px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 font-medium transition-colors text-sm flex items-center gap-2">
+                                <i class="fas fa-upload"></i> Import Nilai
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -143,6 +188,36 @@ const submitNilai = () => {
             <div v-else-if="formFilter.kelas_id && formFilter.tp_id" class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-6 text-center text-yellow-800 dark:text-yellow-400">
                 <i class="fas fa-exclamation-circle text-3xl mb-3"></i>
                 <p>Data siswa tidak ditemukan di kelas ini atau kelas belum memiliki siswa aktif.</p>
+            </div>
+        </div>
+
+        <!-- Modal Import -->
+        <div v-if="isImportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Import Nilai Formatif (.xlsx)</h3>
+                    <button @click="closeImportModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form @submit.prevent="submitImport" class="p-6 space-y-4">
+                    <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-4 rounded-xl text-sm mb-4">
+                        <i class="fas fa-info-circle mr-2"></i> Pastikan Anda mengunggah file hasil dari <b>Download Template</b>. Jangan merubah kolom ID SISWA.
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih File Excel</label>
+                        <input type="file" @input="formImport.file_excel = $event.target.files[0]" accept=".xlsx,.xls" required class="block w-full text-sm text-gray-900 border border-gray-300 rounded-xl cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                    </div>
+                    <div class="pt-4 flex justify-end gap-3">
+                        <button type="button" @click="closeImportModal" class="px-4 py-2 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" :disabled="formImport.processing" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors flex items-center gap-2">
+                            <i v-if="formImport.processing" class="fas fa-spinner fa-spin"></i>
+                            <i v-else class="fas fa-upload"></i> Import Sekarang
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </DashboardLayout>

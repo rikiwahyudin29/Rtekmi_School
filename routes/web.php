@@ -503,12 +503,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/formatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'formatif'])->name('formatif');
         Route::post('/formatif/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeFormatif'])->name('formatif.store');
-        
+        Route::get('/formatif/template', [\App\Http\Controllers\Guru\PenilaianController::class, 'templateFormatif'])->name('formatif.template');
+        Route::post('/formatif/import', [\App\Http\Controllers\Guru\PenilaianController::class, 'importFormatif'])->name('formatif.import');
+
         Route::get('/sumatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'sumatif'])->name('sumatif');
         Route::post('/sumatif/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeSumatif'])->name('sumatif.store');
-        
+        Route::get('/sumatif/template', [\App\Http\Controllers\Guru\PenilaianController::class, 'templateSumatif'])->name('sumatif.template');
+        Route::post('/sumatif/import', [\App\Http\Controllers\Guru\PenilaianController::class, 'importSumatif'])->name('sumatif.import');
+
         Route::get('/sikap-k13', [\App\Http\Controllers\Guru\PenilaianController::class, 'sikapK13'])->name('sikap_k13');
         Route::post('/sikap-k13/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeSikapK13'])->name('sikap_k13.store');
+        Route::get('/sikap-k13/template', [\App\Http\Controllers\Guru\PenilaianController::class, 'templateSikapK13'])->name('sikap_k13.template');
+        Route::post('/sikap-k13/import', [\App\Http\Controllers\Guru\PenilaianController::class, 'importSikapK13'])->name('sikap_k13.import');
         
         Route::get('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'halamanGenerateNilaiAkhir'])->name('halaman_generate_nilai_akhir');
         Route::post('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'generateNilaiAkhir'])->name('store_generate_nilai');

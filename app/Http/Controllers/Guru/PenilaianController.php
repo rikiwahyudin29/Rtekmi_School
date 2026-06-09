@@ -116,7 +116,9 @@ class PenilaianController extends Controller
         $siswa = [];
         $nilai_formatif = [];
         if ($request->has('kelas_id') && $request->has('tp_id')) {
-            $siswa = Siswa::where('kelas_id', $request->kelas_id)->get();
+            $siswa = Siswa::where('kelas_id', $request->kelas_id)
+                          ->orderBy('nama_lengkap', 'asc')
+                          ->get();
             $nilai_formatif = NilaiFormatif::where('tp_id', $request->tp_id)->get()->keyBy('siswa_id');
         }
 
@@ -168,7 +170,9 @@ class PenilaianController extends Controller
         $siswa = [];
         $nilai_sumatif = [];
         if ($request->has('kelas_id') && $request->has('mapel_id')) {
-            $siswa = Siswa::where('kelas_id', $request->kelas_id)->get();
+            $siswa = Siswa::where('kelas_id', $request->kelas_id)
+                          ->orderBy('nama_lengkap', 'asc')
+                          ->get();
             $nilai_sumatif = NilaiSumatif::where('mapel_id', $request->mapel_id)
                 ->where('guru_id', $guru_id)
                 ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
@@ -236,8 +240,7 @@ class PenilaianController extends Controller
         if ($selected_rombel_id) {
             $rombel = \App\Models\JadwalPelajaran::find($selected_rombel_id);
             if ($rombel) {
-                // Dummy fetch siswa by kelas
-                $siswa = Siswa::where('kelas_id', $rombel->id_kelas)->get();
+                $siswa = Siswa::where('kelas_id', $rombel->id_kelas)->orderBy('nama_lengkap', 'asc')->get();
                 $nilai_data = NilaiSikapK13::whereIn('siswa_id', $siswa->pluck('id'))
                     ->where('guru_id', $guru_id)
                     ->get();
@@ -365,5 +368,234 @@ class PenilaianController extends Controller
         }
 
         return redirect()->back()->with('success', 'Berhasil melakukan generate Nilai Akhir dan Deskripsi otomatis untuk seluruh siswa di kelas.');
+    }
+
+    // ==============================================================================
+    // EXCEL IMPORT / EXPORT (PhpSpreadsheet)
+    // ==============================================================================
+
+    public function templateFormatif(Request $request)
+    {
+        $request->validate(['tp_id' => 'required', 'kelas_id' => 'required']);
+        $tp = TujuanPembelajaran::find($request->tp_id);
+        $kelas = Kelas::find($request->kelas_id);
+        $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        $sheet->setCellValue('A1', 'TEMPLATE NILAI FORMATIF');
+        $sheet->setCellValue('A2', 'Mata Pelajaran: ' . ($tp->mapel->nama_mapel ?? ''));
+        $sheet->setCellValue('A3', 'Tujuan Pembelajaran: ' . ($tp->kode_tp ?? ''));
+        $sheet->setCellValue('A4', 'Kelas: ' . ($kelas->nama_kelas ?? ''));
+        
+        $sheet->setCellValue('A6', 'ID SISWA (JANGAN DIUBAH)');
+        $sheet->setCellValue('B6', 'NISN');
+        $sheet->setCellValue('C6', 'NAMA SISWA');
+        $sheet->setCellValue('D6', 'NILAI FORMATIF (0-100)');
+
+        $row = 7;
+        foreach($siswa as $s) {
+            $sheet->setCellValue('A'.$row, $s->id);
+            $sheet->setCellValue('B'.$row, $s->nisn);
+            $sheet->setCellValue('C'.$row, $s->nama_lengkap);
+            $row++;
+        }
+
+        // Auto size columns
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = 'Template_Formatif_'.$kelas->nama_kelas.'_'.$tp->kode_tp.'.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    public function importFormatif(Request $request)
+    {
+        $request->validate([
+            'tp_id' => 'required',
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $file = $request->file('file_excel');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        $data = array_slice($rows, 6); // Skip header
+
+        foreach($data as $row) {
+            $siswa_id = $row[0];
+            $nilai = $row[3];
+
+            if($siswa_id && is_numeric($nilai)) {
+                NilaiFormatif::updateOrCreate(
+                    ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
+                    ['nilai' => $nilai]
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Import Nilai Formatif berhasil.');
+    }
+
+    public function templateSumatif(Request $request)
+    {
+        $request->validate(['mapel_id' => 'required', 'kelas_id' => 'required', 'jenis' => 'required']);
+        $mapel = Mapel::find($request->mapel_id);
+        $kelas = Kelas::find($request->kelas_id);
+        $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        $sheet->setCellValue('A1', 'TEMPLATE NILAI SUMATIF (' . $request->jenis . ')');
+        $sheet->setCellValue('A2', 'Mata Pelajaran: ' . ($mapel->nama_mapel ?? ''));
+        $sheet->setCellValue('A3', 'Kelas: ' . ($kelas->nama_kelas ?? ''));
+        
+        $sheet->setCellValue('A5', 'ID SISWA (JANGAN DIUBAH)');
+        $sheet->setCellValue('B5', 'NISN');
+        $sheet->setCellValue('C5', 'NAMA SISWA');
+        $sheet->setCellValue('D5', 'NILAI SUMATIF (0-100)');
+
+        $row = 6;
+        foreach($siswa as $s) {
+            $sheet->setCellValue('A'.$row, $s->id);
+            $sheet->setCellValue('B'.$row, $s->nisn);
+            $sheet->setCellValue('C'.$row, $s->nama_lengkap);
+            $row++;
+        }
+
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = 'Template_Sumatif_'.$request->jenis.'_'.$kelas->nama_kelas.'.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    public function importSumatif(Request $request)
+    {
+        $request->validate([
+            'mapel_id' => 'required',
+            'jenis' => 'required',
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $guru_id = Auth::user()->guru->id ?? 1;
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+
+        $file = $request->file('file_excel');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        $data = array_slice($rows, 5);
+
+        foreach($data as $row) {
+            $siswa_id = $row[0];
+            $nilai = $row[3];
+
+            if($siswa_id && is_numeric($nilai)) {
+                NilaiSumatif::updateOrCreate(
+                    [
+                        'mapel_id' => $request->mapel_id,
+                        'guru_id' => $guru_id,
+                        'siswa_id' => $siswa_id,
+                        'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
+                        'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                        'jenis' => $request->jenis
+                    ],
+                    ['nilai' => $nilai]
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Import Nilai Sumatif berhasil.');
+    }
+
+    public function templateSikapK13(Request $request)
+    {
+        $request->validate(['kelas_id' => 'required']);
+        $kelas = Kelas::find($request->kelas_id);
+        $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        $sheet->setCellValue('A1', 'TEMPLATE NILAI SIKAP K13');
+        $sheet->setCellValue('A2', 'Kelas: ' . ($kelas->nama_kelas ?? ''));
+        
+        $sheet->setCellValue('A4', 'ID SISWA (JANGAN DIUBAH)');
+        $sheet->setCellValue('B4', 'NISN');
+        $sheet->setCellValue('C4', 'NAMA SISWA');
+        $sheet->setCellValue('D4', 'NILAI SPIRITUAL (1-4)');
+        $sheet->setCellValue('E4', 'DESKRIPSI SPIRITUAL');
+        $sheet->setCellValue('F4', 'NILAI SOSIAL (1-4)');
+        $sheet->setCellValue('G4', 'DESKRIPSI SOSIAL');
+
+        $row = 5;
+        foreach($siswa as $s) {
+            $sheet->setCellValue('A'.$row, $s->id);
+            $sheet->setCellValue('B'.$row, $s->nisn);
+            $sheet->setCellValue('C'.$row, $s->nama_lengkap);
+            $row++;
+        }
+
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = 'Template_SikapK13_'.$kelas->nama_kelas.'.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    public function importSikapK13(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $guru_id = Auth::user()->guru->id ?? 1;
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1;
+
+        $file = $request->file('file_excel');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        $data = array_slice($rows, 4);
+
+        foreach($data as $row) {
+            $siswa_id = $row[0];
+            
+            if($siswa_id) {
+                NilaiSikapK13::updateOrCreate(
+                    ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => $semester],
+                    [
+                        'nilai_spiritual' => $row[3] ?? null,
+                        'deskripsi_spiritual' => $row[4] ?? null,
+                        'nilai_sosial' => $row[5] ?? null,
+                        'deskripsi_sosial' => $row[6] ?? null,
+                    ]
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Import Nilai Sikap K13 berhasil.');
     }
 }
