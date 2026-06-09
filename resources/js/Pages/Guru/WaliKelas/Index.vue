@@ -4,6 +4,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
     kelas: Object,
+    status_penilaian: Array
 });
 </script>
 
@@ -100,6 +101,48 @@ const props = defineProps({
                         Cetak Rapor <i class="fas fa-arrow-right ml-2"></i>
                     </div>
                 </Link>
+            </div>
+
+            <!-- Status Penilaian Mata Pelajaran -->
+            <div v-if="kelas" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-8">
+                <div class="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-tasks text-blue-500"></i> Status Penilaian Guru Mata Pelajaran
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-white dark:bg-gray-800 dark:text-gray-300">
+                            <tr>
+                                <th class="px-6 py-4 border-b dark:border-gray-700">No</th>
+                                <th class="px-6 py-4 border-b dark:border-gray-700">Mata Pelajaran</th>
+                                <th class="px-6 py-4 border-b dark:border-gray-700">Guru Pengampu</th>
+                                <th class="px-6 py-4 border-b dark:border-gray-700">Status Penyelesaian Nilai Akhir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(status, index) in status_penilaian" :key="index" class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-6 py-4">{{ index + 1 }}</td>
+                                <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">{{ status.mapel }}</td>
+                                <td class="px-6 py-4">{{ status.guru }}</td>
+                                <td class="px-6 py-4">
+                                    <span v-if="status.tuntas" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold flex items-center w-max gap-1">
+                                        <i class="fas fa-check-circle"></i> {{ status.status }}
+                                    </span>
+                                    <span v-else-if="status.status === 'Belum Ada Siswa'" class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-bold flex items-center w-max gap-1">
+                                        <i class="fas fa-info-circle"></i> {{ status.status }}
+                                    </span>
+                                    <span v-else class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold flex items-center w-max gap-1">
+                                        <i class="fas fa-clock"></i> {{ status.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr v-if="!status_penilaian || status_penilaian.length === 0">
+                                <td colspan="4" class="px-6 py-8 text-center text-gray-500">Belum ada mata pelajaran yang dijadwalkan untuk kelas ini.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </DashboardLayout>

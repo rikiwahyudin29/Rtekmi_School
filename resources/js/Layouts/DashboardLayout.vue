@@ -325,7 +325,8 @@ const menuItems = computed(() => {
             { name: 'Pembelajaran KBM', icon: 'fas fa-chalkboard-teacher', route: '#', active: false, children: [
                 { name: 'Jadwal Mengajar', icon: 'fas fa-calendar-day', route: '#', active: false },
                 { name: 'Jurnal KBM', icon: 'fas fa-book-open', route: '#', active: false },
-                { name: 'Filebox (RPP/Silabus)', icon: 'fas fa-folder-open', route: '#', active: false },
+                { name: 'Tujuan Pembelajaran', icon: 'fas fa-bullseye', route: 'guru.penilaian.tp', active: route().current('guru.penilaian.tp') },
+                { name: 'Input Nilai Formatif', icon: 'fas fa-clipboard-check', route: 'guru.penilaian.formatif', active: route().current('guru.penilaian.formatif') },
                 { name: 'Input Nilai Sumatif', icon: 'fas fa-star', route: 'guru.penilaian.sumatif', active: route().current('guru.penilaian.sumatif') },
                 { name: 'Input Nilai Sikap K13', icon: 'fas fa-heart', route: 'guru.penilaian.sikap_k13', active: route().current('guru.penilaian.sikap_k13') },
                 { name: 'Generate Nilai Akhir', icon: 'fas fa-calculator', route: '#', active: false },

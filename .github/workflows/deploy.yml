@@ -1,0 +1,31 @@
+name: Deploy ke FastPanel VPS
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: 22
+        script: |
+          # Ganti 'path_ke_folder_website' dengan lokasi asli folder website di FastPanel bos
+          # Contoh biasanya di FastPanel: /var/www/namauser/data/www/domain.com
+          cd /var/www/app_smkriyad_usr/data/www/smkriyadhuljannahjalancagak.sch.id
+          
+          # Eksekusi Git Pull
+          git pull origin main
+          
+          # Jika perlu menjalankan composer atau migrate otomatis, hilangkan tanda pagarnya:
+          # /opt/php83/bin/php /usr/local/bin/composer install --no-interaction --optimize-autoloader
+          # /opt/php83/bin/php artisan migrate --force

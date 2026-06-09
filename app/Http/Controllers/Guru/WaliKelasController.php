@@ -15,6 +15,7 @@ use App\Models\Dudi;
 use App\Models\PklK13;
 use App\Models\DeskripsiP3K13;
 use App\Models\DeskripsiDplK13;
+use App\Models\KenaikanKelas;
 use Illuminate\Support\Facades\Auth;
 
 class WaliKelasController extends Controller
@@ -34,8 +35,43 @@ class WaliKelasController extends Controller
     {
         $kelas = $this->getKelasWali();
         
+        $status_penilaian = [];
+        if ($kelas) {
+            $siswa_count = Siswa::where('kelas_id', $kelas->id)->count();
+            $jadwal = \App\Models\JadwalPelajaran::with(['mapel', 'guru'])
+                ->where('id_kelas', $kelas->id)
+                ->get()
+                ->unique('id_mapel');
+
+            foreach ($jadwal as $j) {
+                if ($j->mapel && $j->guru) {
+                    $siswa_ids = Siswa::where('kelas_id', $kelas->id)->pluck('id');
+                    $nilai_count = \App\Models\RaporAkhir::where('mapel_id', $j->id_mapel)
+                        ->whereIn('siswa_id', $siswa_ids)
+                        ->count();
+
+                    $status = 'Belum Tuntas';
+                    if ($siswa_count == 0) {
+                        $status = 'Belum Ada Siswa';
+                    } elseif ($nilai_count >= $siswa_count) {
+                        $status = 'Tuntas';
+                    } elseif ($nilai_count > 0) {
+                        $status = "Proses ($nilai_count/$siswa_count)";
+                    }
+
+                    $status_penilaian[] = [
+                        'mapel' => $j->mapel->nama_mapel,
+                        'guru' => $j->guru->nama_lengkap,
+                        'status' => $status,
+                        'tuntas' => $status === 'Tuntas'
+                    ];
+                }
+            }
+        }
+        
         return Inertia::render('Guru/WaliKelas/Index', [
-            'kelas' => $kelas
+            'kelas' => $kelas,
+            'status_penilaian' => $status_penilaian
         ]);
     }
 
