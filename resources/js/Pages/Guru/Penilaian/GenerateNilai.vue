@@ -118,8 +118,7 @@ const submit = () => {
                             <th scope="col" colspan="2" class="px-6 py-2 text-center border-l border-b border-gray-200 dark:border-gray-600 bg-purple-50/50 dark:bg-purple-900/20">Nilai Sumatif</th>
                             
                             <th scope="col" rowspan="2" class="px-6 py-4 font-semibold w-32 text-center border-l border-gray-200 dark:border-gray-600">Nilai Akhir</th>
-                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold min-w-[250px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian Tertinggi</th>
-                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold min-w-[250px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian Terendah</th>
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold min-w-[400px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian</th>
                         </tr>
                         <tr>
                             <th v-for="tp in tps" :key="tp.id" scope="col" class="px-3 py-2 font-medium text-xs text-center border-l border-gray-200 dark:border-gray-600 bg-blue-50/30 dark:bg-blue-900/10 whitespace-nowrap" :title="tp.deskripsi">{{ tp.kode_tp }}</th>
@@ -154,11 +153,8 @@ const submit = () => {
                                     {{ rapor_akhir[s.id]?.nilai_akhir ?? '-' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 border-l border-gray-200 dark:border-gray-600 text-green-600 dark:text-green-400">
+                            <td class="px-6 py-4 border-l border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                                 {{ rapor_akhir[s.id]?.deskripsi_tertinggi ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4 border-l border-gray-200 dark:border-gray-600 text-red-600 dark:text-red-400">
-                                {{ rapor_akhir[s.id]?.deskripsi_terendah ?? '-' }}
                             </td>
                         </tr>
                     </tbody>

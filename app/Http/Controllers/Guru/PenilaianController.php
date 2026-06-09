@@ -440,25 +440,39 @@ class PenilaianController extends Controller
             // Nilai Akhir (Misal 60% Formatif + 40% Sumatif)
             $nilai_akhir = ($rata_formatif * 0.6) + ($nilai_sas * 0.4);
 
-            // Mencari TP tertinggi dan terendah untuk deskripsi
-            $tertinggi = $formatifs->sortByDesc('nilai')->first();
-            $terendah = $formatifs->sortBy('nilai')->first();
+            $sangat_baik_tps = [];
+            $baik_tps = [];
+            $kurang_tps = [];
 
-            $deskripsi_tertinggi = "";
-            if ($tertinggi) {
-                $tp_tinggi = $tps->where('id', $tertinggi->tp_id)->first();
-                if ($tertinggi->nilai >= $batas_sangat_baik) {
-                    $deskripsi_tertinggi = "Menunjukkan penguasaan yang sangat baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
-                } elseif ($tertinggi->nilai >= $kkm) {
-                    $deskripsi_tertinggi = "Menunjukkan penguasaan yang baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
+            foreach ($formatifs as $f) {
+                $tp = $tps->where('id', $f->tp_id)->first();
+                if ($tp) {
+                    if ($f->nilai >= $batas_sangat_baik) {
+                        $sangat_baik_tps[] = $tp->deskripsi;
+                    } elseif ($f->nilai >= $kkm) {
+                        $baik_tps[] = $tp->deskripsi;
+                    } else {
+                        $kurang_tps[] = $tp->deskripsi;
+                    }
                 }
             }
 
-            $deskripsi_terendah = "";
-            if ($terendah && $terendah->nilai < $kkm) {
-                $tp_rendah = $tps->where('id', $terendah->tp_id)->first();
-                $deskripsi_terendah = "Perlu pendampingan dalam " . ($tp_rendah ? $tp_rendah->deskripsi : '');
+            $deskripsi_parts = [];
+            if (count($sangat_baik_tps) > 0) {
+                $deskripsi_parts[] = "Menunjukkan penguasaan yang sangat baik dalam " . implode(", ", $sangat_baik_tps);
             }
+            if (count($baik_tps) > 0) {
+                $deskripsi_parts[] = "Menunjukkan penguasaan yang baik dalam " . implode(", ", $baik_tps);
+            }
+            if (count($kurang_tps) > 0) {
+                $deskripsi_parts[] = "Perlu pendampingan dalam " . implode(", ", $kurang_tps);
+            }
+
+            $deskripsi_tertinggi = implode(". ", $deskripsi_parts);
+            if (!empty($deskripsi_tertinggi)) {
+                $deskripsi_tertinggi .= ".";
+            }
+            $deskripsi_terendah = "";
 
             RaporAkhir::updateOrCreate(
                 [
