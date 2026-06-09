@@ -329,7 +329,7 @@ const menuItems = computed(() => {
                 { name: 'Input Nilai Formatif', icon: 'fas fa-clipboard-check', route: 'guru.penilaian.formatif', active: route().current('guru.penilaian.formatif') },
                 { name: 'Input Nilai Sumatif', icon: 'fas fa-star', route: 'guru.penilaian.sumatif', active: route().current('guru.penilaian.sumatif') },
                 { name: 'Input Nilai Sikap K13', icon: 'fas fa-heart', route: 'guru.penilaian.sikap_k13', active: route().current('guru.penilaian.sikap_k13') },
-                { name: 'Generate Nilai Akhir', icon: 'fas fa-calculator', route: '#', active: false },
+                { name: 'Generate Nilai Akhir', icon: 'fas fa-calculator', route: 'guru.penilaian.halaman_generate_nilai_akhir', active: route().current('guru.penilaian.*generate_nilai*') },
                 { name: 'E-Learning Lanjutan', icon: 'fas fa-laptop', route: '#', active: false },
             ]},
             { name: 'Ujian & Evaluasi', icon: 'fas fa-laptop-code', route: '#', active: route().current('admin.cbt.*'), children: [

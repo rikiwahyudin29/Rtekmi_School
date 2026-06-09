@@ -267,6 +267,22 @@ class PenilaianController extends Controller
         return redirect()->back()->with('success', 'Nilai Sikap K13 berhasil disimpan.');
     }
 
+    public function halamanGenerateNilaiAkhir(Request $request)
+    {
+        $guru_id = Auth::user()->guru->id ?? 1;
+        
+        $mapel_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_mapel')->unique();
+        $mapel_list = Mapel::whereIn('id', $mapel_ids)->get();
+
+        $kelas_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_kelas')->unique();
+        $kelas_list = Kelas::whereIn('id', $kelas_ids)->get();
+
+        return Inertia::render('Guru/Penilaian/GenerateNilai', [
+            'mapel_list' => $mapel_list,
+            'kelas_list' => $kelas_list
+        ]);
+    }
+
     /**
      * Proses/Generate Nilai Akhir Rapor & Deskripsi Otomatis
      */

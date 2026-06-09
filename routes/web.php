@@ -510,7 +510,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/sikap-k13', [\App\Http\Controllers\Guru\PenilaianController::class, 'sikapK13'])->name('sikap_k13');
         Route::post('/sikap-k13/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeSikapK13'])->name('sikap_k13.store');
         
-        Route::post('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'generateNilaiAkhir'])->name('generate_nilai_akhir');
+        Route::get('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'halamanGenerateNilaiAkhir'])->name('halaman_generate_nilai_akhir');
+        Route::post('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'generateNilaiAkhir'])->name('store_generate_nilai');
     });
 
     // G. Guru PKL
