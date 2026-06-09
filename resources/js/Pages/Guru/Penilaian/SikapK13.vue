@@ -39,6 +39,7 @@ const gantiRombel = (e) => {
     router.get(route('guru.penilaian.sikap_k13'), { rombel_id: e.target.value }, { preserveState: true, preserveScroll: true });
 };
 
+const submitSikap = () => {
     form.post(route('guru.penilaian.sikap_k13.store'), { preserveScroll: true });
 };
 
