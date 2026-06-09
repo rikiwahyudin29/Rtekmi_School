@@ -26,9 +26,7 @@ class WaliKelasController extends Controller
     private function getKelasWali()
     {
         $guru_id = Auth::user()->guru->id ?? 1;
-        // Asumsikan ada relasi guru_id di tabel tbl_kelas untuk wali kelas
-        // $kelas = Kelas::where('guru_id', $guru_id)->first();
-        $kelas = Kelas::first(); // Simulasi
+        $kelas = Kelas::where('guru_id', $guru_id)->first();
         return $kelas;
     }
 

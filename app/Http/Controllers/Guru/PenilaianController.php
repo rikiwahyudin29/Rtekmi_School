@@ -28,8 +28,8 @@ class PenilaianController extends Controller
     {
         $guru_id = Auth::user()->guru->id ?? 1; // Sesuaikan dengan relasi user ke guru
         
-        // Ambil data mapel yang diajar oleh guru ini (Simulasi, sesuaikan dengan tabel PembagianTugas di app)
-        $mapel = Mapel::all(); 
+        $mapel_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_mapel')->unique();
+        $mapel = Mapel::whereIn('id', $mapel_ids)->get(); 
         
         return Inertia::render('Guru/Penilaian/Index', [
             'mapel' => $mapel
@@ -44,7 +44,9 @@ class PenilaianController extends Controller
         $guru_id = Auth::user()->guru->id ?? 1;
         
         $tp = TujuanPembelajaran::with('mapel')->where('guru_id', $guru_id)->get();
-        $mapel = Mapel::all();
+        
+        $mapel_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_mapel')->unique();
+        $mapel = Mapel::whereIn('id', $mapel_ids)->get();
 
         return Inertia::render('Guru/Penilaian/TujuanPembelajaran', [
             'tp' => $tp,
@@ -92,7 +94,9 @@ class PenilaianController extends Controller
     {
         $guru_id = Auth::user()->guru->id ?? 1;
         $tp_list = TujuanPembelajaran::where('guru_id', $guru_id)->get();
-        $kelas_list = Kelas::all();
+        
+        $kelas_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_kelas')->unique();
+        $kelas_list = Kelas::whereIn('id', $kelas_ids)->get();
 
         // Jika user memilih kelas dan TP tertentu untuk dinilai
         $siswa = [];
@@ -139,8 +143,12 @@ class PenilaianController extends Controller
     public function sumatif(Request $request)
     {
         $guru_id = Auth::user()->guru->id ?? 1;
-        $mapel_list = Mapel::all(); // Seharusnya berdasarkan pembagian tugas
-        $kelas_list = Kelas::all();
+        
+        $mapel_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_mapel')->unique();
+        $mapel_list = Mapel::whereIn('id', $mapel_ids)->get();
+
+        $kelas_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_kelas')->unique();
+        $kelas_list = Kelas::whereIn('id', $kelas_ids)->get();
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
 
         $siswa = [];
@@ -199,17 +207,23 @@ class PenilaianController extends Controller
     public function sikapK13(Request $request)
     {
         $guru_id = Auth::user()->guru->id ?? 1;
-        $rombels = RombonganBelajar::with(['kelas', 'mapel'])->where('guru_id', $guru_id)->get();
+        $rombels = \App\Models\JadwalPelajaran::with(['kelas', 'mapel'])
+            ->where('id_guru', $guru_id)
+            ->get()
+            ->unique(function ($item) {
+                return $item['id_kelas'].'-'.$item['id_mapel'];
+            })->values();
+
         $selected_rombel_id = request('rombel_id');
         
         $siswa = [];
         $nilaiSikap = [];
 
         if ($selected_rombel_id) {
-            $rombel = RombonganBelajar::find($selected_rombel_id);
+            $rombel = \App\Models\JadwalPelajaran::find($selected_rombel_id);
             if ($rombel) {
                 // Dummy fetch siswa by kelas
-                $siswa = Siswa::where('kelas_id', $rombel->kelas_id)->get();
+                $siswa = Siswa::where('kelas_id', $rombel->id_kelas)->get();
                 $nilai_data = NilaiSikapK13::whereIn('siswa_id', $siswa->pluck('id'))
                     ->where('guru_id', $guru_id)
                     ->get();
