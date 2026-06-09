@@ -171,15 +171,32 @@ class PenilaianController extends Controller
     {
         $request->validate([
             'tp_id' => 'required',
-            'nilai' => 'required|array', // [siswa_id => nilai]
+            'nilai' => 'required|array', // [siswa_id => nilai] OR [siswa_id => [tp_id => nilai]]
         ]);
 
-        foreach ($request->nilai as $siswa_id => $nilai) {
-            if ($nilai !== null) {
-                NilaiFormatif::updateOrCreate(
-                    ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
-                    ['nilai' => $nilai]
-                );
+        $isAll = $request->tp_id === 'all';
+
+        foreach ($request->nilai as $siswa_id => $nilai_data) {
+            if ($isAll) {
+                // $nilai_data is an array of [tp_id => nilai]
+                if (is_array($nilai_data)) {
+                    foreach($nilai_data as $tp_id => $n) {
+                        if ($n !== null && $n !== '') {
+                            NilaiFormatif::updateOrCreate(
+                                ['tp_id' => $tp_id, 'siswa_id' => $siswa_id],
+                                ['nilai' => $n]
+                            );
+                        }
+                    }
+                }
+            } else {
+                // $nilai_data is a scalar
+                if ($nilai_data !== null && $nilai_data !== '') {
+                    NilaiFormatif::updateOrCreate(
+                        ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
+                        ['nilai' => $nilai_data]
+                    );
+                }
             }
         }
 
