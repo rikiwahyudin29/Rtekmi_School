@@ -14,6 +14,9 @@ use App\Models\P5Nilai;
 use App\Models\UkkNilai;
 use App\Models\Kelas;
 use App\Models\EkskulNilai;
+use App\Models\Sekolah;
+use App\Models\TahunAjaran;
+use Carbon\Carbon;
 
 class CetakRaporController extends Controller
 {
@@ -34,13 +37,18 @@ class CetakRaporController extends Controller
      */
     public function cetakNilai($id)
     {
-        $siswa = Siswa::with(['kelas', 'jurusan'])->findOrFail($id);
-        $rapor_akhir = RaporAkhir::with('mapel')->where('siswa_id', $id)->where('semester', 1)->get();
-        $kehadiran = RaporKehadiran::where('siswa_id', $id)->where('semester', 1)->first();
-        $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', 1)->first();
-        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', 1)->get();
+        $sekolah = Sekolah::first();
+        $tahun_ajaran = TahunAjaran::where('status', 'Aktif')->first();
+        $tanggal_rapor = Carbon::now()->translatedFormat('d F Y');
+        $semester_int = ($tahun_ajaran && $tahun_ajaran->semester === 'Genap') ? 2 : 1;
 
-        return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl'));
+        $siswa = Siswa::with(['kelas.waliKelas', 'jurusan'])->findOrFail($id);
+        $rapor_akhir = RaporAkhir::with('mapel')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+        $kehadiran = RaporKehadiran::where('siswa_id', $id)->where('semester', $semester_int)->first();
+        $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
+        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+
+        return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'sekolah', 'tahun_ajaran', 'tanggal_rapor'));
     }
 
     /**

@@ -39,15 +39,15 @@
                 <td>{{ $siswa->nisn }} / {{ $siswa->nis ?? '-' }}</td>
                 <td>Fase / Semester</td>
                 <td>:</td>
-                <td>Fase E / 1 (Ganjil)</td>
+                <td>Fase E / {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2 (Genap)' : '1 (Ganjil)' }}</td>
             </tr>
             <tr>
                 <td>Sekolah</td>
                 <td>:</td>
-                <td>SMK N 1 Contoh</td>
+                <td>{{ $sekolah->nama_sekolah ?? 'SMK N 1 Contoh' }}</td>
                 <td>Tahun Ajaran</td>
                 <td>:</td>
-                <td>2026/2027</td>
+                <td>{{ $tahun_ajaran->tahun_ajaran ?? '2026/2027' }}</td>
             </tr>
         </table>
 
@@ -138,18 +138,18 @@
                 </td>
                 <td width="40%"></td>
                 <td width="30%" align="center">
-                    Bandung, 18 Desember 2026<br>
+                    {{ $sekolah->kabupaten ?? 'Bandung' }}, {{ $tanggal_rapor }}<br>
                     Wali Kelas<br><br><br><br>
-                    <strong><u>Nama Wali Kelas S.Pd.</u></strong><br>
-                    NIP. 198001012010011001
+                    <strong><u>{{ $siswa->kelas->waliKelas->nama_lengkap ?? 'Nama Wali Kelas S.Pd.' }}</u></strong><br>
+                    NIP. {{ $siswa->kelas->waliKelas->nip ?? '-' }}
                 </td>
             </tr>
             <tr>
                 <td colspan="3" align="center" style="padding-top: 30px;">
                     Mengetahui,<br>
                     Kepala Sekolah<br><br><br><br>
-                    <strong><u>Kepala Sekolah M.Pd.</u></strong><br>
-                    NIP. 197501012005011002
+                    <strong><u>{{ $sekolah->nama_kepsek ?? 'Kepala Sekolah M.Pd.' }}</u></strong><br>
+                    NIP. {{ $sekolah->nip_kepsek ?? '-' }}
                 </td>
             </tr>
         </table>
