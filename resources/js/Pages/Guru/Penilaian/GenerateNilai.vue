@@ -7,6 +7,8 @@ const props = defineProps({
     kelas_list: Array,
     siswa: Array,
     rapor_akhir: Object,
+    tps: Array,
+    detail_nilai: Object,
     filters: Object
 });
 
@@ -92,12 +94,25 @@ const submit = () => {
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700/50 dark:text-gray-300">
                         <tr>
-                            <th scope="col" class="px-6 py-4 font-semibold w-16">No</th>
-                            <th scope="col" class="px-6 py-4 font-semibold w-32">NISN</th>
-                            <th scope="col" class="px-6 py-4 font-semibold min-w-[200px]">Nama Siswa</th>
-                            <th scope="col" class="px-6 py-4 font-semibold w-32 text-center border-l border-gray-200 dark:border-gray-600">Nilai Akhir</th>
-                            <th scope="col" class="px-6 py-4 font-semibold min-w-[250px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian Tertinggi</th>
-                            <th scope="col" class="px-6 py-4 font-semibold min-w-[250px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian Terendah</th>
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold w-16">No</th>
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold w-32">NISN</th>
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold min-w-[200px]">Nama Siswa</th>
+                            
+                            <!-- Formatif Group -->
+                            <th v-if="tps && tps.length > 0" scope="col" :colspan="tps.length" class="px-6 py-2 text-center border-l border-b border-gray-200 dark:border-gray-600 bg-blue-50/50 dark:bg-blue-900/20">Nilai Formatif (Per TP)</th>
+                            
+                            <!-- Sumatif Group -->
+                            <th scope="col" colspan="2" class="px-6 py-2 text-center border-l border-b border-gray-200 dark:border-gray-600 bg-purple-50/50 dark:bg-purple-900/20">Nilai Sumatif</th>
+                            
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold w-32 text-center border-l border-gray-200 dark:border-gray-600">Nilai Akhir</th>
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold min-w-[250px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian Tertinggi</th>
+                            <th scope="col" rowspan="2" class="px-6 py-4 font-semibold min-w-[250px] border-l border-gray-200 dark:border-gray-600">Deskripsi Capaian Terendah</th>
+                        </tr>
+                        <tr>
+                            <th v-for="tp in tps" :key="tp.id" scope="col" class="px-3 py-2 font-medium text-xs text-center border-l border-gray-200 dark:border-gray-600 bg-blue-50/30 dark:bg-blue-900/10 whitespace-nowrap" :title="tp.deskripsi">{{ tp.kode_tp }}</th>
+                            
+                            <th scope="col" class="px-3 py-2 font-medium text-xs text-center border-l border-gray-200 dark:border-gray-600 bg-purple-50/30 dark:bg-purple-900/10">SAS</th>
+                            <th scope="col" class="px-3 py-2 font-medium text-xs text-center border-l border-gray-200 dark:border-gray-600 bg-purple-50/30 dark:bg-purple-900/10">STS</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -105,6 +120,22 @@ const submit = () => {
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ index + 1 }}</td>
                             <td class="px-6 py-4">{{ s.nisn }}</td>
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ s.nama_lengkap }}</td>
+                            
+                            <!-- Formatif Data -->
+                            <td v-for="tp in tps" :key="tp.id" class="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-600">
+                                <span :class="{'text-red-500 font-medium': detail_nilai[s.id]?.formatif?.[tp.id]?.nilai < 70}">
+                                    {{ detail_nilai[s.id]?.formatif?.[tp.id]?.nilai ?? '-' }}
+                                </span>
+                            </td>
+                            
+                            <!-- Sumatif Data -->
+                            <td class="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-600 font-medium text-purple-700 dark:text-purple-400">
+                                {{ detail_nilai[s.id]?.sas ?? '-' }}
+                            </td>
+                            <td class="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-600 font-medium text-purple-700 dark:text-purple-400">
+                                {{ detail_nilai[s.id]?.sts ?? '-' }}
+                            </td>
+
                             <td class="px-6 py-4 text-center border-l border-gray-200 dark:border-gray-600">
                                 <span class="inline-flex items-center justify-center w-10 h-10 rounded-full font-bold text-blue-700 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400">
                                     {{ rapor_akhir[s.id]?.nilai_akhir ?? '-' }}

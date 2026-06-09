@@ -355,8 +355,32 @@ class PenilaianController extends Controller
 
         $siswa = [];
         $rapor_akhir = [];
+        $tps = [];
+        $detail_nilai = [];
         if ($request->has('kelas_id') && $request->has('mapel_id')) {
             $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)->where('guru_id', $guru_id)->get();
+            $tp_ids = $tps->pluck('id')->toArray();
+            
+            $formatifs = NilaiFormatif::whereIn('siswa_id', $siswa->pluck('id'))->whereIn('tp_id', $tp_ids)->get();
+            $sumatifs = NilaiSumatif::whereIn('siswa_id', $siswa->pluck('id'))
+                ->where('mapel_id', $request->mapel_id)
+                ->where('guru_id', $guru_id)
+                ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+                ->where('semester', $semester_int)
+                ->get();
+
+            foreach($siswa as $s) {
+                $f = $formatifs->where('siswa_id', $s->id)->keyBy('tp_id');
+                $sas = $sumatifs->where('siswa_id', $s->id)->where('jenis', 'SAS')->first();
+                $sts = $sumatifs->where('siswa_id', $s->id)->where('jenis', 'STS')->first();
+                $detail_nilai[$s->id] = [
+                    'formatif' => $f,
+                    'sas' => $sas ? $sas->nilai : '-',
+                    'sts' => $sts ? $sts->nilai : '-'
+                ];
+            }
+
             $rapor_akhir = RaporAkhir::where('mapel_id', $request->mapel_id)
                 ->where('guru_id', $guru_id)
                 ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
@@ -371,6 +395,8 @@ class PenilaianController extends Controller
             'kelas_list' => $kelas_list,
             'siswa' => $siswa,
             'rapor_akhir' => $rapor_akhir,
+            'tps' => $tps,
+            'detail_nilai' => $detail_nilai,
             'filters' => $request->only(['kelas_id', 'mapel_id'])
         ]);
     }
@@ -414,9 +440,13 @@ class PenilaianController extends Controller
             $terendah = $formatifs->sortBy('nilai')->first();
 
             $deskripsi_tertinggi = "";
-            if ($tertinggi && $tertinggi->nilai >= 85) {
+            if ($tertinggi) {
                 $tp_tinggi = $tps->where('id', $tertinggi->tp_id)->first();
-                $deskripsi_tertinggi = "Sangat baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
+                if ($tertinggi->nilai >= 85) {
+                    $deskripsi_tertinggi = "Menunjukkan penguasaan yang sangat baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
+                } elseif ($tertinggi->nilai >= 70) {
+                    $deskripsi_tertinggi = "Menunjukkan penguasaan yang baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
+                }
             }
 
             $deskripsi_terendah = "";
