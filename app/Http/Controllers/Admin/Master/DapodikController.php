@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DapodikSetting;
+use App\Services\DapodikService;
 use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 
@@ -37,24 +38,18 @@ class DapodikController extends Controller
         return redirect()->back()->with('success', 'Pengaturan Dapodik berhasil disimpan.');
     }
 
-    public function testConnection()
+    public function testConnection(DapodikService $dapodikService)
     {
         $setting = DapodikSetting::first();
         try {
-            $response = Http::withToken($setting->key_integrasi)
-                ->timeout(10)
-                ->get($setting->ip_dapodik . '/WebService/getSekolah', [
-                    'npsn' => $setting->npsn
-                ]);
+            $isConnected = $dapodikService->testConnection();
 
-            if ($response->successful()) {
+            if ($isConnected) {
                 $setting->update(['status_koneksi' => 'Terhubung']);
-                $data = $response->json();
-                $nama_sekolah = $data['rows'][0]['nama'] ?? 'Dapodik';
-                return redirect()->back()->with('success', "Koneksi SUKSES! Terhubung ke: $nama_sekolah");
+                return redirect()->back()->with('success', "Koneksi SUKSES! Terhubung ke Web Service Dapodik.");
             } else {
                 $setting->update(['status_koneksi' => 'Gagal']);
-                return redirect()->back()->with('error', 'Gagal terhubung. Pastikan IP dan Token benar.');
+                return redirect()->back()->with('error', 'Gagal terhubung. Pastikan IP dan Token benar, serta aplikasi Dapodik aktif.');
             }
         } catch (\Exception $e) {
             $setting->update(['status_koneksi' => 'Gagal']);
@@ -62,11 +57,35 @@ class DapodikController extends Controller
         }
     }
 
-    public function sync($type)
+    public function sync($type, DapodikService $dapodikService)
     {
-        // Simulasi proses sinkronisasi karena membutuhkan waktu lama.
-        // Di environment sesungguhnya, akan melakukan pemanggilan API Dapodik
-        // seperti getRombonganBelajar, getPesertaDidik, getGtk, dll.
-        return redirect()->back()->with('success', "Proses Sinkronisasi $type selesai dilakukan!");
+        try {
+            $count = 0;
+            if ($type == 'sekolah') {
+                $data = $dapodikService->get('getSekolah');
+                $count = count($data);
+                // Lakukan pembaruan profil sekolah (tbl_sekolah)
+            } elseif ($type == 'guru') {
+                $data = $dapodikService->get('getGtk');
+                $count = count($data);
+                // Lakukan insert/update tbl_guru berdasarkan nuptk/nik
+            } elseif ($type == 'siswa') {
+                $data = $dapodikService->get('getPesertaDidik');
+                $count = count($data);
+                // Lakukan insert/update tbl_siswa berdasarkan nisn/nik
+            } elseif ($type == 'rombel') {
+                $data = $dapodikService->get('getRombonganBelajar');
+                $count = count($data);
+                // Lakukan sinkronisasi tbl_kelas
+            } elseif ($type == 'mapel') {
+                $data = $dapodikService->get('getMataPelajaran');
+                $count = count($data);
+                // Lakukan sinkronisasi tbl_mapel
+            }
+
+            return redirect()->back()->with('success', "Proses Tarik Data $type selesai! Berhasil mengambil $count baris data dari Dapodik.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "Gagal melakukan sinkronisasi $type: " . $e->getMessage());
+        }
     }
 }

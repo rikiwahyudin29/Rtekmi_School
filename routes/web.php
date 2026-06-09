@@ -122,6 +122,56 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // D. Admin Monitoring Rapor
+    Route::get('/admin/monitoring/rapor', [\App\Http\Controllers\Admin\MonitoringRaporController::class, 'index'])->name('admin.monitoring.rapor');
+
+    // E. Admin P5 Management
+    Route::prefix('admin/p5')->name('admin.p5.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\P5Controller::class, 'index'])->name('index');
+        Route::post('/tema', [\App\Http\Controllers\Admin\P5Controller::class, 'storeTema'])->name('tema.store');
+        Route::get('/kelompok', [\App\Http\Controllers\Admin\P5Controller::class, 'kelompok'])->name('kelompok.index');
+        Route::post('/kelompok', [\App\Http\Controllers\Admin\P5Controller::class, 'storeKelompok'])->name('kelompok.store');
+    });
+
+    // F. Admin Kokurikuler
+    Route::prefix('admin/kokurikuler')->name('admin.kokurikuler.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\KokurikulerController::class, 'index'])->name('index');
+        Route::post('/tema', [\App\Http\Controllers\Admin\KokurikulerController::class, 'storeTema'])->name('tema.store');
+        Route::post('/kegiatan', [\App\Http\Controllers\Admin\KokurikulerController::class, 'storeKegiatan'])->name('kegiatan.store');
+        Route::post('/kelompok', [\App\Http\Controllers\Admin\KokurikulerController::class, 'storeKelompok'])->name('kelompok.store');
+    });
+
+    // F. Admin UKK Management
+    Route::prefix('admin/ukk')->name('admin.ukk.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\UkkController::class, 'index'])->name('index');
+        Route::post('/skkni', [\App\Http\Controllers\Admin\UkkController::class, 'storeSkkni'])->name('skkni.store');
+        Route::post('/asesor', [\App\Http\Controllers\Admin\UkkController::class, 'storeAsesor'])->name('asesor.store');
+        
+        Route::get('/nilai', [\App\Http\Controllers\Admin\UkkController::class, 'nilai'])->name('nilai');
+        Route::post('/nilai', [\App\Http\Controllers\Admin\UkkController::class, 'storeNilai'])->name('nilai.store');
+        
+        Route::get('/kuk', [\App\Http\Controllers\Admin\UkkController::class, 'kuk'])->name('kuk');
+        Route::post('/kuk', [\App\Http\Controllers\Admin\UkkController::class, 'storeKuk'])->name('kuk.store');
+
+        Route::get('/skill-passport', [\App\Http\Controllers\Admin\UkkController::class, 'skillPassport'])->name('skill_passport');
+        Route::post('/skill-passport', [\App\Http\Controllers\Admin\UkkController::class, 'storeSkillPassport'])->name('skill_passport.store');
+    });
+
+    // G. Admin PKL Management
+    Route::prefix('admin/pkl')->name('admin.pkl.')->group(function () {
+        Route::get('/kelompok', [\App\Http\Controllers\Admin\PklController::class, 'kelompok'])->name('kelompok');
+        Route::post('/kelompok', [\App\Http\Controllers\Admin\PklController::class, 'storeKelompok'])->name('kelompok.store');
+    });
+
+    // H. Admin Transkrip Ijazah
+    Route::prefix('admin/ijazah')->name('admin.ijazah.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\IjazahController::class, 'index'])->name('index');
+        Route::post('/data', [\App\Http\Controllers\Admin\IjazahController::class, 'storeDataIjazah'])->name('data.store');
+    });
+
+    // I. Admin Perkembangan Nilai
+    Route::get('perkembangan-nilai', [\App\Http\Controllers\Admin\PerkembanganNilaiController::class, 'index'])->name('admin.perkembangan-nilai.index');
+
     // Admin Group
     Route::prefix('admin')->name('admin.')->group(function () {
         
@@ -429,6 +479,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/cetak-rekap', [\App\Http\Controllers\Siswa\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
     });
 
+    // Siswa Rapor
+    Route::get('/siswa/rapor', [\App\Http\Controllers\Siswa\RaporController::class, 'index'])->name('siswa.rapor.index');
+
     // Guru Presensi Group
     Route::prefix('guru/presensi')->name('guru.presensi.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guru\PresensiController::class, 'index'])->name('index');
@@ -439,6 +492,91 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'rekap'])->name('rekap');
         Route::get('/cetak-rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
     });
+
+    // Guru Penilaian (eRapor) Group
+    Route::prefix('guru/penilaian')->name('guru.penilaian.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\PenilaianController::class, 'index'])->name('index');
+        
+        Route::get('/tp', [\App\Http\Controllers\Guru\PenilaianController::class, 'tp'])->name('tp');
+        Route::post('/tp/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeTp'])->name('tp.store');
+        Route::delete('/tp/{id}', [\App\Http\Controllers\Guru\PenilaianController::class, 'destroyTp'])->name('tp.destroy');
+        
+        Route::get('/formatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'formatif'])->name('formatif');
+        Route::post('/formatif/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeFormatif'])->name('formatif.store');
+        
+        Route::get('/sumatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'sumatif'])->name('sumatif');
+        Route::post('/sumatif/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeSumatif'])->name('sumatif.store');
+        
+        Route::get('/sikap-k13', [\App\Http\Controllers\Guru\PenilaianController::class, 'sikapK13'])->name('sikap_k13');
+        Route::post('/sikap-k13/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeSikapK13'])->name('sikap_k13.store');
+        
+        Route::post('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'generateNilaiAkhir'])->name('generate_nilai_akhir');
+    });
+
+    // G. Guru PKL
+    Route::prefix('guru/pkl')->name('guru.pkl.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\PklController::class, 'index'])->name('index');
+        Route::post('/tp', [\App\Http\Controllers\Guru\PklController::class, 'storeTp'])->name('tp.store');
+    });
+
+    // H. Guru Kokurikuler
+    Route::prefix('guru/kokurikuler')->name('guru.kokurikuler.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\KokurikulerController::class, 'index'])->name('index');
+        Route::post('/nilai', [\App\Http\Controllers\Guru\KokurikulerController::class, 'storeNilai'])->name('nilai.store');
+    });
+
+    // Guru Wali Kelas Group
+    Route::prefix('guru/walikelas')->name('guru.walikelas.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\WaliKelasController::class, 'index'])->name('index');
+        
+        Route::get('/kehadiran', [\App\Http\Controllers\Guru\WaliKelasController::class, 'kehadiran'])->name('kehadiran');
+        Route::post('/kehadiran/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeKehadiran'])->name('kehadiran.store');
+        
+        Route::get('/catatan', [\App\Http\Controllers\Guru\WaliKelasController::class, 'catatan'])->name('catatan');
+        Route::post('/catatan/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeCatatan'])->name('catatan.store');
+        
+        Route::get('/pkl', [\App\Http\Controllers\Guru\WaliKelasController::class, 'pkl'])->name('pkl');
+        Route::post('/pkl/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storePkl'])->name('pkl.store');
+
+        Route::get('/pkl-k13', [\App\Http\Controllers\Guru\WaliKelasController::class, 'pklK13'])->name('pkl_k13');
+        Route::post('/pkl-k13/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storePklK13'])->name('pkl_k13.store');
+
+        Route::get('/deskripsi-p3', [\App\Http\Controllers\Guru\WaliKelasController::class, 'deskripsiP3'])->name('deskripsi_p3');
+        Route::post('/deskripsi-p3/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeDeskripsiP3'])->name('deskripsi_p3.store');
+
+        Route::get('/deskripsi-dpl', [\App\Http\Controllers\Guru\WaliKelasController::class, 'deskripsiDpl'])->name('deskripsi_dpl');
+        Route::post('/deskripsi-dpl/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeDeskripsiDpl'])->name('deskripsi_dpl.store');
+
+        Route::get('/kenaikan', [\App\Http\Controllers\Guru\WaliKelasController::class, 'kenaikan'])->name('kenaikan');
+        Route::post('/kenaikan/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeKenaikan'])->name('kenaikan.store');
+        
+        Route::get('/cetak-rapor', [\App\Http\Controllers\Guru\WaliKelasController::class, 'cetakRapor'])->name('cetak_rapor');
+        Route::get('/skill-passport', [\App\Http\Controllers\Admin\UkkController::class, 'skillPassport'])->name('skill_passport');
+        Route::get('/ukk', [\App\Http\Controllers\Admin\UkkController::class, 'index'])->name('ukk');
+        Route::get('/buku-induk', [\App\Http\Controllers\Admin\CetakRaporController::class, 'bukuInduk'])->name('buku_induk');
+        Route::get('/ijazah', [\App\Http\Controllers\Admin\IjazahController::class, 'index'])->name('ijazah');
+    });
+
+    // Guru P5 Group
+    Route::prefix('guru/p5')->name('guru.p5.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\P5Controller::class, 'index'])->name('index');
+        Route::get('/kelompok/{id}/input-nilai', [\App\Http\Controllers\Guru\P5Controller::class, 'inputNilai'])->name('input_nilai');
+        Route::post('/kelompok/{id}/input-nilai', [\App\Http\Controllers\Guru\P5Controller::class, 'storeNilai'])->name('store_nilai');
+    });
+
+    // Guru Ekstrakurikuler Group
+    Route::prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'index'])->name('index');
+        Route::post('/store-nilai', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'storeNilai'])->name('store_nilai');
+    });
+
+    // Rapor Printing Routes
+    Route::get('/cetak/rapor/{id}/cover', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakCover'])->name('cetak.rapor.cover');
+    Route::get('/cetak/rapor/{id}/nilai', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakNilai'])->name('cetak.rapor.nilai');
+    Route::get('/cetak/rapor/{id}/p5', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakP5'])->name('cetak.rapor.p5');
+    Route::get('/cetak/rapor/{id}/ukk', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakUkk'])->name('cetak.rapor.ukk');
+    Route::get('/cetak/rapor/{id}/buku-induk', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakBukuInduk'])->name('cetak.rapor.buku_induk');
+    Route::get('/cetak/leger/{kelas_id}', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakLeger'])->name('cetak.leger');
 });
 
 Route::get('/test-jadwal-kelas/{id}', function ($id) {
