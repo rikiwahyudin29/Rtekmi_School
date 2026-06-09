@@ -106,13 +106,13 @@ class WaliKelasController extends Controller
     public function storeKehadiran(Request $request)
     {
         $request->validate([
-            'data' => 'required|array'
+            'input_data' => 'required|array'
         ]);
 
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
         $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
-        foreach ($request->data as $siswa_id => $absen) {
+        foreach ($request->input_data as $siswa_id => $absen) {
             RaporKehadiran::updateOrCreate(
                 [
                     'siswa_id' => $siswa_id,
@@ -270,13 +270,13 @@ class WaliKelasController extends Controller
     public function storeCatatan(Request $request)
     {
         $request->validate([
-            'data' => 'required|array'
+            'input_data' => 'required|array'
         ]);
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
 
-        foreach ($request->data as $siswa_id => $catatan_text) {
+        foreach ($request->input_data as $siswa_id => $catatan_text) {
             if (!empty($catatan_text)) {
                 RaporCatatanWali::updateOrCreate(
                     [
@@ -319,12 +319,12 @@ class WaliKelasController extends Controller
     public function storePkl(Request $request)
     {
         $request->validate([
-            'data' => 'required|array'
+            'input_data' => 'required|array'
         ]);
 
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
 
-        foreach ($request->data as $siswa_id => $p) {
+        foreach ($request->input_data as $siswa_id => $p) {
             if (!empty($p['dudi_id']) && !empty($p['lokasi']) && !empty($p['lama_bulan'])) {
                 RaporPkl::updateOrCreate(
                     [
@@ -379,10 +379,10 @@ class WaliKelasController extends Controller
         }
 
         $request->validate([
-            'data' => 'required|array'
+            'input_data' => 'required|array'
         ]);
 
-        foreach ($request->data as $siswa_id => $k) {
+        foreach ($request->input_data as $siswa_id => $k) {
             if (!empty($k['status'])) {
                 KenaikanKelas::updateOrCreate(
                     [

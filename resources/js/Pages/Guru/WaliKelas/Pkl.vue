@@ -10,12 +10,12 @@ const props = defineProps({
 });
 
 const form = useForm({
-    data: {}
+    input_data: {}
 });
 
 if (props.siswa && props.siswa.length > 0) {
     props.siswa.forEach(s => {
-        form.data[s.id] = {
+        form.input_data[s.id] = {
             dudi_id: props.pkl[s.id] ? props.pkl[s.id].dudi_id : '',
             lokasi: props.pkl[s.id] ? props.pkl[s.id].lokasi : '',
             lama_bulan: props.pkl[s.id] ? props.pkl[s.id].lama_bulan : '',
@@ -87,22 +87,22 @@ const submit = () => {
                                         <div class="font-bold text-gray-900 dark:text-white">{{ s.nama_lengkap }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <select v-model="form.data[s.id].dudi_id" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                                        <select v-model="form.input_data[s.id].dudi_id" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500">
                                             <option value="">-- Pilih --</option>
                                             <option v-for="d in dudi_list" :key="d.id" :value="d.id">{{ d.nama_dudi }}</option>
                                         </select>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <input v-model="form.data[s.id].lokasi" type="text" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="Kota/Alamat">
+                                        <input v-model="form.input_data[s.id].lokasi" type="text" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="Kota/Alamat">
                                     </td>
                                     <td class="px-4 py-4">
-                                        <input v-model="form.data[s.id].lama_bulan" type="number" min="1" class="w-full text-center text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="1-6">
+                                        <input v-model="form.input_data[s.id].lama_bulan" type="number" min="1" class="w-full text-center text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="1-6">
                                     </td>
                                     <td class="px-4 py-4">
-                                        <input v-model="form.data[s.id].nilai" type="number" min="0" max="100" class="w-full text-center text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="0-100">
+                                        <input v-model="form.input_data[s.id].nilai" type="number" min="0" max="100" class="w-full text-center text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="0-100">
                                     </td>
                                     <td class="px-4 py-4">
-                                        <input v-model="form.data[s.id].keterangan" type="text" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="Keterangan Capaian">
+                                        <input v-model="form.input_data[s.id].keterangan" type="text" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="Keterangan Capaian">
                                     </td>
                                 </tr>
                             </tbody>

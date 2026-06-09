@@ -10,12 +10,12 @@ const props = defineProps({
 });
 
 const form = useForm({
-    data: {}
+    input_data: {}
 });
 
 if (props.siswa && props.siswa.length > 0) {
     props.siswa.forEach(s => {
-        form.data[s.id] = {
+        form.input_data[s.id] = {
             sakit: props.kehadiran[s.id] ? props.kehadiran[s.id].sakit : 0,
             izin: props.kehadiran[s.id] ? props.kehadiran[s.id].izin : 0,
             tanpa_keterangan: props.kehadiran[s.id] ? props.kehadiran[s.id].tanpa_keterangan : 0,
@@ -109,13 +109,13 @@ const submitImport = () => {
                                         <div class="text-xs text-gray-500">{{ s.nisn }}</div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <input v-model="form.data[s.id].sakit" type="number" min="0" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <input v-model="form.input_data[s.id].sakit" type="number" min="0" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     </td>
                                     <td class="px-6 py-4">
-                                        <input v-model="form.data[s.id].izin" type="number" min="0" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <input v-model="form.input_data[s.id].izin" type="number" min="0" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     </td>
                                     <td class="px-6 py-4">
-                                        <input v-model="form.data[s.id].tanpa_keterangan" type="number" min="0" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <input v-model="form.input_data[s.id].tanpa_keterangan" type="number" min="0" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     </td>
                                 </tr>
                             </tbody>

@@ -11,7 +11,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-    data: {}
+    input_data: {}
 });
 
 onMounted(() => {
@@ -23,7 +23,7 @@ onMounted(() => {
             kelas_tujuan_id: k ? k.kelas_tujuan_id : ''
         };
     });
-    form.data = initData;
+    form.input_data = initData;
 });
 
 const submitKenaikan = () => {
@@ -35,9 +35,9 @@ const bulkKelasTujuan = ref('');
 
 const applyBulk = () => {
     props.siswa.forEach(s => {
-        if (form.data[s.id]) {
-            if (bulkStatus.value) form.data[s.id].status = bulkStatus.value;
-            if (bulkKelasTujuan.value) form.data[s.id].kelas_tujuan_id = bulkKelasTujuan.value;
+        if (form.input_data[s.id]) {
+            if (bulkStatus.value) form.input_data[s.id].status = bulkStatus.value;
+            if (bulkKelasTujuan.value) form.input_data[s.id].kelas_tujuan_id = bulkKelasTujuan.value;
         }
     });
 };
@@ -122,7 +122,7 @@ const applyBulk = () => {
                                 <td class="px-6 py-4">{{ s.nisn }}</td>
                                 <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">{{ s.nama_lengkap }}</td>
                                 <td class="px-6 py-4 text-center">
-                                    <select v-if="form.data[s.id]" v-model="form.data[s.id].status" class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 font-bold" :class="{'text-red-600': form.data[s.id].status.includes('Tidak')}">
+                                    <select v-if="form.input_data[s.id]" v-model="form.input_data[s.id].status" class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 font-bold" :class="{'text-red-600': form.input_data[s.id].status.includes('Tidak')}">
                                         <option value="Naik">Naik Kelas</option>
                                         <option value="Tidak Naik">Tinggal di Kelas</option>
                                         <option value="Lulus">Lulus</option>
@@ -130,7 +130,7 @@ const applyBulk = () => {
                                     </select>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <select v-if="form.data[s.id]" v-model="form.data[s.id].kelas_tujuan_id" :disabled="form.data[s.id].status.includes('Lulus')" class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50">
+                                    <select v-if="form.input_data[s.id]" v-model="form.input_data[s.id].kelas_tujuan_id" :disabled="form.input_data[s.id].status.includes('Lulus')" class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50">
                                         <option value="">-- Pilih Kelas Tujuan --</option>
                                         <option v-for="k in kelas_all" :key="k.id" :value="k.id">{{ k.nama_kelas }}</option>
                                     </select>

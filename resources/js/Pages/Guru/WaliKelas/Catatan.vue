@@ -9,12 +9,12 @@ const props = defineProps({
 });
 
 const form = useForm({
-    data: {}
+    input_data: {}
 });
 
 if (props.siswa && props.siswa.length > 0) {
     props.siswa.forEach(s => {
-        form.data[s.id] = props.catatan[s.id] ? props.catatan[s.id].catatan : '';
+        form.input_data[s.id] = props.catatan[s.id] ? props.catatan[s.id].catatan : '';
     });
 }
 
@@ -66,7 +66,7 @@ const submit = () => {
                                 <div class="text-sm text-gray-500">{{ s.nisn }}</div>
                             </div>
                             <div class="w-full md:w-3/4 relative">
-                                <textarea v-model="form.data[s.id]" rows="2" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 transition-all placeholder:text-gray-400" placeholder="Ketik catatan motivasi atau saran pengembangan untuk siswa..."></textarea>
+                                <textarea v-model="form.input_data[s.id]" rows="2" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 transition-all placeholder:text-gray-400" placeholder="Ketik catatan motivasi atau saran pengembangan untuk siswa..."></textarea>
                             </div>
                         </div>
                     </div>
