@@ -107,27 +107,60 @@ class PenilaianController extends Controller
     public function formatif(Request $request)
     {
         $guru_id = Auth::user()->guru->id ?? 1;
-        $tp_list = TujuanPembelajaran::where('guru_id', $guru_id)->get();
         
-        $kelas_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_kelas')->unique();
+        $jadwals = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->get();
+        $kelas_ids = $jadwals->pluck('id_kelas')->unique();
+        $mapel_ids = $jadwals->pluck('id_mapel')->unique();
+        
         $kelas_list = Kelas::whereIn('id', $kelas_ids)->get();
+        $mapel_list = Mapel::whereIn('id', $mapel_ids)->get();
+        
+        // Filter TP list based on selected mapel if available
+        $tp_query = TujuanPembelajaran::where('guru_id', $guru_id);
+        if ($request->has('mapel_id') && $request->mapel_id != '') {
+            $tp_query->where('mapel_id', $request->mapel_id);
+        }
+        $tp_list = $tp_query->get();
 
-        // Jika user memilih kelas dan TP tertentu untuk dinilai
+        // Jika user memilih kelas, mapel dan TP tertentu untuk dinilai
         $siswa = [];
         $nilai_formatif = [];
-        if ($request->has('kelas_id') && $request->has('tp_id')) {
+        
+        if ($request->has('kelas_id') && $request->has('mapel_id') && $request->has('tp_id')) {
             $siswa = Siswa::where('kelas_id', $request->kelas_id)
                           ->orderBy('nama_lengkap', 'asc')
                           ->get();
-            $nilai_formatif = NilaiFormatif::where('tp_id', $request->tp_id)->get()->keyBy('siswa_id');
+                          
+            if ($request->tp_id == 'all') {
+                // Fetch all formatifs for this mapel & kelas
+                $tp_ids = $tp_list->pluck('id');
+                $formatifs = NilaiFormatif::whereIn('tp_id', $tp_ids)
+                                          ->whereIn('siswa_id', $siswa->pluck('id'))
+                                          ->get();
+                // Group by siswa_id then tp_id
+                foreach($formatifs as $nf) {
+                    $nilai_formatif[$nf->siswa_id][$nf->tp_id] = $nf;
+                }
+            } else {
+                $formatifs = NilaiFormatif::where('tp_id', $request->tp_id)
+                                          ->whereIn('siswa_id', $siswa->pluck('id'))
+                                          ->get()->keyBy('siswa_id');
+                // Format matching old behavior but under tp_id for consistency, or we can leave it flat
+                // Flat is expected by vue currently, let's keep it flat if not 'all', but 'all' isn't supported in UI table yet. 
+                // Wait, if 'all', UI input table will just be hidden or we tell them to use Excel?
+                // The user only requested Excel import for 'all', but if they select 'all' in UI, the table might break.
+                // Let's pass flat for single, grouped for 'all'.
+                $nilai_formatif = $formatifs;
+            }
         }
 
         return Inertia::render('Guru/Penilaian/Formatif', [
-            'tp_list' => $tp_list,
+            'mapel_list' => $mapel_list,
             'kelas_list' => $kelas_list,
+            'tp_list' => $tp_list,
             'siswa' => $siswa,
             'nilai_formatif' => $nilai_formatif,
-            'filters' => $request->only(['kelas_id', 'tp_id'])
+            'filters' => $request->only(['kelas_id', 'mapel_id', 'tp_id'])
         ]);
     }
 
@@ -173,11 +206,14 @@ class PenilaianController extends Controller
             $siswa = Siswa::where('kelas_id', $request->kelas_id)
                           ->orderBy('nama_lengkap', 'asc')
                           ->get();
-            $nilai_sumatif = NilaiSumatif::where('mapel_id', $request->mapel_id)
+            $sumatifs = NilaiSumatif::where('mapel_id', $request->mapel_id)
                 ->where('guru_id', $guru_id)
                 ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
                 ->where('semester', $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1)
-                ->get()->keyBy('siswa_id');
+                ->get();
+            foreach($sumatifs as $ns) {
+                $nilai_sumatif[$ns->siswa_id][$ns->jenis] = $ns;
+            }
         }
 
         return Inertia::render('Guru/Penilaian/Sumatif', [
@@ -377,7 +413,6 @@ class PenilaianController extends Controller
     public function templateFormatif(Request $request)
     {
         $request->validate(['tp_id' => 'required', 'kelas_id' => 'required']);
-        $tp = TujuanPembelajaran::find($request->tp_id);
         $kelas = Kelas::find($request->kelas_id);
         $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
 
@@ -385,14 +420,36 @@ class PenilaianController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         
         $sheet->setCellValue('A1', 'TEMPLATE NILAI FORMATIF');
-        $sheet->setCellValue('A2', 'Mata Pelajaran: ' . ($tp->mapel->nama_mapel ?? ''));
-        $sheet->setCellValue('A3', 'Tujuan Pembelajaran: ' . ($tp->kode_tp ?? ''));
         $sheet->setCellValue('A4', 'Kelas: ' . ($kelas->nama_kelas ?? ''));
-        
         $sheet->setCellValue('A6', 'ID SISWA (JANGAN DIUBAH)');
         $sheet->setCellValue('B6', 'NISN');
         $sheet->setCellValue('C6', 'NAMA SISWA');
-        $sheet->setCellValue('D6', 'NILAI FORMATIF (0-100)');
+
+        $isAll = $request->tp_id === 'all';
+        $tps = [];
+        
+        if ($isAll) {
+            $request->validate(['mapel_id' => 'required']);
+            $mapel = Mapel::find($request->mapel_id);
+            $sheet->setCellValue('A2', 'Mata Pelajaran: ' . ($mapel->nama_mapel ?? ''));
+            $sheet->setCellValue('A3', 'Tujuan Pembelajaran: SEMUA TP');
+            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)->where('guru_id', Auth::user()->guru->id ?? 1)->get();
+            
+            $colIndex = 4; // D
+            foreach($tps as $tp) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+                $sheet->setCellValue($colLetter.'6', $tp->kode_tp);
+                $colIndex++;
+            }
+            $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex - 1);
+        } else {
+            $tp = TujuanPembelajaran::find($request->tp_id);
+            $tps = [$tp];
+            $sheet->setCellValue('A2', 'Mata Pelajaran: ' . ($tp->mapel->nama_mapel ?? ''));
+            $sheet->setCellValue('A3', 'Tujuan Pembelajaran: ' . ($tp->kode_tp ?? ''));
+            $sheet->setCellValue('D6', 'NILAI FORMATIF (0-100)');
+            $lastColLetter = 'D';
+        }
 
         $row = 7;
         foreach($siswa as $s) {
@@ -403,7 +460,8 @@ class PenilaianController extends Controller
         }
 
         // Auto size columns
-        foreach (range('A', 'D') as $col) {
+        $highestColumn = $sheet->getHighestColumn();
+        foreach (range('A', $highestColumn) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -417,13 +475,14 @@ class PenilaianController extends Controller
         $styleData = [
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
         ];
-        $sheet->getStyle('A6:D6')->applyFromArray($styleHeader);
+        
+        $sheet->getStyle('A6:'.$lastColLetter.'6')->applyFromArray($styleHeader);
         if ($row > 7) {
-            $sheet->getStyle('A7:D' . ($row - 1))->applyFromArray($styleData);
+            $sheet->getStyle('A7:'.$lastColLetter.($row - 1))->applyFromArray($styleData);
         }
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $fileName = 'Template_Formatif_'.$kelas->nama_kelas.'_'.$tp->kode_tp.'.xlsx';
+        $fileName = 'Template_Formatif_'.$kelas->nama_kelas.'_'.($isAll ? 'Semua_TP' : $tps[0]->kode_tp).'.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), 'excel');
         $writer->save($tempFile);
 
@@ -441,18 +500,51 @@ class PenilaianController extends Controller
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray();
-
+        $headers = $rows[5]; // Row 6 is index 5
         $data = array_slice($rows, 6); // Skip header
 
-        foreach($data as $row) {
-            $siswa_id = $row[0];
-            $nilai = $row[3];
+        $isAll = $request->tp_id === 'all';
+        $tps = [];
+        
+        if ($isAll) {
+            $request->validate(['mapel_id' => 'required']);
+            // Map headers to TP IDs based on kode_tp
+            $tpList = TujuanPembelajaran::where('mapel_id', $request->mapel_id)->where('guru_id', Auth::user()->guru->id ?? 1)->get();
+            $tpMap = []; // column index => tp_id
+            foreach ($headers as $index => $headerName) {
+                if ($index >= 3 && $headerName) { // Start from col D
+                    $matchedTp = $tpList->firstWhere('kode_tp', $headerName);
+                    if ($matchedTp) {
+                        $tpMap[$index] = $matchedTp->id;
+                    }
+                }
+            }
+            
+            foreach($data as $row) {
+                $siswa_id = $row[0];
+                if($siswa_id) {
+                    foreach($tpMap as $colIndex => $tpId) {
+                        $nilai = $row[$colIndex];
+                        if (is_numeric($nilai)) {
+                            NilaiFormatif::updateOrCreate(
+                                ['tp_id' => $tpId, 'siswa_id' => $siswa_id],
+                                ['nilai' => $nilai]
+                            );
+                        }
+                    }
+                }
+            }
+        } else {
+            foreach($data as $row) {
+                $siswa_id = $row[0];
+                $nilai = $row[3]; // Col D
 
-            if($siswa_id && is_numeric($nilai)) {
-                NilaiFormatif::updateOrCreate(
-                    ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
-                    ['nilai' => $nilai]
-                );
+                if($siswa_id && is_numeric($nilai)) {
+                    NilaiFormatif::updateOrCreate(
+                        ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
+                        ['nilai' => $nilai]
+                    );
+                }
             }
         }
 
@@ -476,7 +568,17 @@ class PenilaianController extends Controller
         $sheet->setCellValue('A5', 'ID SISWA (JANGAN DIUBAH)');
         $sheet->setCellValue('B5', 'NISN');
         $sheet->setCellValue('C5', 'NAMA SISWA');
-        $sheet->setCellValue('D5', 'NILAI SUMATIF (0-100)');
+
+        $isBoth = $request->jenis === 'KEDUANYA';
+        
+        if ($isBoth) {
+            $sheet->setCellValue('D5', 'NILAI SAS (0-100)');
+            $sheet->setCellValue('E5', 'NILAI STS (0-100)');
+            $lastColLetter = 'E';
+        } else {
+            $sheet->setCellValue('D5', 'NILAI ' . $request->jenis . ' (0-100)');
+            $lastColLetter = 'D';
+        }
 
         $row = 6;
         foreach($siswa as $s) {
@@ -486,7 +588,7 @@ class PenilaianController extends Controller
             $row++;
         }
 
-        foreach (range('A', 'D') as $col) {
+        foreach (range('A', $lastColLetter) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -500,13 +602,13 @@ class PenilaianController extends Controller
         $styleData = [
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
         ];
-        $sheet->getStyle('A5:D5')->applyFromArray($styleHeader);
+        $sheet->getStyle('A5:'.$lastColLetter.'5')->applyFromArray($styleHeader);
         if ($row > 6) {
-            $sheet->getStyle('A6:D' . ($row - 1))->applyFromArray($styleData);
+            $sheet->getStyle('A6:'.$lastColLetter . ($row - 1))->applyFromArray($styleData);
         }
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $fileName = 'Template_Sumatif_'.$request->jenis.'_'.$kelas->nama_kelas.'.xlsx';
+        $fileName = 'Template_Sumatif_'.str_replace(' ', '_', $request->jenis).'_'.$kelas->nama_kelas.'.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), 'excel');
         $writer->save($tempFile);
 
@@ -530,23 +632,58 @@ class PenilaianController extends Controller
         $rows = $sheet->toArray();
 
         $data = array_slice($rows, 5);
+        $isBoth = $request->jenis === 'KEDUANYA';
 
         foreach($data as $row) {
             $siswa_id = $row[0];
-            $nilai = $row[3];
-
-            if($siswa_id && is_numeric($nilai)) {
-                NilaiSumatif::updateOrCreate(
-                    [
-                        'mapel_id' => $request->mapel_id,
-                        'guru_id' => $guru_id,
-                        'siswa_id' => $siswa_id,
-                        'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                        'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
-                        'jenis' => $request->jenis
-                    ],
-                    ['nilai' => $nilai]
-                );
+            
+            if ($isBoth) {
+                $nilai_sas = $row[3]; // Col D
+                $nilai_sts = $row[4]; // Col E
+                
+                if($siswa_id) {
+                    if (is_numeric($nilai_sas)) {
+                        NilaiSumatif::updateOrCreate(
+                            [
+                                'mapel_id' => $request->mapel_id,
+                                'guru_id' => $guru_id,
+                                'siswa_id' => $siswa_id,
+                                'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
+                                'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                                'jenis' => 'SAS'
+                            ],
+                            ['nilai' => $nilai_sas]
+                        );
+                    }
+                    if (is_numeric($nilai_sts)) {
+                        NilaiSumatif::updateOrCreate(
+                            [
+                                'mapel_id' => $request->mapel_id,
+                                'guru_id' => $guru_id,
+                                'siswa_id' => $siswa_id,
+                                'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
+                                'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                                'jenis' => 'STS'
+                            ],
+                            ['nilai' => $nilai_sts]
+                        );
+                    }
+                }
+            } else {
+                $nilai = $row[3]; // Col D
+                if($siswa_id && is_numeric($nilai)) {
+                    NilaiSumatif::updateOrCreate(
+                        [
+                            'mapel_id' => $request->mapel_id,
+                            'guru_id' => $guru_id,
+                            'siswa_id' => $siswa_id,
+                            'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
+                            'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                            'jenis' => $request->jenis
+                        ],
+                        ['nilai' => $nilai]
+                    );
+                }
             }
         }
 

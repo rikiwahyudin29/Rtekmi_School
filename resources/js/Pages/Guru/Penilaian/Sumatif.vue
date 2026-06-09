@@ -31,14 +31,23 @@ const formNilai = useForm({
     nilai: {}
 });
 
-if (props.siswa && props.siswa.length > 0) {
-    props.siswa.forEach(s => {
-        formNilai.nilai[s.id] = props.nilai_sumatif[s.id] ? props.nilai_sumatif[s.id].nilai : null;
-    });
-}
+const initForm = () => {
+    if (props.siswa && props.siswa.length > 0) {
+        props.siswa.forEach(s => {
+            const existing = props.nilai_sumatif[s.id]?.[formNilai.jenis];
+            formNilai.nilai[s.id] = existing ? existing.nilai : null;
+        });
+    }
+};
+
+initForm();
+watch(() => props.nilai_sumatif, () => initForm(), { deep: true });
+watch(() => props.siswa, () => initForm(), { deep: true });
+watch(() => formNilai.jenis, () => initForm());
 
 const submitNilai = () => {
     formNilai.mapel_id = formFilter.mapel_id;
+    formNilai.kelas_id = formFilter.kelas_id;
     formNilai.post(route('guru.penilaian.sumatif.store'), {
         preserveScroll: true
     });
@@ -46,15 +55,43 @@ const submitNilai = () => {
 
 // Excel Import Logic
 const isImportModalOpen = ref(false);
+const isExportModalOpen = ref(false);
+
+const formExport = useForm({
+    jenis: 'KEDUANYA'
+});
+
 const formImport = useForm({
     mapel_id: '',
-    jenis: 'SAS',
+    jenis: 'KEDUANYA',
     file_excel: null,
 });
 
+const openExportModal = () => {
+    if(!formFilter.mapel_id || !formFilter.kelas_id) {
+        alert('Pilih Mata Pelajaran dan Kelas terlebih dahulu!');
+        return;
+    }
+    formExport.jenis = 'KEDUANYA'; // default
+    isExportModalOpen.value = true;
+};
+
+const closeExportModal = () => {
+    isExportModalOpen.value = false;
+};
+
+const submitExport = () => {
+    window.location.href = route('guru.penilaian.sumatif.template', {
+        mapel_id: formFilter.mapel_id,
+        kelas_id: formFilter.kelas_id,
+        jenis: formExport.jenis
+    });
+    closeExportModal();
+};
+
 const openImportModal = () => {
     formImport.mapel_id = formFilter.mapel_id;
-    formImport.jenis = formNilai.jenis;
+    formImport.jenis = 'KEDUANYA';
     formImport.file_excel = null;
     isImportModalOpen.value = true;
 };
@@ -70,18 +107,6 @@ const submitImport = () => {
             closeImportModal();
             filterData();
         }
-    });
-};
-
-const downloadTemplate = () => {
-    if(!formFilter.mapel_id || !formFilter.kelas_id) {
-        alert('Pilih Kelas dan Mata Pelajaran terlebih dahulu!');
-        return;
-    }
-    window.location.href = route('guru.penilaian.sumatif.template', {
-        kelas_id: formFilter.kelas_id,
-        mapel_id: formFilter.mapel_id,
-        jenis: formNilai.jenis
     });
 };
 </script>
@@ -153,12 +178,12 @@ const downloadTemplate = () => {
                             </select>
                         </div>
                         
-                        <div class="flex items-center gap-2 mt-3 md:mt-0 w-full md:w-auto justify-end">
-                            <button type="button" @click="downloadTemplate" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors text-xs flex items-center gap-1.5">
-                                <i class="fas fa-file-excel"></i> Template
+                        <div class="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+                            <button type="button" @click="openExportModal" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors text-sm flex items-center gap-2">
+                                <i class="fas fa-file-excel"></i> Template Excel
                             </button>
-                            <button type="button" @click="openImportModal" class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium transition-colors text-xs flex items-center gap-1.5">
-                                <i class="fas fa-upload"></i> Import
+                            <button type="button" @click="openImportModal" class="px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 font-medium transition-colors text-sm flex items-center gap-2">
+                                <i class="fas fa-upload"></i> Import Excel
                             </button>
                         </div>
                     </div>
@@ -199,6 +224,36 @@ const downloadTemplate = () => {
             </div>
         </div>
 
+        <!-- Modal Export -->
+        <div v-if="isExportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Download Template Sumatif</h3>
+                    <button @click="closeExportModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih Jenis Nilai yang ingin di-download</label>
+                        <select v-model="formExport.jenis" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-green-500 focus:ring-green-500">
+                            <option value="KEDUANYA">Keduanya (SAS & STS)</option>
+                            <option value="SAS">Hanya SAS</option>
+                            <option value="STS">Hanya STS</option>
+                        </select>
+                    </div>
+                    <div class="pt-4 flex justify-end gap-3">
+                        <button type="button" @click="closeExportModal" class="px-4 py-2 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
+                            Batal
+                        </button>
+                        <button type="button" @click="submitExport" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors flex items-center gap-2">
+                            <i class="fas fa-download"></i> Download Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal Import -->
         <div v-if="isImportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-md overflow-hidden">
@@ -209,9 +264,19 @@ const downloadTemplate = () => {
                     </button>
                 </div>
                 <form @submit.prevent="submitImport" class="p-6 space-y-4">
-                    <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-4 rounded-xl text-sm mb-4">
-                        <i class="fas fa-info-circle mr-2"></i> Pastikan Anda mengunggah file hasil dari <b>Download Template</b> jenis <b>{{ formImport.jenis }}</b>. Jangan merubah kolom ID SISWA.
+                    <div class="bg-purple-50 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 p-4 rounded-xl text-sm mb-4">
+                        <i class="fas fa-info-circle mr-2"></i> Pastikan Anda mengunggah file hasil dari <b>Download Template</b>.
                     </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jenis Nilai di Dalam File</label>
+                        <select v-model="formImport.jenis" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-purple-500 focus:ring-purple-500">
+                            <option value="KEDUANYA">Keduanya (SAS & STS)</option>
+                            <option value="SAS">Hanya SAS</option>
+                            <option value="STS">Hanya STS</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih File Excel</label>
                         <input type="file" @input="formImport.file_excel = $event.target.files[0]" accept=".xlsx,.xls" required class="block w-full text-sm text-gray-900 border border-gray-300 rounded-xl cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
@@ -220,7 +285,7 @@ const downloadTemplate = () => {
                         <button type="button" @click="closeImportModal" class="px-4 py-2 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors">
                             Batal
                         </button>
-                        <button type="submit" :disabled="formImport.processing" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors flex items-center gap-2">
+                        <button type="submit" :disabled="formImport.processing" class="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-medium transition-colors flex items-center gap-2">
                             <i v-if="formImport.processing" class="fas fa-spinner fa-spin"></i>
                             <i v-else class="fas fa-upload"></i> Import Sekarang
                         </button>

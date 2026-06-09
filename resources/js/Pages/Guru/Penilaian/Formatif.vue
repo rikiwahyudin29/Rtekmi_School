@@ -4,20 +4,33 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { ref, watch } from 'vue';
 
 const props = defineProps({
+    mapel_list: Array,
     tp_list: Array,
     kelas_list: Array,
     siswa: Array,
-    nilai_formatif: Object,
+    nilai_formatif: [Object, Array],
     filters: Object
 });
 
 const formFilter = useForm({
+    mapel_id: props.filters.mapel_id || '',
     kelas_id: props.filters.kelas_id || '',
     tp_id: props.filters.tp_id || '',
 });
 
 const filterData = () => {
-    if (formFilter.kelas_id && formFilter.tp_id) {
+    // If mapel changed, reset tp_id
+    if (!formFilter.mapel_id) {
+        formFilter.tp_id = '';
+    }
+    
+    if (formFilter.kelas_id && formFilter.mapel_id && formFilter.tp_id) {
+        formFilter.get(route('guru.penilaian.formatif'), {
+            preserveState: true,
+            preserveScroll: true
+        });
+    } else if (formFilter.mapel_id) {
+        // Just to fetch tp_list based on mapel
         formFilter.get(route('guru.penilaian.formatif'), {
             preserveState: true,
             preserveScroll: true
@@ -32,15 +45,33 @@ const formNilai = useForm({
 });
 
 // Inisialisasi nilai form jika data sudah ada
-if (props.siswa && props.siswa.length > 0) {
-    props.siswa.forEach(s => {
-        formNilai.nilai[s.id] = props.nilai_formatif[s.id] ? props.nilai_formatif[s.id].nilai : null;
-    });
-}
+const initForm = () => {
+    if (props.siswa && props.siswa.length > 0) {
+        props.siswa.forEach(s => {
+            if (formFilter.tp_id === 'all') {
+                formNilai.nilai[s.id] = {};
+                props.tp_list.forEach(tp => {
+                    const existing = props.nilai_formatif[s.id]?.[tp.id];
+                    formNilai.nilai[s.id][tp.id] = existing ? existing.nilai : null;
+                });
+            } else {
+                formNilai.nilai[s.id] = props.nilai_formatif[s.id] ? props.nilai_formatif[s.id].nilai : null;
+            }
+        });
+    }
+};
+
+initForm();
+watch(() => props.nilai_formatif, () => initForm(), { deep: true });
+watch(() => props.siswa, () => initForm(), { deep: true });
 
 const submitNilai = () => {
     formNilai.tp_id = formFilter.tp_id;
-    formNilai.post(route('guru.penilaian.formatif.store'), {
+    // We need to send mapel_id to controller as well so it knows what to do if tp_id = 'all'
+    formNilai.transform((data) => ({
+        ...data,
+        mapel_id: formFilter.mapel_id
+    })).post(route('guru.penilaian.formatif.store'), {
         preserveScroll: true,
         onSuccess: () => {
             // Flash message ditangani oleh layout
@@ -51,11 +82,13 @@ const submitNilai = () => {
 // Excel Import Logic
 const isImportModalOpen = ref(false);
 const formImport = useForm({
+    mapel_id: '',
     tp_id: '',
     file_excel: null,
 });
 
 const openImportModal = () => {
+    formImport.mapel_id = formFilter.mapel_id;
     formImport.tp_id = formFilter.tp_id;
     formImport.file_excel = null;
     isImportModalOpen.value = true;
@@ -76,11 +109,12 @@ const submitImport = () => {
 };
 
 const downloadTemplate = () => {
-    if(!formFilter.tp_id || !formFilter.kelas_id) {
-        alert('Pilih Kelas dan Tujuan Pembelajaran (TP) terlebih dahulu!');
+    if(!formFilter.tp_id || !formFilter.kelas_id || !formFilter.mapel_id) {
+        alert('Pilih Mata Pelajaran, Kelas dan Tujuan Pembelajaran (TP) terlebih dahulu!');
         return;
     }
     window.location.href = route('guru.penilaian.formatif.template', {
+        mapel_id: formFilter.mapel_id,
         kelas_id: formFilter.kelas_id,
         tp_id: formFilter.tp_id
     });
@@ -117,7 +151,14 @@ const downloadTemplate = () => {
 
             <!-- Filter Card -->
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                <form @submit.prevent="filterData" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <form @submit.prevent="filterData" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih Mata Pelajaran</label>
+                        <select v-model="formFilter.mapel_id" @change="filterData" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <option value="">-- Pilih Mapel --</option>
+                            <option v-for="m in mapel_list" :key="m.id" :value="m.id">{{ m.nama_mapel }}</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih Kelas</label>
                         <select v-model="formFilter.kelas_id" @change="filterData" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
@@ -127,14 +168,15 @@ const downloadTemplate = () => {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih Tujuan Pembelajaran (TP)</label>
-                        <select v-model="formFilter.tp_id" @change="filterData" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <select v-model="formFilter.tp_id" @change="filterData" :disabled="!formFilter.mapel_id" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50">
                             <option value="">-- Pilih TP --</option>
-                            <option v-for="tp in tp_list" :key="tp.id" :value="tp.id">{{ tp.kode_tp }} - {{ tp.mapel?.nama_mapel }}</option>
+                            <option value="all">Semua TP</option>
+                            <option v-for="tp in tp_list" :key="tp.id" :value="tp.id">{{ tp.kode_tp }}</option>
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button type="submit" class="w-full md:w-auto px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-medium transition-colors shadow-sm">
-                            <i class="fas fa-search mr-2"></i> Tampilkan Siswa
+                        <button type="submit" class="w-full px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-medium transition-colors shadow-sm">
+                            <i class="fas fa-search mr-2"></i> Tampilkan
                         </button>
                     </div>
                 </form>
@@ -143,14 +185,14 @@ const downloadTemplate = () => {
             <!-- Input Area -->
             <div v-if="siswa && siswa.length > 0" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <form @submit.prevent="submitNilai">
-                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-900 dark:text-white">Form Input Nilai: {{ tp_list.find(t => t.id == formFilter.tp_id)?.kode_tp }}</h3>
+                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h3 class="font-bold text-gray-900 dark:text-white">Form Input Nilai: {{ formFilter.tp_id === 'all' ? 'Semua TP' : tp_list.find(t => t.id == formFilter.tp_id)?.kode_tp }}</h3>
                         <div class="flex items-center gap-3">
                             <button type="button" @click="downloadTemplate" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors text-sm flex items-center gap-2">
-                                <i class="fas fa-file-excel"></i> Download Template
+                                <i class="fas fa-file-excel"></i> Template Excel
                             </button>
                             <button type="button" @click="openImportModal" class="px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 font-medium transition-colors text-sm flex items-center gap-2">
-                                <i class="fas fa-upload"></i> Import Nilai
+                                <i class="fas fa-upload"></i> Import Excel
                             </button>
                         </div>
                     </div>
@@ -161,7 +203,14 @@ const downloadTemplate = () => {
                                     <th scope="col" class="px-6 py-4 w-16">No</th>
                                     <th scope="col" class="px-6 py-4 w-32">NISN</th>
                                     <th scope="col" class="px-6 py-4">Nama Siswa</th>
-                                    <th scope="col" class="px-6 py-4 w-48 text-center">Nilai Formatif</th>
+                                    <template v-if="formFilter.tp_id === 'all'">
+                                        <th v-for="tp in tp_list" :key="tp.id" scope="col" class="px-4 py-4 w-32 text-center" :title="tp.deskripsi">
+                                            {{ tp.kode_tp }}
+                                        </th>
+                                    </template>
+                                    <template v-else>
+                                        <th scope="col" class="px-6 py-4 w-48 text-center">Nilai Formatif</th>
+                                    </template>
                                 </tr>
                             </thead>
                             <tbody>
@@ -169,9 +218,17 @@ const downloadTemplate = () => {
                                     <td class="px-6 py-4">{{ index + 1 }}</td>
                                     <td class="px-6 py-4 font-medium">{{ s.nisn }}</td>
                                     <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">{{ s.nama_lengkap }}</td>
-                                    <td class="px-6 py-4">
-                                        <input v-model="formNilai.nilai[s.id]" type="number" min="0" max="100" step="0.01" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500" placeholder="0">
-                                    </td>
+                                    
+                                    <template v-if="formFilter.tp_id === 'all'">
+                                        <td v-for="tp in tp_list" :key="tp.id" class="px-2 py-4">
+                                            <input v-model="formNilai.nilai[s.id][tp.id]" type="number" min="0" max="100" step="0.01" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500" placeholder="0">
+                                        </td>
+                                    </template>
+                                    <template v-else>
+                                        <td class="px-6 py-4">
+                                            <input v-model="formNilai.nilai[s.id]" type="number" min="0" max="100" step="0.01" class="w-full text-center rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500" placeholder="0">
+                                        </td>
+                                    </template>
                                 </tr>
                             </tbody>
                         </table>
