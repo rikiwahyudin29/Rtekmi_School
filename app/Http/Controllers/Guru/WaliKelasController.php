@@ -86,7 +86,7 @@ class WaliKelasController extends Controller
     public function kehadiran()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
         $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
@@ -135,7 +135,7 @@ class WaliKelasController extends Controller
         $kelas = $this->getKelasWali();
         if (!$kelas) return redirect()->back()->with('error', 'Anda bukan wali kelas.');
         
-        $siswa = Siswa::where('kelas_id', $kelas->id)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id)->orderBy('nama_lengkap', 'asc')->get();
         
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
         $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
@@ -254,7 +254,7 @@ class WaliKelasController extends Controller
     public function catatan()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         
         $catatan = RaporCatatanWali::whereIn('siswa_id', $siswa->pluck('id'))
                         ->where('semester', 1)
@@ -301,7 +301,7 @@ class WaliKelasController extends Controller
     public function pkl()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         $dudi_list = Dudi::all();
         
         $pkl = RaporPkl::whereIn('siswa_id', $siswa->pluck('id'))
@@ -357,7 +357,7 @@ class WaliKelasController extends Controller
         }
 
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         $kelas_all = Kelas::all();
         
         $kenaikan = KenaikanKelas::whereIn('siswa_id', $siswa->pluck('id'))
@@ -402,7 +402,7 @@ class WaliKelasController extends Controller
     public function cetakRapor()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
 
         return Inertia::render('Guru/WaliKelas/Cetak', [
             'kelas' => $kelas,
@@ -416,7 +416,7 @@ class WaliKelasController extends Controller
     public function pklK13()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         $pkl_k13 = PklK13::whereIn('siswa_id', $siswa->pluck('id'))
                         ->where('semester', 1)
                         ->get()->keyBy('siswa_id');
@@ -454,7 +454,7 @@ class WaliKelasController extends Controller
     public function deskripsiP3()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         $deskripsi_p3 = DeskripsiP3K13::whereIn('siswa_id', $siswa->pluck('id'))
                         ->where('semester', 1)
                         ->get()->keyBy('siswa_id');
@@ -487,7 +487,7 @@ class WaliKelasController extends Controller
     public function deskripsiDpl()
     {
         $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         $deskripsi_dpl = DeskripsiDplK13::whereIn('siswa_id', $siswa->pluck('id'))
                         ->where('semester', 1)
                         ->get()->keyBy('siswa_id');
