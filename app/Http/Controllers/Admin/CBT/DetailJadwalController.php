@@ -262,6 +262,8 @@ class DetailJadwalController extends Controller
             return response()->json(['error' => 'Tidak Ada Data Jawaban (Soal Kosong)']);
         }
 
+        $this->migrateJawabanCi4ToLaravel($ujian_id_decoded, $soals);
+
         $soal_ids = array_column($soals, 'id');
         $semua_opsi = DB::table('soal_opsi')->whereIn('soal_id', $soal_ids)->get()->map(function($x){return (array)$x;})->toArray();
         
@@ -683,6 +685,10 @@ class DetailJadwalController extends Controller
         $soal_ids = $soals->pluck('id')->toArray();
         $semua_opsi = DB::table('soal_opsi')->whereIn('soal_id', $soal_ids)->get();
         
+        foreach($peserta as $p) {
+            $this->migrateJawabanCi4ToLaravel($p->id, $soals);
+        }
+
         $semua_jawaban = DB::table('tbl_jawaban_siswa')
             ->whereIn('id_ujian_siswa', $peserta->pluck('id')->toArray())
             ->get()
@@ -775,5 +781,71 @@ class DetailJadwalController extends Controller
         $writer->save($temp_file);
 
         return response()->download($temp_file, $fileName)->deleteFileAfterSend(true);
+    }
+
+    private function migrateJawabanCi4ToLaravel($ujian_id, $soals) {
+        try {
+            $exists = DB::table('tbl_jawaban_siswa')->where('id_ujian_siswa', $ujian_id)->exists();
+            if ($exists) return true;
+
+            $pg = DB::table('jawaban_pg_ujian_siswa')->where('ujian_id', $ujian_id)->get()->groupBy('soal_id');
+            $pgm = DB::table('jawaban_pgmulti_ujian_siswa')->where('ujian_id', $ujian_id)->get()->groupBy('soal_id');
+            $pgc = DB::table('jawaban_pgcouple_ujian_siswa')->where('ujian_id', $ujian_id)->get()->groupBy('soal_id');
+            $pgtf = DB::table('jawaban_pgtf_ujian_siswa')->where('ujian_id', $ujian_id)->get()->groupBy('soal_id');
+            $sh = DB::table('jawaban_shortentry_ujian_siswa')->where('ujian_id', $ujian_id)->get()->groupBy('soal_id');
+            $es = DB::table('jawaban_esai_ujian_siswa')->where('ujian_id', $ujian_id)->get()->groupBy('soal_id');
+
+            $batch = [];
+            $no = 1;
+            foreach($soals as $s) {
+                $s = (array)$s;
+                $sid = $s['id'];
+                $jenis = (int)$s['jenis_soal'];
+                $ans_str = null;
+                $nilai = 0;
+                $is_benar = 0;
+                
+                if ($jenis == 1 && isset($pg[$sid])) {
+                    $ans = $pg[$sid]->first();
+                    $ans_str = $ans->opsi_id;
+                    $is_benar = $ans->is_benar ?? 0;
+                } elseif ($jenis == 3 && isset($pgm[$sid])) {
+                    $ans_str = json_encode($pgm[$sid]->pluck('opsi_id')->toArray());
+                } elseif ($jenis == 4 && isset($pgc[$sid])) {
+                    $arr = [];
+                    foreach($pgc[$sid] as $a) $arr[$a->couple_id] = $a->opsi_id;
+                    $ans_str = json_encode($arr);
+                } elseif ($jenis == 6 && isset($pgtf[$sid])) {
+                    $arr = [];
+                    foreach($pgtf[$sid] as $a) $arr[$a->opsi_id] = $a->tf;
+                    $ans_str = json_encode($arr);
+                } elseif ($jenis == 5 && isset($sh[$sid])) {
+                    $ans = $sh[$sid]->first();
+                    $ans_str = $ans->respond;
+                    $is_benar = $ans->is_benar ?? 0;
+                } elseif ($jenis == 2 && isset($es[$sid])) {
+                    $ans = $es[$sid]->first();
+                    $ans_str = $ans->esai;
+                    $nilai = $ans->nilai ?? 0;
+                }
+
+                $batch[] = [
+                    'id_ujian_siswa' => $ujian_id,
+                    'id_soal' => $sid,
+                    'jawaban_siswa' => $ans_str,
+                    'nomor_urut' => $no++,
+                    'is_benar' => $is_benar,
+                    'nilai' => $nilai,
+                    'ragu' => 0
+                ];
+            }
+            if (!empty($batch)) {
+                DB::table('tbl_jawaban_siswa')->insert($batch);
+                DB::table('ujian_siswa')->where('id', $ujian_id)->update(['soal_generated' => 1]);
+            }
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }
