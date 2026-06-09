@@ -14,7 +14,9 @@ const props = defineProps({
 
 const form = useForm({
     mapel_id: props.filters?.mapel_id || '',
-    kelas_id: props.filters?.kelas_id || ''
+    kelas_id: props.filters?.kelas_id || '',
+    kkm: props.filters?.kkm || 70,
+    batas_sangat_baik: props.filters?.batas_sangat_baik || 85
 });
 
 const submit = () => {
@@ -70,6 +72,17 @@ const submit = () => {
                             </select>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">KKM (Minimal Baik)</label>
+                                <input type="number" v-model="form.kkm" required min="0" max="100" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Batas Sangat Baik</label>
+                                <input type="number" v-model="form.batas_sangat_baik" required min="0" max="100" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                            </div>
+                        </div>
+
                         <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-blue-800 dark:text-blue-300 text-sm flex gap-3">
                             <i class="fas fa-info-circle mt-0.5"></i>
                             <p>Proses ini akan mengambil seluruh nilai Formatif dan Sumatif yang sudah Anda input, kemudian menghitung rata-rata serta membuat deskripsi rapor secara otomatis. Proses ini mungkin memakan waktu beberapa detik.</p>
@@ -123,7 +136,7 @@ const submit = () => {
                             
                             <!-- Formatif Data -->
                             <td v-for="tp in tps" :key="tp.id" class="px-3 py-4 text-center border-l border-gray-200 dark:border-gray-600">
-                                <span :class="{'text-red-500 font-medium': detail_nilai[s.id]?.formatif?.[tp.id]?.nilai < 70}">
+                                <span :class="{'text-red-500 font-medium': detail_nilai[s.id]?.formatif?.[tp.id]?.nilai < form.kkm}">
                                     {{ detail_nilai[s.id]?.formatif?.[tp.id]?.nilai ?? '-' }}
                                 </span>
                             </td>

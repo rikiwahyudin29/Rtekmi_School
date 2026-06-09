@@ -408,8 +408,13 @@ class PenilaianController extends Controller
     {
         $request->validate([
             'mapel_id' => 'required',
-            'kelas_id' => 'required'
+            'kelas_id' => 'required',
+            'kkm' => 'required|numeric|min:0|max:100',
+            'batas_sangat_baik' => 'required|numeric|min:0|max:100'
         ]);
+
+        $kkm = $request->kkm;
+        $batas_sangat_baik = $request->batas_sangat_baik;
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
@@ -442,15 +447,15 @@ class PenilaianController extends Controller
             $deskripsi_tertinggi = "";
             if ($tertinggi) {
                 $tp_tinggi = $tps->where('id', $tertinggi->tp_id)->first();
-                if ($tertinggi->nilai >= 85) {
+                if ($tertinggi->nilai >= $batas_sangat_baik) {
                     $deskripsi_tertinggi = "Menunjukkan penguasaan yang sangat baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
-                } elseif ($tertinggi->nilai >= 70) {
+                } elseif ($tertinggi->nilai >= $kkm) {
                     $deskripsi_tertinggi = "Menunjukkan penguasaan yang baik dalam " . ($tp_tinggi ? $tp_tinggi->deskripsi : '');
                 }
             }
 
             $deskripsi_terendah = "";
-            if ($terendah && $terendah->nilai < 70) {
+            if ($terendah && $terendah->nilai < $kkm) {
                 $tp_rendah = $tps->where('id', $terendah->tp_id)->first();
                 $deskripsi_terendah = "Perlu pendampingan dalam " . ($tp_rendah ? $tp_rendah->deskripsi : '');
             }
@@ -473,7 +478,9 @@ class PenilaianController extends Controller
 
         return redirect()->route('guru.penilaian.halaman_generate_nilai_akhir', [
             'kelas_id' => $request->kelas_id,
-            'mapel_id' => $request->mapel_id
+            'mapel_id' => $request->mapel_id,
+            'kkm' => $kkm,
+            'batas_sangat_baik' => $batas_sangat_baik
         ])->with('success', 'Berhasil melakukan generate Nilai Akhir dan Deskripsi otomatis untuk seluruh siswa di kelas.');
     }
 
