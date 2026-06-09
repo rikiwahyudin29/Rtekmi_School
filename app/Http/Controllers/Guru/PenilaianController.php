@@ -407,6 +407,21 @@ class PenilaianController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
+        // Add Styles
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $styleHeader = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF4F46E5']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $styleData = [
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $sheet->getStyle('A6:D6')->applyFromArray($styleHeader);
+        if ($row > 7) {
+            $sheet->getStyle('A7:D' . ($row - 1))->applyFromArray($styleData);
+        }
+
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $fileName = 'Template_Formatif_'.$kelas->nama_kelas.'_'.$tp->kode_tp.'.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), 'excel');
@@ -473,6 +488,21 @@ class PenilaianController extends Controller
 
         foreach (range('A', 'D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Add Styles
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $styleHeader = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF9333EA']], // Purple 600
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $styleData = [
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $sheet->getStyle('A5:D5')->applyFromArray($styleHeader);
+        if ($row > 6) {
+            $sheet->getStyle('A6:D' . ($row - 1))->applyFromArray($styleData);
         }
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
@@ -553,6 +583,21 @@ class PenilaianController extends Controller
 
         foreach (range('A', 'G') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Add Styles
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $styleHeader = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFDB2777']], // Pink 600
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $styleData = [
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $sheet->getStyle('A4:G4')->applyFromArray($styleHeader);
+        if ($row > 5) {
+            $sheet->getStyle('A5:G' . ($row - 1))->applyFromArray($styleData);
         }
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
