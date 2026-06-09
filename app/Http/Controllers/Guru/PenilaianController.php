@@ -344,6 +344,8 @@ class PenilaianController extends Controller
     public function halamanGenerateNilaiAkhir(Request $request)
     {
         $guru_id = Auth::user()->guru->id ?? 1;
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
         
         $mapel_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_mapel')->unique();
         $mapel_list = Mapel::whereIn('id', $mapel_ids)->get();
@@ -351,9 +353,25 @@ class PenilaianController extends Controller
         $kelas_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_kelas')->unique();
         $kelas_list = Kelas::whereIn('id', $kelas_ids)->get();
 
+        $siswa = [];
+        $rapor_akhir = [];
+        if ($request->has('kelas_id') && $request->has('mapel_id')) {
+            $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+            $rapor_akhir = RaporAkhir::where('mapel_id', $request->mapel_id)
+                ->where('guru_id', $guru_id)
+                ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+                ->where('semester', $semester_int)
+                ->whereIn('siswa_id', $siswa->pluck('id'))
+                ->get()
+                ->keyBy('siswa_id');
+        }
+
         return Inertia::render('Guru/Penilaian/GenerateNilai', [
             'mapel_list' => $mapel_list,
-            'kelas_list' => $kelas_list
+            'kelas_list' => $kelas_list,
+            'siswa' => $siswa,
+            'rapor_akhir' => $rapor_akhir,
+            'filters' => $request->only(['kelas_id', 'mapel_id'])
         ]);
     }
 
@@ -423,7 +441,10 @@ class PenilaianController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Berhasil melakukan generate Nilai Akhir dan Deskripsi otomatis untuk seluruh siswa di kelas.');
+        return redirect()->route('guru.penilaian.halaman_generate_nilai_akhir', [
+            'kelas_id' => $request->kelas_id,
+            'mapel_id' => $request->mapel_id
+        ])->with('success', 'Berhasil melakukan generate Nilai Akhir dan Deskripsi otomatis untuk seluruh siswa di kelas.');
     }
 
     // ==============================================================================
