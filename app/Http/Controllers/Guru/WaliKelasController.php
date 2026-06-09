@@ -223,6 +223,11 @@ class WaliKelasController extends Controller
      */
     public function kenaikan()
     {
+        $tahun_ajaran = \App\Models\TahunAjaran::where('status', 'Aktif')->first();
+        if ($tahun_ajaran && $tahun_ajaran->semester === 'Ganjil') {
+            return redirect()->back()->with('error', 'Status Kenaikan Kelas hanya dapat dikelola pada Semester Genap.');
+        }
+
         $kelas = $this->getKelasWali();
         $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
         $kelas_all = Kelas::all();
@@ -240,6 +245,11 @@ class WaliKelasController extends Controller
 
     public function storeKenaikan(Request $request)
     {
+        $tahun_ajaran = \App\Models\TahunAjaran::where('status', 'Aktif')->first();
+        if ($tahun_ajaran && $tahun_ajaran->semester === 'Ganjil') {
+            return redirect()->back()->with('error', 'Status Kenaikan Kelas hanya dapat dikelola pada Semester Genap.');
+        }
+
         $request->validate([
             'data' => 'required|array'
         ]);
