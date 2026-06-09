@@ -63,19 +63,33 @@ class PenilaianController extends Controller
             'mapel_id' => 'required',
             'kode_tp' => 'required',
             'deskripsi' => 'required',
-            'semester' => 'required',
-            'tingkat' => 'required',
         ]);
 
         $guru_id = Auth::user()->guru->id ?? 1;
+
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1;
+
+        $jadwal = \App\Models\JadwalPelajaran::with('kelas')
+            ->where('id_guru', $guru_id)
+            ->where('id_mapel', $request->mapel_id)
+            ->first();
+            
+        $tingkatStr = 'Fase E (Kelas 10)';
+        if ($jadwal && $jadwal->kelas) {
+            $tingkatNum = $jadwal->kelas->tingkat;
+            if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+            elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+            elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+        }
 
         TujuanPembelajaran::create([
             'mapel_id' => $request->mapel_id,
             'guru_id' => $guru_id,
             'kode_tp' => $request->kode_tp,
             'deskripsi' => $request->deskripsi,
-            'semester' => $request->semester,
-            'tingkat' => $request->tingkat,
+            'semester' => $semester,
+            'tingkat' => $tingkatStr,
         ]);
 
         return redirect()->back()->with('success', 'Tujuan Pembelajaran berhasil ditambahkan.');
@@ -158,7 +172,7 @@ class PenilaianController extends Controller
             $nilai_sumatif = NilaiSumatif::where('mapel_id', $request->mapel_id)
                 ->where('guru_id', $guru_id)
                 ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
-                ->where('semester', 1) // Asumsi semester 1 sementara
+                ->where('semester', $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1)
                 ->get()->keyBy('siswa_id');
         }
 
@@ -193,7 +207,7 @@ class PenilaianController extends Controller
                         'guru_id' => $guru_id,
                         'siswa_id' => $siswa_id,
                         'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                        'semester' => 1,
+                        'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
                         'jenis' => $request->jenis
                     ],
                     ['nilai' => $nilai]
@@ -251,10 +265,12 @@ class PenilaianController extends Controller
     {
         $request->validate(['data' => 'required|array']);
         $guru_id = Auth::user()->guru->id ?? 1;
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1;
 
         foreach ($request->data as $siswa_id => $nilai) {
             NilaiSikapK13::updateOrCreate(
-                ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => 1],
+                ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => $semester],
                 [
                     'nilai_spiritual' => $nilai['nilai_spiritual'] ?? null,
                     'deskripsi_spiritual' => $nilai['deskripsi_spiritual'] ?? null,
@@ -338,7 +354,7 @@ class PenilaianController extends Controller
                     'mapel_id' => $request->mapel_id,
                     'guru_id' => $guru_id,
                     'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                    'semester' => 1
+                    'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1
                 ],
                 [
                     'nilai_akhir' => round($nilai_akhir),

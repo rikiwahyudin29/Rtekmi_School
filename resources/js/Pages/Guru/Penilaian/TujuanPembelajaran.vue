@@ -14,8 +14,6 @@ const form = useForm({
     mapel_id: '',
     kode_tp: '',
     deskripsi: '',
-    semester: '1',
-    tingkat: 'Fase E',
 });
 
 const openModal = () => {
@@ -133,25 +131,9 @@ const deleteTp = (id) => {
                             <option v-for="m in mapel" :key="m.id" :value="m.id">{{ m.nama_mapel }}</option>
                         </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kode TP</label>
-                            <input v-model="form.kode_tp" type="text" placeholder="Contoh: TP.1" required class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fase/Tingkat</label>
-                            <select v-model="form.tingkat" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="Fase E">Fase E (Kelas 10)</option>
-                                <option value="Fase F">Fase F (Kelas 11 & 12)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Semester</label>
-                        <select v-model="form.semester" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                            <option value="1">Ganjil (1)</option>
-                            <option value="2">Genap (2)</option>
-                        </select>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kode TP</label>
+                        <input v-model="form.kode_tp" type="text" placeholder="Contoh: TP.1" required class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deskripsi Tujuan Pembelajaran</label>
