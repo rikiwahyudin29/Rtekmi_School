@@ -1,7 +1,7 @@
 <script setup>
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const props = defineProps({
     kelas: Object,
@@ -28,6 +28,18 @@ onMounted(() => {
 
 const submitKenaikan = () => {
     form.post(route('guru.walikelas.kenaikan.store'));
+};
+
+const bulkStatus = ref('');
+const bulkKelasTujuan = ref('');
+
+const applyBulk = () => {
+    props.siswa.forEach(s => {
+        if (form.data[s.id]) {
+            if (bulkStatus.value) form.data[s.id].status = bulkStatus.value;
+            if (bulkKelasTujuan.value) form.data[s.id].kelas_tujuan_id = bulkKelasTujuan.value;
+        }
+    });
 };
 </script>
 
@@ -62,6 +74,33 @@ const submitKenaikan = () => {
                 <p class="text-sm text-yellow-800 dark:text-yellow-400">
                     <strong>Penting:</strong> Status kenaikan ini akan dicetak di halaman akhir rapor siswa. Pastikan Anda telah melakukan rapat pleno kenaikan kelas sebelum menyimpan data ini secara permanen.
                 </p>
+            </div>
+
+            <!-- Bulk Action Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 flex flex-col md:flex-row items-end md:items-center gap-4 relative overflow-hidden">
+                <div class="absolute inset-y-0 left-0 w-1 bg-blue-500"></div>
+                <div class="flex-1 w-full md:w-auto">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wider pl-2">Set Status Masal</label>
+                    <select v-model="bulkStatus" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Abaikan --</option>
+                        <option value="Naik">Naik Kelas</option>
+                        <option value="Tidak Naik">Tinggal di Kelas</option>
+                        <option value="Lulus">Lulus</option>
+                        <option value="Tidak Lulus">Tidak Lulus</option>
+                    </select>
+                </div>
+                <div class="flex-1 w-full md:w-auto">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wider pl-2">Set Kelas Tujuan Masal</label>
+                    <select v-model="bulkKelasTujuan" class="w-full text-sm rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Abaikan --</option>
+                        <option v-for="k in kelas_all" :key="k.id" :value="k.id">{{ k.nama_kelas }}</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-auto">
+                    <button @click="applyBulk" type="button" class="w-full md:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-xl font-bold shadow-sm transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-magic text-blue-500"></i> Terapkan ke Semua
+                    </button>
+                </div>
             </div>
 
             <!-- Tabel Input Kenaikan -->

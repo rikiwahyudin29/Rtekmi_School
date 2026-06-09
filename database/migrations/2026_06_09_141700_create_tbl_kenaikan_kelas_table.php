@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_kenaikan_kelas', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
+            $table->integer('id', true);
+            $table->integer('siswa_id');
             $table->string('status', 50);
-            $table->foreignId('kelas_tujuan_id')->nullable()->constrained('tbl_kelas')->onDelete('set null');
+            $table->integer('kelas_tujuan_id')->nullable();
             $table->timestamps();
         });
     }
