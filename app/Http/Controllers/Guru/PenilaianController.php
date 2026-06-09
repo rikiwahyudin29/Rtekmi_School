@@ -216,6 +216,7 @@ class PenilaianController extends Controller
         $kelas_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_kelas')->unique();
         $kelas_list = Kelas::whereIn('id', $kelas_ids)->get();
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         $siswa = [];
         $nilai_sumatif = [];
@@ -226,7 +227,7 @@ class PenilaianController extends Controller
             $sumatifs = NilaiSumatif::where('mapel_id', $request->mapel_id)
                 ->where('guru_id', $guru_id)
                 ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
-                ->where('semester', $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1)
+                ->where('semester', $semester_int)
                 ->get();
             foreach($sumatifs as $ns) {
                 $nilai_sumatif[$ns->siswa_id][$ns->jenis] = $ns;
@@ -255,6 +256,7 @@ class PenilaianController extends Controller
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         foreach ($request->nilai as $siswa_id => $nilai) {
             if ($nilai !== null) {
@@ -264,7 +266,7 @@ class PenilaianController extends Controller
                         'guru_id' => $guru_id,
                         'siswa_id' => $siswa_id,
                         'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                        'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                        'semester' => $semester_int,
                         'jenis' => $request->jenis
                     ],
                     ['nilai' => $nilai]
@@ -322,11 +324,11 @@ class PenilaianController extends Controller
         $request->validate(['data' => 'required|array']);
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
-        $semester = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1;
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         foreach ($request->data as $siswa_id => $nilai) {
             NilaiSikapK13::updateOrCreate(
-                ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => $semester],
+                ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => $semester_int],
                 [
                     'nilai_spiritual' => $nilai['nilai_spiritual'] ?? null,
                     'deskripsi_spiritual' => $nilai['deskripsi_spiritual'] ?? null,
@@ -367,6 +369,7 @@ class PenilaianController extends Controller
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
         $siswa_list = Siswa::where('kelas_id', $request->kelas_id)->get();
 
         foreach ($siswa_list as $siswa) {
@@ -410,7 +413,7 @@ class PenilaianController extends Controller
                     'mapel_id' => $request->mapel_id,
                     'guru_id' => $guru_id,
                     'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                    'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1
+                    'semester' => $semester_int
                 ],
                 [
                     'nilai_akhir' => round($nilai_akhir),
@@ -642,6 +645,7 @@ class PenilaianController extends Controller
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         $file = $request->file('file_excel');
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
@@ -666,7 +670,7 @@ class PenilaianController extends Controller
                                 'guru_id' => $guru_id,
                                 'siswa_id' => $siswa_id,
                                 'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                                'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                                'semester' => $semester_int,
                                 'jenis' => 'SAS'
                             ],
                             ['nilai' => $nilai_sas]
@@ -679,7 +683,7 @@ class PenilaianController extends Controller
                                 'guru_id' => $guru_id,
                                 'siswa_id' => $siswa_id,
                                 'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                                'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                                'semester' => $semester_int,
                                 'jenis' => 'STS'
                             ],
                             ['nilai' => $nilai_sts]
@@ -695,7 +699,7 @@ class PenilaianController extends Controller
                             'guru_id' => $guru_id,
                             'siswa_id' => $siswa_id,
                             'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                            'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1,
+                            'semester' => $semester_int,
                             'jenis' => $request->jenis
                         ],
                         ['nilai' => $nilai]
@@ -770,7 +774,7 @@ class PenilaianController extends Controller
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
-        $semester = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1;
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         $file = $request->file('file_excel');
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
@@ -784,7 +788,7 @@ class PenilaianController extends Controller
             
             if($siswa_id) {
                 NilaiSikapK13::updateOrCreate(
-                    ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => $semester],
+                    ['siswa_id' => $siswa_id, 'guru_id' => $guru_id, 'semester' => $semester_int],
                     [
                         'nilai_spiritual' => $row[3] ?? null,
                         'deskripsi_spiritual' => $row[4] ?? null,
