@@ -26,6 +26,10 @@ jobs:
           # Eksekusi Git Pull
           git pull origin main
           
+          # Jika Bos menggunakan user 'root', wajib kembalikan permission ke user website 
+          # agar Laravel tidak error "Permission Denied"
+          chown -R app_smkriyad_usr:app_smkriyad_usr /var/www/app_smkriyad_usr/data/www/smkriyadhuljannahjalancagak.sch.id
+          
           # Jika perlu menjalankan composer atau migrate otomatis, hilangkan tanda pagarnya:
           # /opt/php83/bin/php /usr/local/bin/composer install --no-interaction --optimize-autoloader
           # /opt/php83/bin/php artisan migrate --force
