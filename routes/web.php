@@ -538,6 +538,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/kehadiran', [\App\Http\Controllers\Guru\WaliKelasController::class, 'kehadiran'])->name('kehadiran');
         Route::post('/kehadiran/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeKehadiran'])->name('kehadiran.store');
+        Route::get('/kehadiran/template', [\App\Http\Controllers\Guru\WaliKelasController::class, 'templateKehadiran'])->name('kehadiran.template');
+        Route::post('/kehadiran/import', [\App\Http\Controllers\Guru\WaliKelasController::class, 'importKehadiran'])->name('kehadiran.import');
         
         Route::get('/catatan', [\App\Http\Controllers\Guru\WaliKelasController::class, 'catatan'])->name('catatan');
         Route::post('/catatan/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeCatatan'])->name('catatan.store');

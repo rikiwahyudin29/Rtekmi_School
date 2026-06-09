@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import { ref } from 'vue';
 
 const props = defineProps({
     kelas: Object,
@@ -27,6 +28,26 @@ const submit = () => {
         preserveScroll: true
     });
 };
+
+const showImportModal = ref(false);
+const importForm = useForm({
+    file_excel: null
+});
+
+const submitImport = () => {
+    importForm.post(route('guru.walikelas.kehadiran.import'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showImportModal.value = false;
+            importForm.reset();
+            // Update local form data based on imported data
+            // Inertia will reload props automatically
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+    });
+};
 </script>
 
 <template>
@@ -45,7 +66,13 @@ const submit = () => {
                         Kelas: <span class="font-bold">{{ kelas?.nama_kelas || '-' }}</span>
                     </p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <a :href="route('guru.walikelas.kehadiran.template')" target="_blank" class="px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors font-medium flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i> Template
+                    </a>
+                    <button @click="showImportModal = true" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium flex items-center gap-2">
+                        <i class="fas fa-upload"></i> Import
+                    </button>
                     <Link :href="route('guru.walikelas.index')" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
                         <i class="fas fa-arrow-left mr-2"></i> Kembali
                     </Link>
@@ -101,6 +128,37 @@ const submit = () => {
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal Import -->
+        <div v-if="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-file-import text-blue-500"></i> Import Kehadiran
+                    </h3>
+                    <button @click="showImportModal = false" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form @submit.prevent="submitImport">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pilih File Excel (.xlsx)</label>
+                            <input type="file" @input="importForm.file_excel = $event.target.files[0]" accept=".xlsx, .xls" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-xl cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                            <div v-if="importForm.errors.file_excel" class="text-red-500 text-xs mt-1">{{ importForm.errors.file_excel }}</div>
+                        </div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" @click="showImportModal = false" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50">Batal</button>
+                            <button type="submit" :disabled="importForm.processing" class="px-4 py-2 text-white bg-blue-600 rounded-xl hover:bg-blue-700 flex items-center gap-2">
+                                <i v-if="importForm.processing" class="fas fa-spinner fa-spin"></i>
+                                <i v-else class="fas fa-upload"></i>
+                                Import Sekarang
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </DashboardLayout>

@@ -17,6 +17,11 @@ use App\Models\DeskripsiP3K13;
 use App\Models\DeskripsiDplK13;
 use App\Models\KenaikanKelas;
 use Illuminate\Support\Facades\Auth;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class WaliKelasController extends Controller
 {
@@ -83,8 +88,12 @@ class WaliKelasController extends Controller
         $kelas = $this->getKelasWali();
         $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->get();
         
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
         $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))
-                        ->where('semester', 1)
+                        ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+                        ->where('semester', $semester_int)
                         ->get()->keyBy('siswa_id');
 
         return Inertia::render('Guru/WaliKelas/Kehadiran', [
@@ -101,13 +110,14 @@ class WaliKelasController extends Controller
         ]);
 
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         foreach ($request->data as $siswa_id => $absen) {
             RaporKehadiran::updateOrCreate(
                 [
                     'siswa_id' => $siswa_id,
                     'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                    'semester' => 1
+                    'semester' => $semester_int
                 ],
                 [
                     'sakit' => $absen['sakit'] ?? 0,
@@ -118,6 +128,124 @@ class WaliKelasController extends Controller
         }
 
         return redirect()->back()->with('success', 'Data kehadiran berhasil disimpan.');
+    }
+
+    public function templateKehadiran()
+    {
+        $kelas = $this->getKelasWali();
+        if (!$kelas) return redirect()->back()->with('error', 'Anda bukan wali kelas.');
+        
+        $siswa = Siswa::where('kelas_id', $kelas->id)->get();
+        
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))
+                        ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+                        ->where('semester', $semester_int)
+                        ->get()->keyBy('siswa_id');
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Styling Header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '4F46E5'] // Indigo color
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ];
+
+        // Border Body
+        $bodyStyle = [
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '000000']],
+            ],
+        ];
+
+        // Set Headers
+        $headers = ['NO', 'SISWA_ID', 'NISN', 'NAMA SISWA', 'SAKIT', 'IZIN', 'TANPA KETERANGAN'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '1', $h);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(30);
+
+        // Hide SISWA_ID column
+        $sheet->getColumnDimension('B')->setVisible(false);
+
+        $row = 2;
+        foreach ($siswa as $index => $s) {
+            $k = $kehadiran->get($s->id);
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $s->id);
+            $sheet->setCellValue('C' . $row, " " . $s->nisn);
+            $sheet->setCellValue('D' . $row, $s->nama_lengkap);
+            $sheet->setCellValue('E' . $row, $k ? $k->sakit : 0);
+            $sheet->setCellValue('F' . $row, $k ? $k->izin : 0);
+            $sheet->setCellValue('G' . $row, $k ? $k->tanpa_keterangan : 0);
+            
+            $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray($bodyStyle);
+            $row++;
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Template_Kehadiran_Kelas_' . str_replace(' ', '_', $kelas->nama_kelas) . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'. urlencode($fileName).'"');
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function importKehadiran(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $file = $request->file('file_excel');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+        $sheet = $spreadsheet->getActiveSheet();
+        $highestRow = $sheet->getHighestRow();
+
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        for ($row = 2; $row <= $highestRow; $row++) {
+            $siswa_id = $sheet->getCell('B' . $row)->getValue();
+            if (!$siswa_id) continue;
+
+            $sakit = (int) $sheet->getCell('E' . $row)->getValue();
+            $izin = (int) $sheet->getCell('F' . $row)->getValue();
+            $tanpa_ket = (int) $sheet->getCell('G' . $row)->getValue();
+
+            RaporKehadiran::updateOrCreate(
+                [
+                    'siswa_id' => $siswa_id,
+                    'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
+                    'semester' => $semester_int
+                ],
+                [
+                    'sakit' => $sakit,
+                    'izin' => $izin,
+                    'tanpa_keterangan' => $tanpa_ket,
+                ]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Data kehadiran berhasil diimport.');
     }
 
     /**
