@@ -8,6 +8,7 @@ use App\Models\JamMaster;
 use App\Models\JadwalPengaturan;
 use App\Models\GuruKetersediaan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class TimetableEngine
 {
@@ -81,6 +82,15 @@ class TimetableEngine
      */
     public function autoGenerate()
     {
+        // Cegah race condition jika user double-click
+        $lock = Cache::lock('auto_generate_jadwal_lock', 120);
+        if (!$lock->get()) {
+            return [
+                'status' => 'error',
+                'msg' => 'Proses penyusunan jadwal sedang berjalan, mohon tunggu sebentar...'
+            ];
+        }
+
         DB::beginTransaction();
         try {
             // 1. Kosongkan jadwal yang ada di tahun ajaran ini
@@ -97,6 +107,11 @@ class TimetableEngine
                                 ->where('id_tahun_ajaran', $this->idTahunAjaran)
                                 ->orderBy('beban_jam', 'DESC')
                                 ->get();
+                                
+            // Pastikan tidak ada data ganda (duplikat) di tabel pembagian tugas untuk kelas dan mapel yang sama
+            $bebanTugas = $bebanTugas->unique(function ($item) {
+                return $item->id_kelas . '_' . $item->id_mapel;
+            });
 
             $gagalGenerate = 0;
             $detailGagal = [];
@@ -214,6 +229,7 @@ class TimetableEngine
             }
 
             DB::commit();
+            $lock->release();
 
             return [
                 'status' => 'success',
@@ -225,6 +241,7 @@ class TimetableEngine
 
         } catch (\Exception $e) {
             DB::rollBack();
+            $lock->release();
             return [
                 'status' => 'error',
                 'msg' => $e->getMessage()
