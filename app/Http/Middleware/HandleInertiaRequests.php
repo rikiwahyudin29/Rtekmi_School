@@ -69,6 +69,7 @@ class HandleInertiaRequests extends Middleware
                 'message' => fn () => $request->session()->get('message'),
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'detail_gagal' => fn () => $request->session()->get('detail_gagal'),
             ],
             'web_settings' => $web,
             'theme' => $tema ? $tema->nilai : 'theme-green',

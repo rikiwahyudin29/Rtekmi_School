@@ -342,6 +342,46 @@ const selectedKelasName = computed(() => {
                         <i class="fas fa-exclamation-circle text-lg"></i> {{ $page.props.flash.error }}
                     </div>
 
+                    <!-- Tampilkan Detail Gagal -->
+                    <div v-if="$page.props.flash?.detail_gagal?.length > 0" class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-5 rounded-2xl shadow-sm mb-6 shrink-0 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <i class="fas fa-exclamation-triangle text-8xl text-orange-600"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex items-start gap-3 text-orange-800 dark:text-orange-400 mb-3">
+                                <i class="fas fa-exclamation-triangle mt-1 text-lg"></i>
+                                <div>
+                                    <h3 class="font-bold text-lg">Peringatan: Ada Jadwal Gagal Terpasang</h3>
+                                    <p class="text-sm opacity-90 mt-1">Sistem gagal memasang mapel di bawah ini karena kapasitas jadwal untuk Guru atau Kelas tersebut sudah sepenuhnya terisi dan tidak ada slot waktu luang yang beririsan.</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 bg-white/60 dark:bg-gray-900/40 rounded-xl overflow-hidden border border-orange-100 dark:border-orange-800/50">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left">
+                                        <thead class="bg-orange-100/50 dark:bg-orange-900/30 text-orange-900 dark:text-orange-300 font-bold border-b border-orange-200 dark:border-orange-800/50">
+                                            <tr>
+                                                <th class="px-4 py-3">Mata Pelajaran</th>
+                                                <th class="px-4 py-3">Kelas</th>
+                                                <th class="px-4 py-3">Guru Pengampu</th>
+                                                <th class="px-4 py-3 text-center">Gagal (JP)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-orange-100 dark:divide-orange-800/30 text-orange-900 dark:text-orange-200">
+                                            <tr v-for="(gagal, idx) in $page.props.flash.detail_gagal" :key="idx" class="hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors">
+                                                <td class="px-4 py-3 font-semibold">{{ gagal.mapel }}</td>
+                                                <td class="px-4 py-3">{{ gagal.kelas }}</td>
+                                                <td class="px-4 py-3">{{ gagal.guru }}</td>
+                                                <td class="px-4 py-3 text-center font-bold">
+                                                    <span class="bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400 px-2.5 py-1 rounded-lg">{{ gagal.sisa_jam }} JP</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Empty State: No Kelas Selected -->
                     <div v-if="!selectedKelas" class="bg-white dark:bg-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-none rounded-3xl border border-gray-100 dark:border-gray-700 p-16 text-center">
                         <div class="w-24 h-24 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-6">

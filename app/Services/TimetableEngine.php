@@ -93,11 +93,13 @@ class TimetableEngine
             $this->memoryKelas = [];
 
             // 3. Ambil semua beban mengajar (urutkan dari beban terbesar agar lebih mudah dipasang di awal)
-            $bebanTugas = PembagianTugas::where('id_tahun_ajaran', $this->idTahunAjaran)
+            $bebanTugas = PembagianTugas::with(['mapel', 'kelas', 'guru'])
+                                ->where('id_tahun_ajaran', $this->idTahunAjaran)
                                 ->orderBy('beban_jam', 'DESC')
                                 ->get();
 
             $gagalGenerate = 0;
+            $detailGagal = [];
 
             // 4. Proses pendistribusian jadwal
             foreach ($bebanTugas as $tugas) {
@@ -192,6 +194,12 @@ class TimetableEngine
                             continue; 
                         } else {
                             $gagalGenerate += $sisaJam;
+                            $detailGagal[] = [
+                                'mapel' => $tugas->mapel ? $tugas->mapel->nama_mapel : 'Unknown',
+                                'kelas' => $tugas->kelas ? $tugas->kelas->nama_kelas : 'Unknown',
+                                'guru' => $tugas->guru ? $tugas->guru->nama_lengkap : 'Tanpa Guru',
+                                'sisa_jam' => $sisaJam
+                            ];
                             break; // Stop untuk mapel ini
                         }
                     }
@@ -211,6 +219,7 @@ class TimetableEngine
                 'status' => 'success',
                 'total_terjadwal' => count($this->jadwalMemory),
                 'gagal_terjadwal' => $gagalGenerate,
+                'detail_gagal' => $detailGagal,
                 'msg' => $gagalGenerate > 0 ? "Berhasil, namun ada $gagalGenerate JP yang gagal terpasang karena kelas/guru terlalu padat (kres)." : "Jadwal berhasil digenerate 100% tanpa kres!"
             ];
 

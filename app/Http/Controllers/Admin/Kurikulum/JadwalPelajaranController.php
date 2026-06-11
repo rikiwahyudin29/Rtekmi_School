@@ -498,7 +498,8 @@ class JadwalPelajaranController extends Controller
         $result = $engine->autoGenerate();
 
         if ($result['status'] === 'success') {
-            return back()->with('message', $result['msg']);
+            return back()->with('message', $result['msg'])
+                         ->with('detail_gagal', $result['detail_gagal'] ?? []);
         } else {
             return back()->with('error', 'Gagal Generate: ' . $result['msg']);
         }
