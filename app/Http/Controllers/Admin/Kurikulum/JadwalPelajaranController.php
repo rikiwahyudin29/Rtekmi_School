@@ -22,9 +22,9 @@ class JadwalPelajaranController extends Controller
     {
         $tahunAktif = TahunAjaran::where('status', 'Aktif')->first();
 
-        $filterKelas = $request->input('id_kelas');
-        $filterGuru = $request->input('id_guru');
-        $filterJurusan = $request->input('id_jurusan');
+        $filterKelas = $request->input('kelas') ?? $request->input('id_kelas');
+        $filterGuru = $request->input('guru') ?? $request->input('id_guru');
+        $filterJurusan = $request->input('jurusan') ?? $request->input('id_jurusan');
 
         $query = JadwalPelajaran::with(['kelas.jurusan', 'mapel', 'guru', 'tahunAjaran']);
 
@@ -236,9 +236,9 @@ class JadwalPelajaranController extends Controller
     {
         $tahunAktif = TahunAjaran::where('status', 'Aktif')->first();
         
-        $filterKelas = $request->input('id_kelas');
-        $filterGuru  = $request->input('id_guru');
-        $filterJurusan = $request->input('id_jurusan');
+        $filterKelas = $request->input('kelas') ?? $request->input('id_kelas');
+        $filterGuru  = $request->input('guru') ?? $request->input('id_guru');
+        $filterJurusan = $request->input('jurusan') ?? $request->input('id_jurusan');
 
         $query = JadwalPelajaran::with(['kelas.jurusan', 'mapel', 'guru', 'tahunAjaran']);
         if ($tahunAktif) $query->where('id_tahun_ajaran', $tahunAktif->id);
