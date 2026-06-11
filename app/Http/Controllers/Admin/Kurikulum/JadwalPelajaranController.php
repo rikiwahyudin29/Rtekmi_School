@@ -504,4 +504,16 @@ class JadwalPelajaranController extends Controller
             return back()->with('error', 'Gagal Generate: ' . $result['msg']);
         }
     }
+
+    public function clearAll(Request $request)
+    {
+        $tahunAktif = TahunAjaran::where('status', 'Aktif')->first();
+        if (!$tahunAktif) {
+            return back()->with('error', 'Tahun ajaran aktif belum disetting.');
+        }
+
+        JadwalPelajaran::where('id_tahun_ajaran', $tahunAktif->id)->delete();
+
+        return back()->with('message', 'Seluruh jadwal berhasil dikosongkan!');
+    }
 }

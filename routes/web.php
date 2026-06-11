@@ -229,6 +229,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('jadwal-pelajaran/cetak-rekap', [JadwalPelajaranController::class, 'cetakRekap'])->name('jadwal-pelajaran.cetak_rekap');
             Route::get('jadwal-pelajaran/cetak', [JadwalPelajaranController::class, 'cetak'])->name('jadwal-pelajaran.cetak');
             Route::post('jadwal-pelajaran/auto-generate', [JadwalPelajaranController::class, 'autoGenerate'])->name('jadwal-pelajaran.auto-generate');
+            Route::delete('jadwal-pelajaran/clear-all', [JadwalPelajaranController::class, 'clearAll'])->name('jadwal-pelajaran.clear-all');
             Route::resource('jadwal-pelajaran', JadwalPelajaranController::class)->except(['create', 'edit', 'show']);
         });
 

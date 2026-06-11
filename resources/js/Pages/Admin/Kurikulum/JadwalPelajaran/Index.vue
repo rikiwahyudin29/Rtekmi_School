@@ -64,6 +64,16 @@ const submitImport = () => {
 };
 
 const isGenerating = ref(false);
+
+const clearAll = () => {
+    if (confirm('PERINGATAN BAHAYA: Aksi ini akan MENGHAPUS SEMUA JADWAL yang sudah ada untuk Tahun Ajaran aktif!\n\nApakah Anda benar-benar yakin ingin mengosongkan jadwal?')) {
+        router.delete('/admin/kurikulum/jadwal-pelajaran/clear-all', {
+            preserveScroll: true,
+            preserveState: false,
+        });
+    }
+};
+
 const autoGenerate = () => {
     if (confirm('PERINGATAN: Auto Generate akan MENGHAPUS SEMUA jadwal yang ada saat ini untuk Tahun Ajaran aktif dan menyusun ulang secara otomatis berdasarkan beban guru.\n\nApakah Anda yakin ingin melanjutkan?')) {
         isGenerating.value = true;
@@ -303,6 +313,9 @@ const selectedKelasName = computed(() => {
                             </Link>
                             <button @click="openImportModal = true" class="bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center gap-2 border border-green-200 dark:border-green-800">
                                 <i class="fas fa-upload"></i> Import
+                            </button>
+                            <button @click="clearAll" class="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center gap-2 border border-red-200 dark:border-red-800">
+                                <i class="fas fa-trash"></i> Kosongkan
                             </button>
                             <button @click="autoGenerate" :disabled="isGenerating" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 disabled:opacity-50 border border-orange-600">
                                 <i class="fas fa-magic" :class="{'fa-spin': isGenerating}"></i>
