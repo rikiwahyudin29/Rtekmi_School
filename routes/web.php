@@ -235,7 +235,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $path = storage_path('logs/laravel.log');
                 if (!file_exists($path)) return 'No log file';
                 $lines = file($path);
-                return '<pre>' . implode("", array_slice($lines, -200)) . '</pre>';
+                $filtered = array_filter($lines, function($line) {
+                    return strpos($line, 'MULAI AUTO GENERATE') !== false || 
+                           strpos($line, 'Memproses Mapel') !== false || 
+                           strpos($line, 'Inserted 1 JP') !== false;
+                });
+                return '<pre>' . implode("", array_slice($filtered, -100)) . '</pre>';
             });
 
             Route::resource('jadwal-pelajaran', JadwalPelajaranController::class)->except(['create', 'edit', 'show']);
