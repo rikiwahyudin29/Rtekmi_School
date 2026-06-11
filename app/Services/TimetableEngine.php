@@ -106,9 +106,11 @@ class TimetableEngine
                 // Jika tidak ada beban jam, lewati
                 if ($sisaJam <= 0) continue;
 
+                $forceSatuJam = false;
+
                 // Coba pecah jam menjadi blok 2 JP (standar umum)
                 while ($sisaJam > 0) {
-                    $blokJam = min(2, $sisaJam); // Ambil 2 jam, atau 1 jam jika sisa 1
+                    $blokJam = $forceSatuJam ? 1 : min(2, $sisaJam); // Ambil 2 jam, atau 1 jam jika terpaksa
                     
                     // Cari slot kosong berturut-turut untuk kelas dan guru ini
                     $ditemukan = false;
@@ -174,6 +176,7 @@ class TimetableEngine
                                 }
                                 $sisaJam -= $blokJam;
                                 $ditemukan = true;
+                                $forceSatuJam = false; // Reset state
                                 break; // Break dari loop jamMaster
                             }
                         }
@@ -185,6 +188,7 @@ class TimetableEngine
                         // Turunkan blok jam jadi 1 (jika tadi 2)
                         if ($blokJam == 2) {
                             // Coba loop lagi dengan blok 1
+                            $forceSatuJam = true;
                             continue; 
                         } else {
                             $gagalGenerate += $sisaJam;
