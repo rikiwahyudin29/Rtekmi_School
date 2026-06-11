@@ -9,6 +9,7 @@ use App\Models\JadwalPengaturan;
 use App\Models\GuruKetersediaan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class TimetableEngine
 {
@@ -113,12 +114,18 @@ class TimetableEngine
                 return $item->id_kelas . '_' . $item->id_mapel;
             });
 
+            Log::info("=== MULAI AUTO GENERATE ===");
+            Log::info("Tahun Ajaran: " . $this->idTahunAjaran);
+            Log::info("Total Tugas Unik: " . count($bebanTugas));
+
             $gagalGenerate = 0;
             $detailGagal = [];
 
             // 4. Proses pendistribusian jadwal
             foreach ($bebanTugas as $tugas) {
                 $sisaJam = $tugas->beban_jam;
+                Log::info("Memproses Mapel: {$tugas->id_mapel} untuk Kelas: {$tugas->id_kelas} dengan Beban: {$sisaJam} JP");
+
                 
                 // Jika tidak ada beban jam, lewati
                 if ($sisaJam <= 0) continue;
@@ -190,6 +197,8 @@ class TimetableEngine
                                     $kelasKey = $tugas->id_kelas . '_' . $hari . '_' . $ts->id;
                                     $this->memoryGuru[$guruKey] = true;
                                     $this->memoryKelas[$kelasKey] = true;
+                                    
+                                    Log::info("  -> Inserted 1 JP di $hari jam $ts->jam_mulai (Sisa sebelum kurang: $sisaJam)");
                                 }
                                 $sisaJam -= $blokJam;
                                 $ditemukan = true;

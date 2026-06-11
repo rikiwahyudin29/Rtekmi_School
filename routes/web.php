@@ -230,6 +230,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('jadwal-pelajaran/cetak', [JadwalPelajaranController::class, 'cetak'])->name('jadwal-pelajaran.cetak');
             Route::post('jadwal-pelajaran/auto-generate', [JadwalPelajaranController::class, 'autoGenerate'])->name('jadwal-pelajaran.auto-generate');
             Route::delete('jadwal-pelajaran/clear-all', [JadwalPelajaranController::class, 'clearAll'])->name('jadwal-pelajaran.clear-all');
+            
+            Route::get('debug-log', function() {
+                $path = storage_path('logs/laravel.log');
+                if (!file_exists($path)) return 'No log file';
+                $lines = file($path);
+                return '<pre>' . implode("", array_slice($lines, -200)) . '</pre>';
+            });
+
             Route::resource('jadwal-pelajaran', JadwalPelajaranController::class)->except(['create', 'edit', 'show']);
         });
 
