@@ -323,7 +323,7 @@ const menuItems = computed(() => {
                 { name: 'Tugas & Ujian', icon: 'fas fa-tasks', route: '#', active: false },
             ]},
             { name: 'Pembelajaran KBM', icon: 'fas fa-chalkboard-teacher', route: '#', active: false, children: [
-                { name: 'Jadwal Mengajar', icon: 'fas fa-calendar-day', route: '#', active: false },
+                { name: 'Jadwal Mengajar', icon: 'fas fa-calendar-day', route: 'guru.jadwal-mengajar.index', active: route().current('guru.jadwal-mengajar.*') },
                 { name: 'Jurnal KBM', icon: 'fas fa-book-open', route: '#', active: false },
                 { name: 'Tujuan Pembelajaran', icon: 'fas fa-bullseye', route: 'guru.penilaian.tp', active: route().current('guru.penilaian.tp') },
                 { name: 'Input Nilai Formatif', icon: 'fas fa-clipboard-check', route: 'guru.penilaian.formatif', active: route().current('guru.penilaian.formatif') },

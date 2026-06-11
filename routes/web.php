@@ -506,6 +506,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'rekap'])->name('rekap');
         Route::get('/cetak-rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
     });
+    // Guru Jadwal Mengajar Group
+    Route::prefix('guru/jadwal-mengajar')->name('guru.jadwal-mengajar.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\JadwalMengajarController::class, 'index'])->name('index');
+    });
 
     // Guru Penilaian (eRapor) Group
     Route::prefix('guru/penilaian')->name('guru.penilaian.')->group(function () {
