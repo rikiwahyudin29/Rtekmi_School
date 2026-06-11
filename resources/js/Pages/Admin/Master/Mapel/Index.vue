@@ -16,6 +16,8 @@ const kelompokFilter = ref(props.filters.kelompok || '');
 const showModal = ref(false);
 const showImportModal = ref(false);
 const isEditing = ref(false);
+const isSemuaJurusan = ref(true);
+const selectedJurusans = ref([]);
 
 const form = useForm({
     id: null,
@@ -39,6 +41,14 @@ const openModal = (mpl = null) => {
         form.tampil_raport = !!mpl.tampil_raport;
         form.tampil_skl = !!mpl.tampil_skl;
         form.tampil_transkrip = !!mpl.tampil_transkrip;
+        
+        if (mpl.jurusan_id === '0' || !mpl.jurusan_id) {
+            isSemuaJurusan.value = true;
+            selectedJurusans.value = [];
+        } else {
+            isSemuaJurusan.value = false;
+            selectedJurusans.value = mpl.jurusan_id.split(',');
+        }
     } else {
         form.reset();
         form.id = null;
@@ -46,6 +56,8 @@ const openModal = (mpl = null) => {
         form.tampil_raport = true;
         form.tampil_skl = true;
         form.tampil_transkrip = true;
+        isSemuaJurusan.value = true;
+        selectedJurusans.value = [];
     }
     showModal.value = true;
 };
@@ -57,6 +69,8 @@ const closeModal = () => {
 };
 
 const submit = () => {
+    form.jurusan_id = isSemuaJurusan.value ? '0' : selectedJurusans.value.join(',');
+
     if (isEditing.value) {
         form.put(route('admin.master.mapel.update', form.id), {
             onSuccess: () => closeModal(),
@@ -110,6 +124,13 @@ watch([search, perPage, kelompokFilter], ([newSearch, newPerPage, newKelompokFil
         );
     }, 300);
 });
+
+const formatJurusan = (jurusan_id) => {
+    if (!jurusan_id || jurusan_id === '0') return 'Semua Jurusan';
+    const ids = jurusan_id.split(',');
+    const names = props.jurusans.filter(j => ids.includes(j.id.toString())).map(j => j.nama_jurusan);
+    return names.join(', ');
+};
 </script>
 
 <template>
@@ -201,8 +222,8 @@ watch([search, perPage, kelompokFilter], ([newSearch, newPerPage, newKelompokFil
                                     </td>
                                     <td class="py-4 px-5 text-gray-900 dark:text-gray-100 font-bold">
                                         {{ mpl.nama_mapel }}
-                                        <div class="text-xs font-normal text-gray-500 mt-0.5">
-                                            Jurusan: {{ mpl.jurusan_id == '0' ? 'Semua Jurusan' : 'Terkustomisasi' }}
+                                        <div class="text-xs font-normal text-gray-500 mt-0.5 whitespace-normal max-w-[200px]">
+                                            Jurusan: {{ formatJurusan(mpl.jurusan_id) }}
                                         </div>
                                     </td>
                                     <td class="py-4 px-5 text-center">
@@ -297,15 +318,21 @@ watch([search, perPage, kelompokFilter], ([newSearch, newPerPage, newKelompokFil
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ketersediaan Jurusan</label>
-                            <select v-model="form.jurusan_id" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                <option value="0">Tersedia Untuk Semua Jurusan</option>
-                                <optgroup label="Hanya Jurusan Tertentu">
-                                    <option v-for="jrs in jurusans" :key="jrs.id" :value="jrs.id.toString()">
-                                        Hanya {{ jrs.nama_jurusan }}
-                                    </option>
-                                </optgroup>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ketersediaan Jurusan</label>
+                            
+                            <div class="space-y-3 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <label class="flex items-center gap-2 cursor-pointer pb-2 border-b border-gray-200 dark:border-gray-700">
+                                    <input type="checkbox" v-model="isSemuaJurusan" class="rounded text-primary-600 focus:ring-primary-500 bg-white dark:bg-gray-800 dark:border-gray-600">
+                                    <span class="text-sm font-bold text-gray-900 dark:text-white">Tersedia Untuk Semua Jurusan</span>
+                                </label>
+                                
+                                <div v-if="!isSemuaJurusan" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                                    <label v-for="jrs in jurusans" :key="jrs.id" class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" v-model="selectedJurusans" :value="jrs.id.toString()" class="rounded text-primary-600 focus:ring-primary-500 bg-white dark:bg-gray-800 dark:border-gray-600">
+                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ jrs.nama_jurusan }}</span>
+                                    </label>
+                                </div>
+                            </div>
                             <div v-if="form.errors.jurusan_id" class="text-red-500 text-xs mt-1">{{ form.errors.jurusan_id }}</div>
                         </div>
                         
