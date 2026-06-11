@@ -16,6 +16,8 @@ class TimetableEngine
     protected $jamMasters;
     protected $guruTidakTersedia = [];
     protected $jadwalMemory = [];
+    protected $memoryGuru = [];
+    protected $memoryKelas = [];
     
     // Default hari kerja
     protected $daftarHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -58,11 +60,10 @@ class TimetableEngine
             return false;
         }
 
-        // Cek di memory (untuk auto generator)
-        foreach ($this->jadwalMemory as $j) {
-            if ($j['id_guru'] == $idGuru && $j['hari'] == $hari && $j['id_jam_master'] == $idJamMaster) {
-                return true; // Kres!
-            }
+        // Cek di memory (untuk auto generator) O(1)
+        $key = $idGuru . '_' . $hari . '_' . $idJamMaster;
+        if (isset($this->memoryGuru[$key])) {
+            return true; // Kres!
         }
 
         // Cek di Database (untuk input manual via UI)
@@ -88,6 +89,8 @@ class TimetableEngine
             // 2. Load constraints
             $this->loadConstraints();
             $this->jadwalMemory = [];
+            $this->memoryGuru = [];
+            $this->memoryKelas = [];
 
             // 3. Ambil semua beban mengajar (urutkan dari beban terbesar agar lebih mudah dipasang di awal)
             $bebanTugas = PembagianTugas::where('id_tahun_ajaran', $this->idTahunAjaran)
@@ -130,15 +133,9 @@ class TimetableEngine
                                     break;
                                 }
 
-                                // b. Cek apakah Kelas sedang belajar mapel lain di jam ini
-                                $kelasPenuh = false;
-                                foreach ($this->jadwalMemory as $jm) {
-                                    if ($jm['id_kelas'] == $tugas->id_kelas && $jm['hari'] == $hari && $jm['id_jam_master'] == $jamMaster->id) {
-                                        $kelasPenuh = true;
-                                        break;
-                                    }
-                                }
-                                if ($kelasPenuh) {
+                                // b. Cek apakah Kelas sedang belajar mapel lain di jam ini (O(1) lookup)
+                                $kelasKey = $tugas->id_kelas . '_' . $hari . '_' . $jamMaster->id;
+                                if (isset($this->memoryKelas[$kelasKey])) {
                                     $slotBisaDipakai = false;
                                     break;
                                 }
@@ -168,6 +165,12 @@ class TimetableEngine
                                         'created_at' => now(),
                                         'updated_at' => now(),
                                     ];
+                                    
+                                    // Daftarkan ke fast-lookup dictionary
+                                    $guruKey = $tugas->id_guru . '_' . $hari . '_' . $ts->id;
+                                    $kelasKey = $tugas->id_kelas . '_' . $hari . '_' . $ts->id;
+                                    $this->memoryGuru[$guruKey] = true;
+                                    $this->memoryKelas[$kelasKey] = true;
                                 }
                                 $sisaJam -= $blokJam;
                                 $ditemukan = true;
