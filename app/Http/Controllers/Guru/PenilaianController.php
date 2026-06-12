@@ -45,12 +45,55 @@ class PenilaianController extends Controller
         
         $tp = TujuanPembelajaran::with('mapel')->where('guru_id', $guru_id)->get();
         
-        $mapel_ids = \App\Models\JadwalPelajaran::where('id_guru', $guru_id)->pluck('id_mapel')->unique();
-        $mapel = Mapel::whereIn('id', $mapel_ids)->get();
+        // Dapatkan semua jadwal yang diajar oleh guru ini
+        $jadwals = \App\Models\JadwalPelajaran::with(['mapel', 'kelas'])
+            ->where('id_guru', $guru_id)
+            ->get();
+
+        $mapel_groups = [];
+
+        foreach ($jadwals as $jadwal) {
+            if (!$jadwal->mapel || !$jadwal->kelas) continue;
+            
+            $mapel_id = $jadwal->id_mapel;
+            
+            $tingkatNum = $jadwal->kelas->tingkat;
+            $tingkatStr = 'Fase E (Kelas 10)';
+            if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+            elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+            elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+            
+            if (!isset($mapel_groups[$mapel_id])) {
+                $mapel_groups[$mapel_id] = [];
+            }
+            if (!in_array($tingkatStr, $mapel_groups[$mapel_id])) {
+                $mapel_groups[$mapel_id][] = $tingkatStr;
+            }
+        }
+
+        $mapel_list = [];
+        foreach ($mapel_groups as $mapel_id => $phases) {
+            $mapelModel = \App\Models\Mapel::find($mapel_id);
+            if (!$mapelModel) continue;
+            
+            if (count($phases) > 1) {
+                foreach ($phases as $phase) {
+                    $mapel_list[] = [
+                        'id' => $mapel_id . '|' . $phase,
+                        'nama_mapel' => $mapelModel->nama_mapel . ' (' . $phase . ')'
+                    ];
+                }
+            } else {
+                $mapel_list[] = [
+                    'id' => $mapel_id . '|' . $phases[0],
+                    'nama_mapel' => $mapelModel->nama_mapel
+                ];
+            }
+        }
 
         return Inertia::render('Guru/Penilaian/TujuanPembelajaran', [
             'tp' => $tp,
-            'mapel' => $mapel
+            'mapel' => $mapel_list
         ]);
     }
 
@@ -70,21 +113,13 @@ class PenilaianController extends Controller
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
         $semester = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 1;
 
-        $jadwal = \App\Models\JadwalPelajaran::with('kelas')
-            ->where('id_guru', $guru_id)
-            ->where('id_mapel', $request->mapel_id)
-            ->first();
-            
-        $tingkatStr = 'Fase E (Kelas 10)';
-        if ($jadwal && $jadwal->kelas) {
-            $tingkatNum = $jadwal->kelas->tingkat;
-            if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
-            elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
-            elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
-        }
+        // Parse mapel_id dan tingkatStr dari input
+        $parts = explode('|', $request->mapel_id);
+        $real_mapel_id = $parts[0];
+        $tingkatStr = count($parts) > 1 ? $parts[1] : 'Fase E (Kelas 10)'; // Default fallback
 
         TujuanPembelajaran::create([
-            'mapel_id' => $request->mapel_id,
+            'mapel_id' => $real_mapel_id,
             'guru_id' => $guru_id,
             'kode_tp' => $request->kode_tp,
             'deskripsi' => $request->deskripsi,
