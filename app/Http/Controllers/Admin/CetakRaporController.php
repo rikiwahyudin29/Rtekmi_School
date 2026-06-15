@@ -26,10 +26,11 @@ class CetakRaporController extends Controller
     public function cetakCover($id)
     {
         $siswa = Siswa::with(['kelas', 'jurusan'])->findOrFail($id);
+        $sekolah = Sekolah::first();
         
         // Di aplikasi riil, akan menggunakan view HTML khusus cetak yang di-styling mirip eRapor.
         // Bisa menggunakan dompdf atau print window javascript.
-        return view('rapor.cetak_cover', compact('siswa'));
+        return view('rapor.cetak_cover', compact('siswa', 'sekolah'));
     }
 
     /**
