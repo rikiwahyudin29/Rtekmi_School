@@ -513,4 +513,104 @@ class WaliKelasController extends Controller
         }
         return redirect()->back()->with('success', 'Deskripsi Perkembangan Lulusan (K13) berhasil disimpan.');
     }
+
+    /**
+     * Edit Data Siswa oleh Wali Kelas
+     */
+    public function dataSiswa()
+    {
+        $kelas = $this->getKelasWali();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
+
+        return Inertia::render('Guru/WaliKelas/DataSiswa', [
+            'kelas' => $kelas,
+            'siswa' => $siswa
+        ]);
+    }
+
+    public function updateDataSiswa(Request $request, $id)
+    {
+        $siswa = Siswa::findOrFail($id);
+
+        $request->validate([
+            'nisn'           => 'required|unique:tbl_siswa,nisn,' . $id,
+            'nama_lengkap'   => 'required|string|max:100',
+        ]);
+
+        $siswa->update([
+            'nisn'             => $request->nisn,
+            'nis'              => $request->nis,
+            'nama_lengkap'     => $request->nama_lengkap,
+            'jenis_kelamin'    => $request->jenis_kelamin,
+            'tempat_lahir'     => $request->tempat_lahir,
+            'tanggal_lahir'    => $request->tanggal_lahir,
+            'agama'            => $request->agama,
+            'alamat'           => $request->alamat,
+            'no_hp_siswa'      => $request->no_hp_siswa,
+            'nama_ayah'        => $request->nama_ayah,
+            'nama_ibu'         => $request->nama_ibu,
+            'pekerjaan_ayah'   => $request->pekerjaan_ayah,
+            'pekerjaan_ibu'    => $request->pekerjaan_ibu,
+            'no_hp_ortu'       => $request->no_hp_ortu,
+        ]);
+
+        return redirect()->back()->with('success', 'Data biodata siswa berhasil diperbarui.');
+    }
+
+    /**
+     * Input Data Ekskul oleh Wali Kelas
+     */
+    public function ekskul()
+    {
+        $kelas = $this->getKelasWali();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
+        $ekskul_list = \App\Models\Ekskul::all();
+        
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        $ekskul_nilai = \App\Models\EkskulNilai::whereIn('siswa_id', $siswa->pluck('id'))
+                        ->where('semester', $semester_int)
+                        ->get()->groupBy('siswa_id');
+
+        return Inertia::render('Guru/WaliKelas/Ekskul', [
+            'kelas' => $kelas,
+            'siswa' => $siswa,
+            'ekskul_list' => $ekskul_list,
+            'ekskul_nilai' => $ekskul_nilai
+        ]);
+    }
+
+    public function storeEkskul(Request $request)
+    {
+        $request->validate([
+            'input_data' => 'required|array'
+        ]);
+
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        foreach ($request->input_data as $siswa_id => $data) {
+            // Delete existing ekskul for this student and semester to allow clean replacement
+            \App\Models\EkskulNilai::where('siswa_id', $siswa_id)
+                ->where('semester', $semester_int)
+                ->delete();
+
+            if (!empty($data) && is_array($data)) {
+                foreach ($data as $e) {
+                    if (!empty($e['ekskul_id']) && !empty($e['nilai_huruf'])) {
+                        \App\Models\EkskulNilai::create([
+                            'siswa_id' => $siswa_id,
+                            'ekskul_id' => $e['ekskul_id'],
+                            'semester' => $semester_int,
+                            'nilai_huruf' => $e['nilai_huruf'],
+                            'deskripsi_dapodik' => $e['deskripsi_dapodik'] ?? '-',
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', 'Data Nilai Ekskul berhasil disimpan.');
+    }
 }

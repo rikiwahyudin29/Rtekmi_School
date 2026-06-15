@@ -577,6 +577,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/kenaikan', [\App\Http\Controllers\Guru\WaliKelasController::class, 'kenaikan'])->name('kenaikan');
         Route::post('/kenaikan/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeKenaikan'])->name('kenaikan.store');
         
+        Route::get('/data-siswa', [\App\Http\Controllers\Guru\WaliKelasController::class, 'dataSiswa'])->name('data_siswa');
+        Route::post('/data-siswa/{id}', [\App\Http\Controllers\Guru\WaliKelasController::class, 'updateDataSiswa'])->name('data_siswa.update');
+
+        Route::get('/ekskul', [\App\Http\Controllers\Guru\WaliKelasController::class, 'ekskul'])->name('ekskul');
+        Route::post('/ekskul/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeEkskul'])->name('ekskul.store');
+
         Route::get('/cetak-rapor', [\App\Http\Controllers\Guru\WaliKelasController::class, 'cetakRapor'])->name('cetak_rapor');
         Route::get('/skill-passport', [\App\Http\Controllers\Admin\UkkController::class, 'skillPassport'])->name('skill_passport');
         Route::get('/ukk', [\App\Http\Controllers\Admin\UkkController::class, 'index'])->name('ukk');

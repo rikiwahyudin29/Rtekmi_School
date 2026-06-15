@@ -37,6 +37,19 @@ const props = defineProps({
             </div>
 
             <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Menu Data Siswa -->
+                <Link :href="route('guru.walikelas.data_siswa')" class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="absolute right-0 top-0 w-24 h-24 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="w-14 h-14 bg-indigo-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-user-edit text-2xl text-indigo-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Data Siswa</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Edit biodata dan identitas siswa di kelas perwalian Anda.</p>
+                    <div class="mt-4 flex items-center text-indigo-600 dark:text-indigo-400 font-medium text-sm group-hover:translate-x-2 transition-transform">
+                        Kelola Data <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </Link>
+
                 <!-- Menu Kehadiran -->
                 <Link :href="route('guru.walikelas.kehadiran')" class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 dark:bg-blue-500/20 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
@@ -60,6 +73,19 @@ const props = defineProps({
                     <p class="text-sm text-gray-500 dark:text-gray-400">Input nilai dan keterangan Praktik Kerja Lapangan (PKL) siswa.</p>
                     <div class="mt-4 flex items-center text-orange-600 dark:text-orange-400 font-medium text-sm group-hover:translate-x-2 transition-transform">
                         Kelola PKL <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </Link>
+
+                <!-- Menu Data Ekskul -->
+                <Link :href="route('guru.walikelas.ekskul')" class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="absolute right-0 top-0 w-24 h-24 bg-pink-500/10 dark:bg-pink-500/20 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="w-14 h-14 bg-pink-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-futbol text-2xl text-pink-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Data Ekskul</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Input nilai kegiatan ekstrakurikuler siswa.</p>
+                    <div class="mt-4 flex items-center text-pink-600 dark:text-pink-400 font-medium text-sm group-hover:translate-x-2 transition-transform">
+                        Kelola Ekskul <i class="fas fa-arrow-right ml-2"></i>
                     </div>
                 </Link>
 
