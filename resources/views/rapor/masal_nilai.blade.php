@@ -19,9 +19,9 @@
         .page:last-child { page-break-after: auto; }
         
         /* Table Layouts */
-        .report-container { width: 100%; }
-        .report-header { height: 20px; }
-        .report-footer { height: 50px; }
+        table.report-container { width: 100%; height: 99vh; }
+        thead.report-header { display: table-header-group; height: 20px; }
+        tfoot.report-footer { display: table-footer-group; height: 50px; }
         
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
         .header-table td { padding: 1px 0; vertical-align: top; font-weight: bold; }

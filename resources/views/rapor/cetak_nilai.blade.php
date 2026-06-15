@@ -46,7 +46,7 @@
         .sig-space { height: 80px; }
         
         /* Using table layout for repeating footer */
-        table.report-container { width: 100%; }
+        table.report-container { width: 100%; height: 99vh; }
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
         .footer-content { font-size: 10px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; display: flex; justify-content: space-between; margin-top: 10px; }
