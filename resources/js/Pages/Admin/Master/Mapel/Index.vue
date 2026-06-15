@@ -24,6 +24,7 @@ const form = useForm({
     kode_mapel: '',
     nama_mapel: '',
     kelompok: '',
+    urutan: 0,
     jurusan_id: '0',
     tampil_raport: true,
     tampil_skl: true,
@@ -37,6 +38,7 @@ const openModal = (mpl = null) => {
         form.kode_mapel = mpl.kode_mapel || '';
         form.nama_mapel = mpl.nama_mapel;
         form.kelompok = mpl.kelompok || '';
+        form.urutan = mpl.urutan || 0;
         form.jurusan_id = mpl.jurusan_id || '0';
         form.tampil_raport = !!mpl.tampil_raport;
         form.tampil_skl = !!mpl.tampil_skl;
@@ -52,6 +54,7 @@ const openModal = (mpl = null) => {
     } else {
         form.reset();
         form.id = null;
+        form.urutan = 0;
         form.jurusan_id = '0';
         form.tampil_raport = true;
         form.tampil_skl = true;
@@ -206,6 +209,7 @@ const formatJurusan = (jurusan_id) => {
                                     <th class="py-4 px-5 font-bold">Kode</th>
                                     <th class="py-4 px-5 font-bold">Nama Mapel</th>
                                     <th class="py-4 px-5 font-bold text-center">Kel.</th>
+                                    <th class="py-4 px-5 font-bold text-center">Urutan</th>
                                     <th class="py-4 px-5 font-bold text-center">Pengaturan Tampil</th>
                                     <th class="py-4 px-5 font-bold text-center w-32">Aksi</th>
                                 </tr>
@@ -230,6 +234,9 @@ const formatJurusan = (jurusan_id) => {
                                         <span class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs mx-auto">
                                             {{ mpl.kelompok || '-' }}
                                         </span>
+                                    </td>
+                                    <td class="py-4 px-5 text-center text-gray-600 dark:text-gray-400 font-bold">
+                                        {{ mpl.urutan || 0 }}
                                     </td>
                                     <td class="py-4 px-5 text-center">
                                         <div class="flex items-center justify-center gap-2">
@@ -311,10 +318,18 @@ const formatJurusan = (jurusan_id) => {
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Mata Pelajaran <span class="text-red-500">*</span></label>
-                            <input v-model="form.nama_mapel" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" placeholder="Contoh: Pendidikan Agama Islam" required>
-                            <div v-if="form.errors.nama_mapel" class="text-red-500 text-xs mt-1">{{ form.errors.nama_mapel }}</div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Mata Pelajaran <span class="text-red-500">*</span></label>
+                                <input v-model="form.nama_mapel" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" placeholder="Contoh: Pendidikan Agama Islam" required>
+                                <div v-if="form.errors.nama_mapel" class="text-red-500 text-xs mt-1">{{ form.errors.nama_mapel }}</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Urutan Cetak</label>
+                                <input v-model="form.urutan" type="number" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" placeholder="0">
+                                <div v-if="form.errors.urutan" class="text-red-500 text-xs mt-1">{{ form.errors.urutan }}</div>
+                            </div>
                         </div>
 
                         <div>

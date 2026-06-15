@@ -20,11 +20,11 @@
         
         /* Table Layouts */
         .report-container { width: 100%; }
-        .report-header { height: 20px; } /* Space for top margin if needed */
+        .report-header { height: 20px; }
         .report-footer { height: 50px; }
         
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .header-table td { padding: 3px 0; vertical-align: top; font-weight: bold; }
+        .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+        .header-table td { padding: 1px 0; vertical-align: top; font-weight: bold; }
         .ht-label { width: 15%; }
         .ht-colon { width: 2%; text-align: center; }
         .ht-value { width: 33%; border-bottom: 1px dotted #000; }
@@ -120,7 +120,11 @@
                             </thead>
                             <tbody>
                                 @php
-                                    $grouped_rapor = collect($rapor_akhir)->groupBy(function($item) {
+                                    $sorted_rapor = collect($rapor_akhir)->sortBy([
+                                        function($item) { return $item->mapel->urutan ?? 999; },
+                                        function($item) { return $item->mapel->nama_mapel ?? 'Z'; }
+                                    ]);
+                                    $grouped_rapor = $sorted_rapor->groupBy(function($item) {
                                         return $item->mapel->kelompok ?? 'Lainnya';
                                     })->sortKeys();
                                     $no = 1;
@@ -231,8 +235,24 @@
 
                         <!-- KENAIKAN KELAS (Tampil di Genap) -->
                         @if($tahun_ajaran && $tahun_ajaran->semester === 'Genap')
-                        <div class="box-wrapper" style="padding: 10px; text-align: center; font-weight: bold;">
-                            Keterangan Kenaikan Kelas : Naik/Tidak Naik ke kelas .......
+                        @php $kenaikan = $kenaikan_all[$siswa->id] ?? null; @endphp
+                        <div class="box-wrapper" style="padding: 10px; font-weight: bold;">
+                            Keterangan Kenaikan Kelas : 
+                            @if(isset($kenaikan))
+                                @if($kenaikan->status === 'Naik')
+                                    Naik ke kelas {{ $kenaikan->kelasTujuan->nama_kelas ?? '.......' }}
+                                @elseif($kenaikan->status === 'Tidak Naik')
+                                    Tidak Naik Kelas
+                                @elseif($kenaikan->status === 'Lulus')
+                                    Lulus
+                                @elseif($kenaikan->status === 'Tidak Lulus')
+                                    Tidak Lulus
+                                @else
+                                    Naik/Tidak Naik ke kelas .......
+                                @endif
+                            @else
+                                Naik/Tidak Naik ke kelas .......
+                            @endif
                         </div>
                         @endif
 
@@ -264,20 +284,21 @@
                         @if(request('posisi_ttd_ks', 'Dibawah Wali Kelas') === 'Sejajar Wali Kelas')
                         <table class="signature-table" style="width: 100%;">
                             <tr>
-                                <td style="width: 33%; text-align: left; vertical-align: top;">
+                                <td style="width: 30%; text-align: center; vertical-align: top;">
                                     <br>
+                                    Mengetahui,<br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
                                     ..........................................
                                 </td>
-                                <td style="width: 33%; text-align: center; vertical-align: top;">
+                                <td style="width: 40%; text-align: center; vertical-align: top;">
                                     <br><br>
                                     Kepala Sekolah
                                     <div class="sig-space"></div>
                                     <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
                                     NIP. {{ $sekolah->nip_kepsek ?? '-' }}
                                 </td>
-                                <td style="width: 34%; text-align: left; padding-left: 20px; vertical-align: top;">
+                                <td style="width: 30%; text-align: center; vertical-align: top;">
                                     {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tgl_ttd }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
@@ -297,13 +318,15 @@
                         @else
                         <table class="signature-table" style="width: 100%;">
                             <tr>
-                                <td style="width: 40%; text-align: left; vertical-align: top;">
+                                <td style="width: 35%; text-align: center; vertical-align: top;">
                                     <br>
+                                    Mengetahui,<br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
                                     ..........................................
                                 </td>
-                                <td style="width: 60%; text-align: left; padding-left: 150px; vertical-align: top;">
+                                <td style="width: 30%;"></td>
+                                <td style="width: 35%; text-align: center; vertical-align: top;">
                                     {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tgl_ttd }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
@@ -320,7 +343,8 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="2" style="text-align: center; padding-top: 20px;">
+                                <td colspan="3" style="text-align: center; padding-top: 20px;">
+                                    Mengetahui,<br>
                                     Kepala Sekolah
                                     <div class="sig-space"></div>
                                     <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>

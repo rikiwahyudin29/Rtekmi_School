@@ -48,8 +48,9 @@ class CetakRaporController extends Controller
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
         $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+        $kenaikan = \App\Models\KenaikanKelas::where('siswa_id', $id)->first();
 
-        return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'ekskul', 'sekolah', 'tahun_ajaran', 'tanggal_rapor'));
+        return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'ekskul', 'sekolah', 'tahun_ajaran', 'tanggal_rapor', 'kenaikan'));
     }
 
     /**
@@ -144,6 +145,7 @@ class CetakRaporController extends Controller
         $catatan_all = collect();
         $pkl_all = collect();
         $ekskul_all = collect();
+        $kenaikan_all = collect();
         
         foreach($siswas as $siswa) {
             $rapor_akhir_all[$siswa->id] = RaporAkhir::with('mapel')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
@@ -151,8 +153,9 @@ class CetakRaporController extends Controller
             $catatan_all[$siswa->id] = RaporCatatanWali::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
             $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
             $ekskul_all[$siswa->id] = EkskulNilai::with('ekskul')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
+            $kenaikan_all[$siswa->id] = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $siswa->id)->first();
         }
 
-        return view('rapor.masal_nilai', compact('siswas', 'rapor_akhir_all', 'kehadiran_all', 'catatan_all', 'pkl_all', 'ekskul_all', 'sekolah', 'tahun_ajaran', 'tanggal_rapor'));
+        return view('rapor.masal_nilai', compact('siswas', 'rapor_akhir_all', 'kehadiran_all', 'catatan_all', 'pkl_all', 'ekskul_all', 'sekolah', 'tahun_ajaran', 'tanggal_rapor', 'kenaikan_all'));
     }
 }

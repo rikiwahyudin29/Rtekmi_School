@@ -46,6 +46,7 @@ class MapelController extends Controller
             'nama_mapel' => 'required|string|max:100',
             'kode_mapel' => 'nullable|string|max:20',
             'kelompok' => 'nullable|string|max:2',
+            'urutan' => 'nullable|integer',
             'jurusan_id' => 'nullable|string', // Could be comma separated like "1,2" or "0"
             'tampil_raport' => 'nullable|boolean',
             'tampil_skl' => 'nullable|boolean',
@@ -57,6 +58,7 @@ class MapelController extends Controller
         $validated['tampil_skl'] = $validated['tampil_skl'] ?? true;
         $validated['tampil_transkrip'] = $validated['tampil_transkrip'] ?? true;
         $validated['jurusan_id'] = $validated['jurusan_id'] ?? '0';
+        $validated['urutan'] = $validated['urutan'] ?? 0;
 
         Mapel::create($validated);
 
@@ -71,12 +73,15 @@ class MapelController extends Controller
             'nama_mapel' => 'required|string|max:100',
             'kode_mapel' => 'nullable|string|max:20',
             'kelompok' => 'nullable|string|max:2',
+            'urutan' => 'nullable|integer',
             'jurusan_id' => 'nullable|string',
             'tampil_raport' => 'nullable|boolean',
             'tampil_skl' => 'nullable|boolean',
             'tampil_transkrip' => 'nullable|boolean',
         ]);
 
+        $validated['urutan'] = $validated['urutan'] ?? 0;
+        
         $mapel->update($validated);
 
         return back()->with('message', 'Mata Pelajaran berhasil diperbarui.');
