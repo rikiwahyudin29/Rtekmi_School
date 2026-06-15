@@ -141,6 +141,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/kelompok', [\App\Http\Controllers\Admin\KokurikulerController::class, 'storeKelompok'])->name('kelompok.store');
     });
 
+    // Admin Ekskul
+    Route::prefix('admin/ekskul')->name('admin.ekskul.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\EkskulController::class, 'index'])->name('index');
+        Route::post('/simpan', [\App\Http\Controllers\Admin\EkskulController::class, 'simpan'])->name('simpan');
+        Route::post('/update', [\App\Http\Controllers\Admin\EkskulController::class, 'update'])->name('update');
+        Route::delete('/delete/{id}', [\App\Http\Controllers\Admin\EkskulController::class, 'delete'])->name('delete');
+        Route::post('/tambah-pembina', [\App\Http\Controllers\Admin\EkskulController::class, 'tambahPembina'])->name('tambah_pembina');
+        Route::delete('/hapus-pembina/{id}', [\App\Http\Controllers\Admin\EkskulController::class, 'hapusPembina'])->name('hapus_pembina');
+    });
+
+    // Admin PKL
+    Route::prefix('admin/pkl')->name('admin.pkl.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PklController::class, 'index'])->name('index');
+        Route::post('/dudi/simpan', [\App\Http\Controllers\Admin\PklController::class, 'simpanDudi'])->name('dudi.simpan');
+        Route::post('/dudi/update', [\App\Http\Controllers\Admin\PklController::class, 'updateDudi'])->name('dudi.update');
+        Route::delete('/dudi/delete/{id}', [\App\Http\Controllers\Admin\PklController::class, 'deleteDudi'])->name('dudi.delete');
+        
+        Route::get('/kelompok', [\App\Http\Controllers\Admin\PklController::class, 'kelompok'])->name('kelompok');
+        Route::post('/kelompok/simpan', [\App\Http\Controllers\Admin\PklController::class, 'storeKelompok'])->name('kelompok.simpan');
+    });
+
     // F. Admin UKK Management
     Route::prefix('admin/ukk')->name('admin.ukk.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\UkkController::class, 'index'])->name('index');
@@ -543,12 +564,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('guru/pkl')->name('guru.pkl.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guru\PklController::class, 'index'])->name('index');
         Route::post('/tp', [\App\Http\Controllers\Guru\PklController::class, 'storeTp'])->name('tp.store');
+        
+        Route::get('/monitoring', [\App\Http\Controllers\Guru\PklController::class, 'monitoring'])->name('monitoring');
+        Route::get('/jurnal', [\App\Http\Controllers\Guru\PklController::class, 'jurnal'])->name('jurnal');
+        Route::post('/jurnal/validasi', [\App\Http\Controllers\Guru\PklController::class, 'jurnalValidasi'])->name('jurnal.validasi');
+        Route::post('/laporan/validasi', [\App\Http\Controllers\Guru\PklController::class, 'laporanValidasi'])->name('laporan.validasi');
+        
+        Route::get('/kunjungan', [\App\Http\Controllers\Guru\PklController::class, 'kunjungan'])->name('kunjungan');
+        Route::post('/kunjungan/simpan', [\App\Http\Controllers\Guru\PklController::class, 'kunjunganSimpan'])->name('kunjungan.simpan');
+        
+        Route::get('/nilai', [\App\Http\Controllers\Guru\PklController::class, 'nilai'])->name('nilai');
+        Route::post('/nilai/simpan', [\App\Http\Controllers\Guru\PklController::class, 'simpanNilai'])->name('nilai.simpan');
+        Route::get('/cetak-sertifikat/{id}', [\App\Http\Controllers\Guru\PklController::class, 'cetakSertifikat'])->name('cetak_sertifikat');
     });
 
     // Guru Ekskul Group
     Route::prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'index'])->name('index');
-        Route::post('/nilai/store', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'storeNilai'])->name('nilai.store');
+        Route::get('/anggota/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'anggota'])->name('anggota');
+        Route::post('/anggota/{id}/validasi', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'validasiAnggota'])->name('anggota.validasi');
+        
+        Route::get('/jurnal/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'jurnal'])->name('jurnal');
+        Route::post('/jurnal/simpan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'jurnalSimpan'])->name('jurnal.simpan');
+        Route::get('/absen-scan/{jurnal_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'absenScan'])->name('absen_scan');
+        Route::post('/proses-scan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'prosesScan'])->name('proses_scan');
+        Route::post('/absen-manual', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'absenManual'])->name('absen_manual');
+        
+        Route::get('/prestasi/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'prestasi'])->name('prestasi');
+        Route::post('/prestasi/simpan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'prestasiSimpan'])->name('prestasi.simpan');
+        
+        Route::get('/penilaian/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'penilaian'])->name('penilaian');
+        Route::post('/penilaian/simpan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'penilaianSimpan'])->name('penilaian.simpan');
+        Route::get('/cetak-sertifikat/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'cetakSertifikat'])->name('cetak_sertifikat');
+        Route::get('/cetak-lpj/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'cetakLpj'])->name('cetak_lpj');
     });
 
     // H. Guru Kokurikuler

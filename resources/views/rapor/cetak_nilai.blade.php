@@ -138,6 +138,36 @@
                             </tbody>
                         </table>
 
+                        <!-- PRAKTIK KERJA LAPANGAN (PKL) -->
+                        <table class="bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">No</th>
+                                    <th style="width: 30%;">Mitra DU/DI</th>
+                                    <th style="width: 25%;">Lokasi</th>
+                                    <th style="width: 15%;">Lamanya (Bulan)</th>
+                                    <th style="width: 25%;">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(isset($pkl) && count($pkl) > 0)
+                                    @foreach($pkl as $index => $p)
+                                    <tr>
+                                        <td style="text-align: center;">{{ $index + 1 }}</td>
+                                        <td>{{ $p->dudi->nama_dudi ?? '-' }}</td>
+                                        <td>{{ $p->lokasi ?? '-' }}</td>
+                                        <td style="text-align: center;">{{ $p->lama_bulan ?? '-' }}</td>
+                                        <td>{{ $p->keterangan ?? '-' }} (Nilai: {{ $p->nilai ?? '-' }})</td>
+                                    </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="5" style="text-align: center;">-</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+
                         <!-- EKSTRAKURIKULER -->
                         <table class="bordered">
                             <thead>

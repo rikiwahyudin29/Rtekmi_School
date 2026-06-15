@@ -14,7 +14,9 @@ const isModalOpen = ref(false);
 const form = useForm({
     nama_kelompok: '',
     guru_id: '',
-    dudi_id: ''
+    dudi_id: '',
+    tgl_mulai: '',
+    tgl_selesai: ''
 });
 
 const submitKelompok = () => {
@@ -57,6 +59,7 @@ const submitKelompok = () => {
                                 <th scope="col" class="px-6 py-4">Nama Kelompok</th>
                                 <th scope="col" class="px-6 py-4">Mitra DUDI</th>
                                 <th scope="col" class="px-6 py-4">Guru Pembimbing</th>
+                                <th scope="col" class="px-6 py-4">Periode Pelaksanaan</th>
                                 <th scope="col" class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -66,6 +69,9 @@ const submitKelompok = () => {
                                 <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">{{ k.nama_kelompok }}</td>
                                 <td class="px-6 py-4">{{ k.dudi?.nama_dudi }}</td>
                                 <td class="px-6 py-4">{{ k.guru?.nama_lengkap }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-xs text-gray-500 font-mono">{{ k.tgl_mulai }} s/d {{ k.tgl_selesai }}</div>
+                                </td>
                                 <td class="px-6 py-4 text-center">
                                     <!-- Aksi Edit/Delete belum aktif untuk simplifikasi -->
                                     <button class="text-blue-600 hover:text-blue-900 mx-1"><i class="fas fa-edit"></i></button>
@@ -107,6 +113,16 @@ const submitKelompok = () => {
                             <option value="">-- Pilih Guru Pembimbing --</option>
                             <option v-for="g in guru" :key="g.id" :value="g.id">{{ g.nama_lengkap }}</option>
                         </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Mulai</label>
+                            <input v-model="form.tgl_mulai" type="date" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Selesai</label>
+                            <input v-model="form.tgl_selesai" type="date" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required>
+                        </div>
                     </div>
                     <div class="pt-4 flex justify-end gap-2">
                         <button type="button" @click="isModalOpen = false" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl">Batal</button>

@@ -1,62 +1,15 @@
 <script setup>
-import { Head, useForm, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { ref, watch, onMounted } from 'vue';
 
 const props = defineProps({
-    ekskuls: Array,
-    selected_ekskul_id: [String, Number],
-    anggota: Array,
-    nilai_existing: Array
+    binaan: Array,
+    total_pending: Number
 });
-
-const form = useForm({
-    ekskul_id: props.selected_ekskul_id,
-    nilai_data: []
-});
-
-onMounted(() => {
-    initForm();
-});
-
-watch(() => props.anggota, () => {
-    initForm();
-});
-
-const initForm = () => {
-    const initData = [];
-    if (props.anggota) {
-        props.anggota.forEach(a => {
-            const existing = props.nilai_existing.find(n => n.siswa_id === a.siswa_id);
-            initData.push({
-                siswa_id: a.siswa_id,
-                nilai_huruf: existing ? existing.nilai_huruf : 'B',
-                deskripsi: existing ? existing.deskripsi_dapodik : 'Melaksanakan kegiatan ekstrakurikuler dengan Baik.'
-            });
-        });
-    }
-    form.nilai_data = initData;
-    form.ekskul_id = props.selected_ekskul_id;
-};
-
-const gantiEkskul = (e) => {
-    router.get(route('guru.ekskul.index'), { ekskul_id: e.target.value }, {
-        preserveState: true,
-        preserveScroll: true
-    });
-};
-
-const getNilaiModel = (siswa_id) => {
-    return form.nilai_data.find(n => n.siswa_id === siswa_id);
-};
-
-const submitNilai = () => {
-    form.post(route('guru.ekskul.store_nilai'));
-};
 </script>
 
 <template>
-    <Head title="Nilai Ekstrakurikuler" />
+    <Head title="Dashboard Pembina Ekskul" />
     
     <DashboardLayout>
         <div class="space-y-6">
@@ -64,73 +17,83 @@ const submitNilai = () => {
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <i class="fas fa-running text-orange-500"></i>
-                        Penilaian Ekstrakurikuler
+                        Dashboard Pembina Ekstrakurikuler
                     </h2>
                     <p class="text-gray-500 dark:text-gray-400 mt-1">
-                        Input nilai capaian siswa untuk ekstrakurikuler yang Anda bina.
+                        Selamat datang! Berikut adalah unit ekstrakurikuler yang Anda bina.
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <button @click="submitNilai" :disabled="form.processing || !anggota || anggota.length === 0" class="px-6 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 font-medium shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50">
-                        <i class="fas fa-save"></i> {{ form.processing ? 'Menyimpan...' : 'Simpan Nilai' }}
-                    </button>
+            </div>
+
+            <div v-if="total_pending > 0" class="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-4 rounded-r-xl shadow-sm flex items-start gap-4">
+                <i class="fas fa-bell text-orange-500 text-xl mt-0.5"></i>
+                <div>
+                    <h4 class="font-bold text-orange-800 dark:text-orange-400">Pemberitahuan Pendaftar Baru</h4>
+                    <p class="text-sm text-orange-700 dark:text-orange-300 mt-1">Ada <strong>{{ total_pending }}</strong> siswa yang mendaftar dan menunggu validasi Anda. Segera cek menu Kelola Anggota.</p>
                 </div>
             </div>
 
-            <!-- Filter Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                <div class="max-w-md w-full">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pilih Ekstrakurikuler</label>
-                    <select v-model="form.ekskul_id" @change="gantiEkskul" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-orange-500 focus:ring-orange-500">
-                        <option value="">-- Pilih Ekstrakurikuler --</option>
-                        <option v-for="e in ekskuls" :key="e.id" :value="e.id">{{ e.nama_ekskul }}</option>
-                    </select>
+            <div v-if="!binaan || binaan.length === 0" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 mb-4">
+                    <i class="fas fa-ban text-3xl"></i>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Belum Ada Ekstrakurikuler Binaan</h3>
+                <p class="text-gray-500 dark:text-gray-400">Anda belum ditugaskan sebagai pembina unit ekstrakurikuler manapun oleh Admin.</p>
             </div>
 
-            <!-- Tabel Input Nilai -->
-            <div v-if="anggota && anggota.length > 0" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
-                            <tr>
-                                <th scope="col" class="px-6 py-4 w-16">No</th>
-                                <th scope="col" class="px-6 py-4">Nama Siswa</th>
-                                <th scope="col" class="px-6 py-4">Kelas</th>
-                                <th scope="col" class="px-6 py-4 w-40 text-center">Nilai</th>
-                                <th scope="col" class="px-6 py-4">Deskripsi Capaian</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(a, index) in anggota" :key="a.id" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                <td class="px-6 py-4 align-top">{{ index + 1 }}</td>
-                                <td class="px-6 py-4 font-bold text-gray-900 dark:text-white align-top">{{ a.siswa?.nama_lengkap }}</td>
-                                <td class="px-6 py-4 align-top">{{ a.siswa?.kelas?.nama_kelas || '-' }}</td>
-                                <td class="px-6 py-4 text-center align-top">
-                                    <select v-if="getNilaiModel(a.siswa_id)" v-model="getNilaiModel(a.siswa_id).nilai_huruf" class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-orange-500 focus:border-orange-500 text-center font-bold">
-                                        <option value="A">Sangat Baik</option>
-                                        <option value="B">Baik</option>
-                                        <option value="C">Cukup</option>
-                                        <option value="D">Kurang</option>
-                                    </select>
-                                </td>
-                                <td class="px-6 py-4 align-top">
-                                    <textarea v-if="getNilaiModel(a.siswa_id)" v-model="getNilaiModel(a.siswa_id).deskripsi" rows="2" class="w-full text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"></textarea>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Card Ekskul Binaan -->
+                <div v-for="b in binaan" :key="b.id" class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden group hover:border-orange-500 transition-colors duration-300">
+                    <div class="h-24 bg-gradient-to-r from-orange-500 to-amber-500 relative">
+                        <div class="absolute -bottom-8 left-6">
+                            <div class="w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 p-2 shadow-lg border border-gray-100 dark:border-gray-700">
+                                <img :src="`/uploads/ekskul/${b.logo || 'default.png'}`" @error="$event.target.src='https://ui-avatars.com/api/?background=random&name='+b.nama_ekskul" class="w-full h-full object-contain">
+                            </div>
+                        </div>
+                        <div class="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-bold border border-white/30 shadow-sm">
+                            <i class="fas fa-star mr-1"></i> Pembina
+                        </div>
+                    </div>
+                    <div class="p-6 pt-10">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-orange-600 transition-colors">{{ b.nama_ekskul }}</h3>
+                        
+                        <div class="flex items-center gap-4 mt-4 py-4 border-y border-gray-100 dark:border-gray-700">
+                            <div class="flex-1 text-center border-r border-gray-100 dark:border-gray-700">
+                                <div class="text-2xl font-black text-gray-900 dark:text-white">{{ b.jml_aktif }}</div>
+                                <div class="text-xs text-gray-500 font-medium uppercase tracking-wider">Anggota Aktif</div>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="text-2xl font-black" :class="b.jml_pending > 0 ? 'text-orange-600' : 'text-gray-900 dark:text-white'">{{ b.jml_pending }}</div>
+                                <div class="text-xs text-gray-500 font-medium uppercase tracking-wider">Pendaftar Baru</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mt-4">
+                            <Link :href="route('guru.ekskul.anggota', b.id)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/30 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 rounded-xl text-sm font-bold text-center transition-all flex flex-col items-center gap-1 border border-transparent hover:border-orange-200 dark:hover:border-orange-800">
+                                <i class="fas fa-users text-lg"></i>
+                                Anggota
+                            </Link>
+                            <Link :href="route('guru.ekskul.jurnal', b.id)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/30 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 rounded-xl text-sm font-bold text-center transition-all flex flex-col items-center gap-1 border border-transparent hover:border-orange-200 dark:hover:border-orange-800">
+                                <i class="fas fa-book-open text-lg"></i>
+                                Jurnal & Absen
+                            </Link>
+                            <Link :href="route('guru.ekskul.prestasi', b.id)" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/30 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 rounded-xl text-sm font-bold text-center transition-all flex flex-col items-center gap-1 border border-transparent hover:border-orange-200 dark:hover:border-orange-800">
+                                <i class="fas fa-trophy text-lg"></i>
+                                Prestasi
+                            </Link>
+                            <Link :href="route('guru.ekskul.penilaian', b.id)" class="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/30 rounded-xl text-sm font-bold text-center transition-all flex flex-col items-center justify-center gap-1">
+                                <i class="fas fa-star text-lg"></i>
+                                Penilaian
+                            </Link>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <a :href="route('guru.ekskul.cetak_lpj', b.id)" target="_blank" class="w-full block px-4 py-2.5 bg-gray-900 dark:bg-gray-600 hover:bg-black dark:hover:bg-gray-500 text-white rounded-xl text-sm font-bold text-center transition-all shadow-md">
+                                <i class="fas fa-print mr-2"></i> Cetak Laporan (LPJ)
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div v-else-if="form.ekskul_id" class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-6 text-center text-yellow-800 dark:text-yellow-400">
-                <i class="fas fa-info-circle text-3xl mb-3"></i>
-                <p>Belum ada anggota siswa yang terdaftar di ekstrakurikuler ini.</p>
-            </div>
-            
-            <div v-if="!ekskuls || ekskuls.length === 0" class="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center text-red-800 dark:text-red-400">
-                <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
-                <p>Anda belum ditugaskan sebagai Pembina Ekstrakurikuler manapun.</p>
             </div>
         </div>
     </DashboardLayout>
