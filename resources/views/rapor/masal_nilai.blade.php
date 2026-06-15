@@ -20,16 +20,16 @@
         
         /* Table Layouts */
         table.report-container { width: 100%; }
-        thead.report-header { display: table-header-group; height: 20px; }
+        thead.report-header { display: table-header-group; }
         
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
-        .header-table td { padding: 1px 0; vertical-align: top; font-weight: bold; }
+        .header-table td { padding: 1px 0; vertical-align: top; }
         .ht-label { width: 15%; }
         .ht-colon { width: 2%; text-align: center; }
-        .ht-value { width: 33%; border-bottom: 1px dotted #000; }
-        .ht-label-r { width: 15%; padding-left: 20px !important; }
+        .ht-value { width: 45%; }
+        .ht-label-r { width: 15%; }
         .ht-colon-r { width: 2%; text-align: center; }
-        .ht-value-r { width: 33%; border-bottom: 1px dotted #000; }
+        .ht-value-r { width: 21%; }
 
         .title-center { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
 
