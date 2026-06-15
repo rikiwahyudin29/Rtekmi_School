@@ -12,9 +12,10 @@
         body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 14px; line-height: 1.4; color: #000; }
         .page { width: 100%; box-sizing: border-box; background: white; padding: 10px; }
         @media print {
+            html, body { height: 100%; }
             body { background: white; margin: 0; padding: 0; }
-            .page { border: none; box-shadow: none; margin: 0; width: 100%; page-break-after: always; padding: 0; }
-            .report-container { min-height: 100vh; }
+            .page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100%; page-break-after: always; padding: 0; }
+            .report-container { height: 100%; }
         }
         .page:last-child { page-break-after: auto; }
         
@@ -46,7 +47,7 @@
         .sig-space { height: 80px; }
         
         /* Using table layout for repeating footer */
-        table.report-container { width: 100%; height: 99vh; }
+        table.report-container { width: 100%; height: 100%; }
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
         .footer-content { font-size: 10px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; display: flex; justify-content: space-between; margin-top: 10px; }
