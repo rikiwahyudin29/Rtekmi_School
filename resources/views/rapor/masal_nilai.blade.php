@@ -22,7 +22,6 @@
         /* Table Layouts */
         table.report-container { width: 100%; height: 100%; }
         thead.report-header { display: table-header-group; height: 20px; }
-        tfoot.report-footer { display: table-footer-group; height: 50px; }
         
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
         .header-table td { padding: 1px 0; vertical-align: top; font-weight: bold; }
@@ -50,7 +49,6 @@
         .signature-table td { vertical-align: top; text-align: center; padding: 0; }
         .sig-space { height: 70px; }
 
-        .footer-content { display: flex; justify-content: space-between; font-size: 12px; border-top: 1px solid #000; padding-top: 5px; margin-top: 20px; }
     </style>
 </head>
 <body onload="window.print()">
@@ -344,16 +342,7 @@
                     </td>
                 </tr>
             </tbody>
-            <tfoot class="report-footer">
-                <tr>
-                    <td>
-                        <!-- FOOTER -->
-                        <div class="footer-content">
-                            <div>{{ $siswa->kelas->nama_kelas ?? '-' }} | {{ strtoupper($siswa->nama_lengkap) }} | {{ $siswa->nisn }}</div>
-                        </div>
-                    </td>
-                </tr>
-            </tfoot>
+
         </table>
     </div>
     @endforeach

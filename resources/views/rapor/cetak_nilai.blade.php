@@ -46,24 +46,7 @@
         .signature-table td { text-align: center; vertical-align: top; }
         .sig-space { height: 80px; }
         
-        /* Using fixed positioning for footer to guarantee it sticks to bottom */
-        .footer-content { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            font-size: 10px; 
-            font-style: italic; 
-            border-top: 1px solid #000; 
-            padding-top: 5px; 
-            display: flex; 
-            justify-content: space-between; 
-            background: white;
-            padding-bottom: 10px;
-        }
         thead.report-header { display: table-header-group; }
-        /* tfoot is hidden because we use fixed positioning */
-        tfoot.report-footer { display: none; }
     </style>
 </head>
 <body onload="window.print()">
@@ -349,10 +332,7 @@
                 </tr>
             </tbody>
         </table>
-        <!-- FOOTER (Fixed to bottom) -->
-        <div class="footer-content">
-            <div>{{ $siswa->kelas->nama_kelas ?? '-' }} | {{ strtoupper($siswa->nama_lengkap) }} | {{ $siswa->nisn }}</div>
-        </div>
+
     </div>
 </body>
 </html>
