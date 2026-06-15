@@ -52,7 +52,7 @@
 </head>
 <body onload="window.print()">
     @php
-        $tgl_ttd = request('tanggal_cetak');
+        $tgl_ttd = request('tanggal_titimangsa');
         if(!$tgl_ttd) {
             $tgl_ttd = $tahun_ajaran && $tahun_ajaran->tanggal_pembagian ? \Carbon\Carbon::parse($tahun_ajaran->tanggal_pembagian)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y');
         } else {
