@@ -350,4 +350,22 @@ class SiswaController extends Controller
             return back()->with('error', 'Gagal import: ' . $e->getMessage());
         }
     }
+
+    public function resetPassword($id)
+    {
+        $siswa = Siswa::findOrFail($id);
+        
+        if ($siswa->user_id) {
+            $user = User::find($siswa->user_id);
+            if ($user) {
+                // Default password for siswa is their NISN
+                $user->update([
+                    'password' => Hash::make($siswa->nisn)
+                ]);
+                return back()->with('message', "Password siswa berhasil di-reset menjadi NISN: {$siswa->nisn}");
+            }
+        }
+        
+        return back()->with('error', 'Gagal mereset! Siswa ini tidak tertaut dengan akun pengguna.');
+    }
 }

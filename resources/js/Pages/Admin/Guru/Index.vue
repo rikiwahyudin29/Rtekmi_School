@@ -79,6 +79,14 @@ const reset2FA = (id) => {
         });
     }
 };
+
+const resetPassword = (id) => {
+    if (confirm('Yakin ingin mereset password guru ini menjadi NIP-nya?')) {
+        router.post(`/admin/guru/${id}/reset-password`, {}, {
+            preserveScroll: true
+        });
+    }
+};
 </script>
 
 <template>
@@ -182,6 +190,9 @@ const reset2FA = (id) => {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center justify-center gap-2">
+                                            <button @click="resetPassword(guru.id)" class="w-9 h-9 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400 dark:hover:bg-gray-900/50 flex items-center justify-center transition-colors" title="Reset Password ke NIP">
+                                                <i class="fas fa-key"></i>
+                                            </button>
                                             <button @click="reset2FA(guru.id)" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 flex items-center justify-center transition-colors" title="Reset Google Authenticator 2FA">
                                                 <i class="fas fa-shield-alt"></i>
                                             </button>

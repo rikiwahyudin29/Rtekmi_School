@@ -259,6 +259,23 @@ class GuruController extends Controller
         return back()->with('error', 'Gagal mereset! Guru ini tidak tertaut dengan akun pengguna (User ID kosong).');
     }
 
+    public function resetPassword($id)
+    {
+        $guru = Guru::findOrFail($id);
+        
+        if ($guru->user_id) {
+            $user = User::find($guru->user_id);
+            if ($user) {
+                $user->update([
+                    'password' => Hash::make($guru->nip)
+                ]);
+                return back()->with('message', "Password guru berhasil di-reset menjadi NIP: {$guru->nip}");
+            }
+        }
+        
+        return back()->with('error', 'Gagal mereset! Guru ini tidak tertaut dengan akun pengguna.');
+    }
+
     public function syncRoles(Request $request, $id)
     {
         $guru = Guru::findOrFail($id);

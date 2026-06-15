@@ -55,6 +55,14 @@ const hapus = (id) => {
         router.delete(`/admin/siswa/${id}`);
     }
 };
+
+const resetPassword = (id) => {
+    if (confirm('Yakin ingin mereset password siswa ini menjadi NISN-nya?')) {
+        router.post(`/admin/siswa/${id}/reset-password`, {}, {
+            preserveScroll: true
+        });
+    }
+};
 </script>
 
 <template>
@@ -192,6 +200,9 @@ const hapus = (id) => {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center justify-center gap-2">
+                                            <button @click="resetPassword(s.id)" class="w-9 h-9 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400 dark:hover:bg-gray-900/50 flex items-center justify-center transition-colors" title="Reset Password ke NISN">
+                                                <i class="fas fa-key"></i>
+                                            </button>
                                             <Link :href="`/admin/siswa/${s.id}/edit`" class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50 flex items-center justify-center transition-colors" title="Edit Data Siswa">
                                                 <i class="fas fa-pen"></i>
                                             </Link>

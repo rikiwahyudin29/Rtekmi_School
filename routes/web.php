@@ -211,8 +211,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Admin User/Data Group
         Route::post('guru/{id}/roles', [GuruController::class, 'syncRoles'])->name('guru.roles.sync');
+        Route::post('guru/{id}/reset-password', [GuruController::class, 'resetPassword'])->name('guru.reset-password');
         Route::post('guru/{id}/reset-2fa', [GuruController::class, 'reset2FA'])->name('guru.reset2fa');
         Route::resource('guru', GuruController::class);
+        Route::post('siswa/{id}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password');
         Route::resource('siswa', SiswaController::class);
         
         // Admin Kurikulum Group
@@ -541,6 +543,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('guru/pkl')->name('guru.pkl.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guru\PklController::class, 'index'])->name('index');
         Route::post('/tp', [\App\Http\Controllers\Guru\PklController::class, 'storeTp'])->name('tp.store');
+    });
+
+    // Guru Ekskul Group
+    Route::prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'index'])->name('index');
+        Route::post('/nilai/store', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'storeNilai'])->name('nilai.store');
     });
 
     // H. Guru Kokurikuler
