@@ -120,10 +120,9 @@
                             </thead>
                             <tbody>
                                 @php
-                                    $sorted_rapor = collect($rapor_akhir)->sortBy([
-                                        function($item) { return $item->mapel->urutan ?? 999; },
-                                        function($item) { return $item->mapel->nama_mapel ?? 'Z'; }
-                                    ]);
+                                    $sorted_rapor = collect($rapor_akhir)
+                                        ->sortBy(function($item) { return strtolower($item->mapel->nama_mapel ?? 'Z'); })
+                                        ->sortBy(function($item) { return (int) ($item->mapel->urutan ?? 999); });
                                     $nomor = 1;
                                 @endphp
                                 @forelse($sorted_rapor as $rapor)
@@ -133,12 +132,9 @@
                                         <td style="text-align: center; vertical-align: top; font-weight: bold;">
                                             {{ $rapor->nilai_akhir }}
                                         </td>
-                                        <td style="vertical-align: top; font-size: 11px;">
-                                            @if($rapor->deskripsi_keterampilan && $rapor->deskripsi_pengetahuan)
-                                                {{ $rapor->deskripsi_keterampilan }} {{ $rapor->deskripsi_pengetahuan }}
-                                            @else
-                                                Menunjukkan penguasaan yang baik dalam kompetensi ini.
-                                            @endif
+                                        <td style="vertical-align: top; font-size: 11px; text-align: justify; padding-right: 5px;">
+                                            <div style="margin-bottom: 5px;">{{ $rapor->deskripsi_tertinggi }}</div>
+                                            <div>{{ $rapor->deskripsi_terendah }}</div>
                                         </td>
                                     </tr>
                                 @empty
