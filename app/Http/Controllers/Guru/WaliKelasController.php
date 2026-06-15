@@ -547,11 +547,20 @@ class WaliKelasController extends Controller
             'agama'            => $request->agama,
             'alamat'           => $request->alamat,
             'no_hp_siswa'      => $request->no_hp_siswa,
+            'status_keluarga'  => $request->status_keluarga,
+            'anak_ke'          => $request->anak_ke,
+            'sekolah_asal'     => $request->sekolah_asal,
+            'diterima_kelas'   => $request->diterima_kelas,
+            'tanggal_diterima' => $request->tanggal_diterima,
             'nama_ayah'        => $request->nama_ayah,
             'nama_ibu'         => $request->nama_ibu,
             'pekerjaan_ayah'   => $request->pekerjaan_ayah,
             'pekerjaan_ibu'    => $request->pekerjaan_ibu,
             'no_hp_ortu'       => $request->no_hp_ortu,
+            'nama_wali'        => $request->nama_wali,
+            'pekerjaan_wali'   => $request->pekerjaan_wali,
+            'alamat_wali'      => $request->alamat_wali,
+            'no_hp_wali'       => $request->no_hp_wali,
         ]);
 
         return redirect()->back()->with('success', 'Data biodata siswa berhasil diperbarui.');

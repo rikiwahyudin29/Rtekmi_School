@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Pelengkap Rapor - {{ $siswa->nama_lengkap }}</title>
+    <title>Cetak Pelengkap Rapor Masal</title>
     <style>
         @page {
             size: {{ request('kertas', 'A4') }};
@@ -15,7 +15,7 @@
             body { background: white; margin: 0; padding: 0; }
             .page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100vh; page-break-after: always; padding: 0; }
         }
-        .page:last-child { page-break-after: auto; }.page:last-child { page-break-after: auto; }
+        .page:last-child { page-break-after: auto; }
         
         .title-center { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 40px; text-transform: uppercase; line-height: 1.4; }
         
@@ -52,6 +52,7 @@
 </head>
 <body onload="window.print()">
 
+    @foreach($siswas as $siswa)
     <!-- HALAMAN 1: IDENTITAS SEKOLAH -->
     <div class="page">
         <div class="title-center" style="margin-top: 3cm;">
@@ -328,6 +329,7 @@
             </tbody>
         </table>
     </div>
+    @endforeach
 
 </body>
 </html>

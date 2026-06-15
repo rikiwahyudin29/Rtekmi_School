@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Nilai Rapor - {{ $siswa->nama_lengkap }}</title>
+    <title>Cetak Nilai Rapor Masal</title>
     <style>
         @page {
             size: {{ request('kertas', 'A4') }};
             margin: {{ request('margin_atas', 20) }}mm {{ request('margin_kanan', 20) }}mm {{ request('margin_bawah', 20) }}mm {{ request('margin_kiri', 20) }}mm;
         }
         body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 14px; line-height: 1.4; color: #000; }
-        .page { width: 100%; box-sizing: border-box; background: white; padding: 10px; }
+        .page { width: 100%; box-sizing: border-box; background: white; page-break-after: always; padding: 10px; }
         @media print {
             body { background: white; margin: 0; padding: 0; }
             .page { border: none; box-shadow: none; margin: 0; width: 100%; page-break-after: always; padding: 0; }
@@ -18,41 +18,49 @@
         }
         .page:last-child { page-break-after: auto; }
         
-        .header-table { width: 100%; margin-bottom: 20px; }
-        .header-table td { padding: 3px 0; vertical-align: top; }
+        /* Table Layouts */
+        .report-container { width: 100%; }
+        .report-header { height: 20px; } /* Space for top margin if needed */
+        .report-footer { height: 50px; }
+        
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .header-table td { padding: 3px 0; vertical-align: top; font-weight: bold; }
         .ht-label { width: 15%; }
         .ht-colon { width: 2%; text-align: center; }
-        .ht-value { width: 45%; }
-        .ht-label-r { width: 15%; }
+        .ht-value { width: 33%; border-bottom: 1px dotted #000; }
+        .ht-label-r { width: 15%; padding-left: 20px !important; }
         .ht-colon-r { width: 2%; text-align: center; }
-        .ht-value-r { width: 21%; }
+        .ht-value-r { width: 33%; border-bottom: 1px dotted #000; }
 
-        .title-center { text-align: center; font-size: 16px; font-weight: bold; margin: 20px 0; }
+        .title-center { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
 
-        table.bordered { width: 100%; border-collapse: collapse; margin-bottom: 15px; page-break-inside: auto; }
-        table.bordered tr { page-break-inside: avoid; page-break-after: auto; }
-        table.bordered th, table.bordered td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
-        table.bordered th { font-weight: bold; text-align: center; background-color: #f9f9f9; }
+        .bordered { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .bordered th, .bordered td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
+        .bordered th { background-color: #f0f0f0; text-align: center; font-weight: bold; }
 
-        .flex-container { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 15px; page-break-inside: avoid; }
-        .flex-item { width: 48%; }
-        
-        .box-title { text-align: center; font-weight: bold; background-color: #f9f9f9; border-bottom: 1px solid #000; padding: 5px; }
-        .box-content { min-height: 60px; padding: 8px; }
-        .box-wrapper { border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid; }
+        .box-wrapper { border: 1px solid #000; margin-bottom: 15px; }
+        .box-title { background-color: #f0f0f0; border-bottom: 1px solid #000; padding: 4px 8px; font-weight: bold; }
+        .box-content { padding: 8px; min-height: 40px; }
 
-        .signature-table { width: 100%; margin-top: 30px; page-break-inside: avoid; }
-        .signature-table td { text-align: center; vertical-align: top; }
-        .sig-space { height: 80px; }
-        
-        /* Using table layout for repeating footer */
-        table.report-container { width: 100%; }
-        thead.report-header { display: table-header-group; }
-        tfoot.report-footer { display: table-footer-group; }
-        .footer-content { font-size: 10px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; display: flex; justify-content: space-between; margin-top: 10px; }
+        .flex-container { display: flex; gap: 15px; margin-bottom: 15px; }
+        .flex-item { flex: 1; }
+
+        .signature-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .signature-table td { vertical-align: top; text-align: center; padding: 0; }
+        .sig-space { height: 70px; }
+
+        .footer-content { display: flex; justify-content: space-between; font-size: 12px; border-top: 1px solid #000; padding-top: 5px; margin-top: 20px; }
     </style>
 </head>
 <body onload="window.print()">
+    @foreach($siswas as $siswa)
+    @php
+        $rapor_akhir = $rapor_akhir_all[$siswa->id] ?? collect();
+        $kehadiran = $kehadiran_all[$siswa->id] ?? (object) ['sakit' => 0, 'izin' => 0, 'tanpa_keterangan' => 0];
+        $catatan = $catatan_all[$siswa->id] ?? (object) ['catatan' => ''];
+        $ekskul = $ekskul_all[$siswa->id] ?? collect();
+    @endphp
+    
     <div class="page">
         <table class="report-container">
             <thead class="report-header">
@@ -133,7 +141,7 @@
                         <div class="box-wrapper">
                             <div class="box-title">Kokurikuler</div>
                             <div class="box-content">
-                                <!-- Data P5 / Kokurikuler bisa ditampilkan di sini jika ada -->
+                                <!-- Data P5 / Kokurikuler -->
                             </div>
                         </div>
 
@@ -212,7 +220,6 @@
                         @if($tahun_ajaran && $tahun_ajaran->semester === 'Genap')
                         <div class="box-wrapper" style="padding: 10px; text-align: center; font-weight: bold;">
                             Keterangan Kenaikan Kelas : Naik/Tidak Naik ke kelas .......
-                            <!-- Di implementasi riil, bisa diganti dengan field status_naik dari database -->
                         </div>
                         @endif
 
@@ -272,5 +279,6 @@
             </tfoot>
         </table>
     </div>
+    @endforeach
 </body>
 </html>

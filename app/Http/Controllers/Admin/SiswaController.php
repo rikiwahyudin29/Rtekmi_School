@@ -119,6 +119,12 @@ class SiswaController extends Controller
                 'pekerjaan_ibu'    => $request->pekerjaan_ibu,
                 'pekerjaan_wali'   => $request->pekerjaan_wali,
                 'no_hp_ortu'       => $request->no_hp_ortu,
+                'status_keluarga'  => $request->status_keluarga,
+                'anak_ke'          => $request->anak_ke,
+                'diterima_kelas'   => $request->diterima_kelas,
+                'tanggal_diterima' => $request->tanggal_diterima,
+                'alamat_wali'      => $request->alamat_wali,
+                'no_hp_wali'       => $request->no_hp_wali,
                 'status_siswa'     => 'Aktif',
                 'foto'             => $fotoName,
             ]);
@@ -198,6 +204,12 @@ class SiswaController extends Controller
             'pekerjaan_ibu'    => $request->pekerjaan_ibu,
             'pekerjaan_wali'   => $request->pekerjaan_wali,
             'no_hp_ortu'       => $request->no_hp_ortu,
+            'status_keluarga'  => $request->status_keluarga,
+            'anak_ke'          => $request->anak_ke,
+            'diterima_kelas'   => $request->diterima_kelas,
+            'tanggal_diterima' => $request->tanggal_diterima,
+            'alamat_wali'      => $request->alamat_wali,
+            'no_hp_wali'       => $request->no_hp_wali,
             'foto'             => $fotoName,
         ]);
 

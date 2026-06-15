@@ -21,11 +21,20 @@ const form = useForm({
     agama: '',
     alamat: '',
     no_hp_siswa: '',
+    status_keluarga: '',
+    anak_ke: '',
+    sekolah_asal: '',
+    diterima_kelas: '',
+    tanggal_diterima: '',
     nama_ayah: '',
     nama_ibu: '',
     pekerjaan_ayah: '',
     pekerjaan_ibu: '',
     no_hp_ortu: '',
+    nama_wali: '',
+    pekerjaan_wali: '',
+    alamat_wali: '',
+    no_hp_wali: '',
 });
 
 const openEditModal = (s) => {
@@ -39,11 +48,20 @@ const openEditModal = (s) => {
     form.agama = s.agama || '';
     form.alamat = s.alamat || '';
     form.no_hp_siswa = s.no_hp_siswa || '';
+    form.status_keluarga = s.status_keluarga || '';
+    form.anak_ke = s.anak_ke || '';
+    form.sekolah_asal = s.sekolah_asal || '';
+    form.diterima_kelas = s.diterima_kelas || '';
+    form.tanggal_diterima = s.tanggal_diterima || '';
     form.nama_ayah = s.nama_ayah || '';
     form.nama_ibu = s.nama_ibu || '';
     form.pekerjaan_ayah = s.pekerjaan_ayah || '';
     form.pekerjaan_ibu = s.pekerjaan_ibu || '';
     form.no_hp_ortu = s.no_hp_ortu || '';
+    form.nama_wali = s.nama_wali || '';
+    form.pekerjaan_wali = s.pekerjaan_wali || '';
+    form.alamat_wali = s.alamat_wali || '';
+    form.no_hp_wali = s.no_hp_wali || '';
     
     isModalOpen.value = true;
 };
@@ -195,6 +213,29 @@ const submit = () => {
                             </div>
                         </div>
 
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status dalam Keluarga</label>
+                                    <input v-model="form.status_keluarga" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anak Ke-</label>
+                                    <input v-model="form.anak_ke" type="number" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sekolah Asal</label>
+                                    <input v-model="form.sekolah_asal" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Diterima di Kelas</label>
+                                    <input v-model="form.diterima_kelas" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Diterima</label>
+                                    <input v-model="form.tanggal_diterima" type="date" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Data Orang Tua -->
                         <div>
                             <h4 class="font-bold text-primary-600 border-b pb-2 mb-4 mt-6">Data Orang Tua</h4>
@@ -215,9 +256,32 @@ const submit = () => {
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pekerjaan Ibu</label>
                                     <input v-model="form.pekerjaan_ibu" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No HP Orang Tua / Wali</label>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No HP Orang Tua / Ayah / Ibu</label>
                                     <input v-model="form.no_hp_ortu" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Wali -->
+                        <div>
+                            <h4 class="font-bold text-primary-600 border-b pb-2 mb-4 mt-6">Data Wali Siswa (Opsional)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Wali</label>
+                                    <input v-model="form.nama_wali" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pekerjaan Wali</label>
+                                    <input v-model="form.pekerjaan_wali" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alamat Wali</label>
+                                    <textarea v-model="form.alamat_wali" rows="2" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No HP Wali</label>
+                                    <input v-model="form.no_hp_wali" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 </div>
                             </div>
                         </div>

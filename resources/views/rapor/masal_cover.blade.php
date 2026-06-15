@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Cover Rapor - {{ $siswa->nama_lengkap }}</title>
+    <title>Cetak Cover Masal</title>
     <style>
         @page {
             size: {{ request('kertas', 'A4') }};
@@ -32,6 +32,7 @@
     </style>
 </head>
 <body onload="window.print()">
+    @foreach($siswas as $siswa)
     <div class="page" style="padding: 2cm;">
         <div style="padding-top: 2cm;">
             <div class="title-1">RAPOR</div>
@@ -74,5 +75,6 @@
             </div>
         </div>
     </div>
+    @endforeach
 </body>
 </html>

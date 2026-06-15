@@ -35,6 +35,12 @@ const form = useForm({
     pekerjaan_ibu: props.siswa.pekerjaan_ibu || '',
     pekerjaan_wali: props.siswa.pekerjaan_wali || '',
     no_hp_ortu: props.siswa.no_hp_ortu || '',
+    status_keluarga: props.siswa.status_keluarga || '',
+    anak_ke: props.siswa.anak_ke || '',
+    diterima_kelas: props.siswa.diterima_kelas || '',
+    tanggal_diterima: props.siswa.tanggal_diterima || '',
+    alamat_wali: props.siswa.alamat_wali || '',
+    no_hp_wali: props.siswa.no_hp_wali || '',
     foto: null,
 });
 
@@ -195,6 +201,22 @@ const submit = () => {
                                 <input type="text" v-model="form.no_hp_ortu" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
                             </div>
 
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status Keluarga</label>
+                                <input type="text" v-model="form.status_keluarga" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anak Ke-</label>
+                                <input type="number" v-model="form.anak_ke" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Diterima di Kelas</label>
+                                <input type="text" v-model="form.diterima_kelas" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Diterima</label>
+                                <input type="date" v-model="form.tanggal_diterima" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
                             <div class="md:col-span-3 border-t border-gray-100 dark:border-gray-700 pt-4 mt-2">
                                 <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-4">Data Orang Tua / Wali</p>
                             </div>
@@ -221,6 +243,14 @@ const submit = () => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pekerjaan Wali</label>
                                 <input type="text" v-model="form.pekerjaan_wali" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No. HP Wali</label>
+                                <input type="text" v-model="form.no_hp_wali" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alamat Wali</label>
+                                <textarea v-model="form.alamat_wali" rows="2" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
                             </div>
                         </div>
                     </div>

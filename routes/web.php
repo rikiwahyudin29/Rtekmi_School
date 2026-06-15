@@ -200,8 +200,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             
             // Backup specific routes
             Route::post('backup/restore', [BackupController::class, 'restore'])->name('backup.restore');
-            Route::post('backup/hapusData', [BackupController::class, 'hapusData'])->name('backup.hapusData');
-            Route::get('backup/database', [BackupController::class, 'database'])->name('backup.database');
             Route::resource('backup', BackupController::class)->only(['index']);
 
             // Dapodik specific routes
@@ -605,6 +603,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Rapor Printing Routes
+    Route::get('/cetak/rapor-masal/{kelas_id}/cover', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakCoverMasal'])->name('cetak.rapor-masal.cover');
+    Route::get('/cetak/rapor-masal/{kelas_id}/pelengkap', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakPelengkapMasal'])->name('cetak.rapor-masal.pelengkap');
+    Route::get('/cetak/rapor-masal/{kelas_id}/nilai', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakNilaiMasal'])->name('cetak.rapor-masal.nilai');
+    
     Route::get('/cetak/rapor/{id}/cover', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakCover'])->name('cetak.rapor.cover');
     Route::get('/cetak/rapor/{id}/nilai', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakNilai'])->name('cetak.rapor.nilai');
     Route::get('/cetak/rapor/{id}/p5', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakP5'])->name('cetak.rapor.p5');

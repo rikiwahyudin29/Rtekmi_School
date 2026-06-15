@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
@@ -7,16 +8,47 @@ const props = defineProps({
     siswa: Array,
 });
 
+// State for Print Settings
+const printSettings = ref({
+    kertas: 'A4',
+    margin_kiri: 20,
+    margin_kanan: 20,
+    margin_atas: 20,
+    margin_bawah: 10,
+    halaman_pertama: 1,
+    isi_ttd: 'Tanpa Tanda Tangan',
+    posisi_ttd_ks: 'Dibawah Wali Kelas',
+    tampil_nama_wali: 'Isi Nama Wali Kelas',
+});
+
+// Helper to build query string
+const buildQuery = () => {
+    const params = new URLSearchParams(printSettings.value);
+    return `?${params.toString()}`;
+};
+
 const printCover = (siswa_id) => {
-    window.open(`/cetak/rapor/${siswa_id}/cover`, '_blank');
+    window.open(`/cetak/rapor/${siswa_id}/cover${buildQuery()}`, '_blank');
 };
 
 const printPelengkap = (siswa_id) => {
-    window.open(`/cetak/rapor/${siswa_id}/pelengkap`, '_blank');
+    window.open(`/cetak/rapor/${siswa_id}/pelengkap${buildQuery()}`, '_blank');
 };
 
 const printRapor = (siswa_id) => {
-    window.open(`/cetak/rapor/${siswa_id}/nilai`, '_blank');
+    window.open(`/cetak/rapor/${siswa_id}/nilai${buildQuery()}`, '_blank');
+};
+
+const printMasalCover = () => {
+    window.open(`/cetak/rapor-masal/${props.kelas.id}/cover${buildQuery()}`, '_blank');
+};
+
+const printMasalPelengkap = () => {
+    window.open(`/cetak/rapor-masal/${props.kelas.id}/pelengkap${buildQuery()}`, '_blank');
+};
+
+const printMasalNilai = () => {
+    window.open(`/cetak/rapor-masal/${props.kelas.id}/nilai${buildQuery()}`, '_blank');
 };
 </script>
 
@@ -43,13 +75,82 @@ const printRapor = (siswa_id) => {
                 </div>
             </div>
 
+            <!-- Pengaturan Hasil Cetak -->
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-lg">Pengaturan Hasil Cetak</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ukuran Kertas:</label>
+                            <select v-model="printSettings.kertas" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                                <option value="A4">A4</option>
+                                <option value="F4">F4</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Margin Kiri (mm):</label>
+                            <input type="number" v-model="printSettings.margin_kiri" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Margin Kanan (mm):</label>
+                            <input type="number" v-model="printSettings.margin_kanan" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Margin Atas (mm):</label>
+                            <input type="number" v-model="printSettings.margin_atas" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Margin Bawah (mm):</label>
+                            <input type="number" v-model="printSettings.margin_bawah" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Halaman Pertama:</label>
+                            <input type="number" v-model="printSettings.halaman_pertama" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Isi Tanda Tangan:</label>
+                            <select v-model="printSettings.isi_ttd" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                                <option value="Tanpa Tanda Tangan">Tanpa Tanda Tangan</option>
+                                <option value="Tanda Tangan Otomatis">Tanda Tangan Otomatis</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posisi Tanda Tangan KS:</label>
+                            <select v-model="printSettings.posisi_ttd_ks" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                                <option value="Dibawah Wali Kelas">Dibawah Wali Kelas</option>
+                                <option value="Sejajar Wali Kelas">Sejajar Wali Kelas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tampil Nama Wali:</label>
+                            <select v-model="printSettings.tampil_nama_wali" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                                <option value="Isi Nama Wali Kelas">Isi Nama Wali Kelas</option>
+                                <option value="Kosongkan Nama Wali">Kosongkan Nama Wali</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tabel Siswa -->
             <div v-if="siswa && siswa.length > 0" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h3 class="font-bold text-gray-900 dark:text-white">Daftar Siswa - {{ kelas?.nama_kelas || '-' }}</h3>
-                    <button class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-bold flex items-center gap-2 transition-colors">
-                        <i class="fas fa-file-pdf"></i> Cetak Semua Rapor Kelas
-                    </button>
+                    <div class="flex flex-wrap gap-2">
+                        <button @click="printMasalCover" class="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-bold flex items-center gap-2 transition-colors">
+                            <i class="fas fa-file-pdf"></i> Masal Cover
+                        </button>
+                        <button @click="printMasalPelengkap" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-bold flex items-center gap-2 transition-colors">
+                            <i class="fas fa-file-pdf"></i> Masal Pelengkap
+                        </button>
+                        <button @click="printMasalNilai" class="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-bold flex items-center gap-2 transition-colors">
+                            <i class="fas fa-file-pdf"></i> Masal Nilai
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="overflow-x-auto">
