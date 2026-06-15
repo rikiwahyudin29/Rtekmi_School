@@ -9,7 +9,7 @@
             size: {{ request('kertas', 'A4') }};
             margin: {{ request('margin_atas', 20) }}mm {{ request('margin_kanan', 20) }}mm {{ request('margin_bawah', 20) }}mm {{ request('margin_kiri', 20) }}mm;
         }
-        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 14px; line-height: 1.5; }
+        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 16px; line-height: 1.2; }
         .page { width: 100%; box-sizing: border-box; background: white; page-break-after: always; position: relative; padding: 1.5cm; }
         @media print {
             body { background: white; margin: 0; padding: 0; }
@@ -17,7 +17,7 @@
         }
         .page:last-child { page-break-after: auto; }
         
-        .title-center { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 40px; text-transform: uppercase; line-height: 1.4; }
+        .title-center { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; line-height: 1.4; }
         
         /* Table Layouts */
         .table-identitas { width: 80%; margin: 0 auto; border-collapse: collapse; }
@@ -27,7 +27,7 @@
         .td-value { width: 65%; }
 
         .table-murid { width: 100%; border-collapse: collapse; }
-        .table-murid td { padding: 6px 5px; vertical-align: top; }
+        .table-murid td { padding: 2px 5px; vertical-align: top; }
         .tm-no { width: 5%; text-align: right; padding-right: 15px !important; }
         .tm-label { width: 35%; }
         .tm-colon { width: 5%; text-align: center; }
@@ -39,10 +39,10 @@
         .table-pindah th { text-align: center; font-weight: bold; }
 
         /* Signatures */
-        .signature-area { margin-top: 50px; display: flex; justify-content: center; gap: 100px; align-items: flex-end; }
+        .signature-area { margin-top: 20px; display: flex; justify-content: center; gap: 100px; align-items: flex-end; }
         .signature-box { width: 300px; text-align: left; }
         .signature-box p { margin: 2px 0; }
-        .signature-space { height: 80px; }
+        .signature-space { height: 60px; }
         .signature-name { font-weight: bold; text-decoration: underline; margin-bottom: 2px; }
 
         .photo-box { width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center; background: #eee; }
