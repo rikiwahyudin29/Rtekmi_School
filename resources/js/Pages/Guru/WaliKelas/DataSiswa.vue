@@ -210,9 +210,6 @@ const submit = () => {
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No HP Siswa</label>
                                     <input v-model="form.no_hp_siswa" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 </div>
-                            </div>
-                        </div>
-
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status dalam Keluarga</label>
                                     <input v-model="form.status_keluarga" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
