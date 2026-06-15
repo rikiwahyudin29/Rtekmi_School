@@ -9,11 +9,11 @@
             size: {{ request('kertas', 'A4') }};
             margin: {{ request('margin_atas', 20) }}mm {{ request('margin_kanan', 20) }}mm {{ request('margin_bawah', 20) }}mm {{ request('margin_kiri', 20) }}mm;
         }
-        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 14px; line-height: 1.5; }
+        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 16px; line-height: 1.5; }
         .page { width: 100%; box-sizing: border-box; background: white; page-break-after: always; position: relative; padding: 1.5cm; }
         @media print {
             body { background: white; margin: 0; padding: 0; }
-            .page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100vh; page-break-after: always; padding: 0; }
+            .page { border: none; box-shadow: none; margin: 0; width: 100%; page-break-after: always; padding: 0; }
         }
         .page:last-child { page-break-after: auto; }
         
@@ -39,18 +39,26 @@
         .table-pindah th { text-align: center; font-weight: bold; }
 
         /* Signatures */
-        .signature-area { margin-top: 50px; display: flex; justify-content: flex-end; }
+        .signature-area { margin-top: 50px; display: flex; justify-content: center; gap: 100px; align-items: flex-end; }
         .signature-box { width: 300px; text-align: left; }
         .signature-box p { margin: 2px 0; }
         .signature-space { height: 80px; }
         .signature-name { font-weight: bold; text-decoration: underline; margin-bottom: 2px; }
 
-        .photo-box { width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center; background: #eee; margin-top: 50px; margin-left: 50px; float: left; }
+        .photo-box { width: 3cm; height: 4cm; border: 1px solid #000; display: flex; align-items: center; justify-content: center; background: #eee; }
         .photo-img { width: 100%; height: 100%; object-fit: cover; }
         .clearfix::after { content: ""; clear: both; display: table; }
     </style>
 </head>
 <body onload="window.print()">
+    @php
+        $tgl_ttd = request('tanggal_cetak');
+        if(!$tgl_ttd) {
+            $tgl_ttd = $tahun_ajaran && $tahun_ajaran->tanggal_pembagian ? \Carbon\Carbon::parse($tahun_ajaran->tanggal_pembagian)->translatedFormat('d F Y') : \Carbon\Carbon::now()->translatedFormat('d F Y');
+        } else {
+            $tgl_ttd = \Carbon\Carbon::parse($tgl_ttd)->translatedFormat('d F Y');
+        }
+    @endphp
 
     @foreach($siswas as $siswa)
     <!-- HALAMAN 1: IDENTITAS SEKOLAH -->
@@ -267,7 +275,7 @@
             </tr>
         </table>
 
-        <div class="clearfix" style="margin-top: 30px;">
+        <div class="signature-area">
             <div class="photo-box">
                 @if($siswa->foto && $siswa->foto != 'default.png')
                     <img src="{{ Storage::url('siswa/'.$siswa->foto) }}" class="photo-img">
@@ -276,14 +284,12 @@
                 @endif
             </div>
 
-            <div class="signature-area" style="margin-top: 0;">
-                <div class="signature-box">
-                    <p>{{ $sekolah->kabupaten ?? 'Kabupaten' }}, {{ $siswa->tanggal_diterima ? \Carbon\Carbon::parse($siswa->tanggal_diterima)->translatedFormat('d F Y') : \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p>Kepala Sekolah</p>
-                    <div class="signature-space"></div>
-                    <div class="signature-name">{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</div>
-                    <p>NIP. {{ $sekolah->nip_kepsek ?? '-' }}</p>
-                </div>
+            <div class="signature-box">
+                <p>{{ $sekolah->kabupaten ?? 'Kabupaten' }}, {{ $tgl_ttd }}</p>
+                <p>Kepala Sekolah</p>
+                <div class="signature-space"></div>
+                <div class="signature-name">{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</div>
+                <p>NIP. {{ $sekolah->nip_kepsek ?? '-' }}</p>
             </div>
         </div>
     </div>
