@@ -34,7 +34,7 @@
         <div style="padding-top: 1cm;">
             
             <div style="margin-bottom: 20px;">
-                <img src="{{ $pathLogo }}" alt="Logo" class="logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg/300px-Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.svg.png" alt="Logo Kemendikdasmen" class="logo" style="width: 140px;">
             </div>
 
             <div class="title-2">SEKOLAH MENENGAH KEJURUAN<br>( SMK )</div>
