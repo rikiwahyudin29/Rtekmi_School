@@ -16,6 +16,7 @@ const printSettings = ref({
     margin_atas: 20,
     margin_bawah: 10,
     halaman_pertama: 1,
+    tanggal_titimangsa: '',
     isi_ttd: 'Tanpa Tanda Tangan',
     posisi_ttd_ks: 'Dibawah Wali Kelas',
     tampil_nama_wali: 'Isi Nama Wali Kelas',
@@ -118,10 +119,14 @@ const printMasalNilai = () => {
                             <input type="number" v-model="printSettings.margin_bawah" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Halaman Pertama:</label>
                             <input type="number" v-model="printSettings.halaman_pertama" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Titimangsa:</label>
+                            <input type="date" v-model="printSettings.tanggal_titimangsa" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Isi Tanda Tangan:</label>

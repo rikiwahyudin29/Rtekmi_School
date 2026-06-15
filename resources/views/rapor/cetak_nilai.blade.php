@@ -111,16 +111,29 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($rapor_akhir as $index => $rapor)
-                                <tr>
-                                    <td style="text-align: center;">{{ $index + 1 }}</td>
-                                    <td>{{ $rapor->mapel->nama_mapel ?? '-' }}</td>
-                                    <td style="text-align: center;">{{ $rapor->nilai_akhir }}</td>
-                                    <td>
-                                        <div style="margin-bottom: 5px;">{{ $rapor->deskripsi_tertinggi }}</div>
-                                        <div>{{ $rapor->deskripsi_terendah }}</div>
-                                    </td>
-                                </tr>
+                                @php
+                                    $grouped_rapor = collect($rapor_akhir)->groupBy(function($item) {
+                                        return $item->mapel->kelompok ?? 'Lainnya';
+                                    })->sortKeys();
+                                    $no = 1;
+                                @endphp
+                                @forelse($grouped_rapor as $kelompok => $rapors)
+                                    <tr>
+                                        <td colspan="4" style="font-weight: bold; background-color: #f9f9f9; text-align: left; padding-left: 10px;">
+                                            {{ str_starts_with(strtolower($kelompok), 'kelompok') ? $kelompok : 'Kelompok ' . $kelompok }}
+                                        </td>
+                                    </tr>
+                                    @foreach($rapors as $rapor)
+                                    <tr>
+                                        <td style="text-align: center;">{{ $no++ }}</td>
+                                        <td>{{ $rapor->mapel->nama_mapel ?? '-' }}</td>
+                                        <td style="text-align: center;">{{ $rapor->nilai_akhir }}</td>
+                                        <td>
+                                            <div style="margin-bottom: 5px;">{{ $rapor->deskripsi_tertinggi }}</div>
+                                            <div>{{ $rapor->deskripsi_terendah }}</div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
                                 @empty
                                 <tr>
                                     <td colspan="4" style="text-align: center;">Belum ada data nilai</td>
@@ -133,7 +146,7 @@
                         <div class="box-wrapper">
                             <div class="box-title">Kokurikuler</div>
                             <div class="box-content">
-                                <!-- Data P5 / Kokurikuler bisa ditampilkan di sini jika ada -->
+                                <!-- Data P5 / Kokurikuler -->
                             </div>
                         </div>
 
@@ -225,7 +238,21 @@
                         </div>
 
                         <!-- SIGNATURES -->
-                        <!-- SIGNATURES -->
+                        @php
+                            if (request('tanggal_titimangsa')) {
+                                $tgl_ttd = \Carbon\Carbon::parse(request('tanggal_titimangsa'))->locale('id')->translatedFormat('d F Y');
+                            } else {
+                                $tgl_ttd = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
+                            }
+                            
+                            $wk = $siswa->kelas->waliKelas ?? null;
+                            $nama_wk = 'Nama Wali Kelas';
+                            if ($wk) {
+                                $gelar_depan = $wk->gelar_depan ? $wk->gelar_depan . ' ' : '';
+                                $gelar_belakang = $wk->gelar_belakang ? ', ' . $wk->gelar_belakang : '';
+                                $nama_wk = trim($gelar_depan . $wk->nama_lengkap . $gelar_belakang);
+                            }
+                        @endphp
                         @if(request('posisi_ttd_ks', 'Dibawah Wali Kelas') === 'Sejajar Wali Kelas')
                         <table class="signature-table" style="width: 100%;">
                             <tr>
@@ -242,19 +269,19 @@
                                     <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
                                     NIP. {{ $sekolah->nip_kepsek ?? '-' }}
                                 </td>
-                                <td style="width: 33%; text-align: left; padding-left: 30px; vertical-align: top;">
-                                    {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tanggal_rapor ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                                <td style="width: 34%; text-align: left; padding-left: 20px; vertical-align: top;">
+                                    {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tgl_ttd }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
                                     <strong><u>
                                     @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
                                         ..........................................
                                     @else
-                                        {{ $siswa->kelas->waliKelas->nama_lengkap ?? 'Nama Wali Kelas' }}
+                                        {{ $nama_wk }}
                                     @endif
                                     </u></strong><br>
                                     @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
-                                        NIP. {{ $siswa->kelas->waliKelas->nip ?? '-' }}
+                                        NIP. {{ $wk->nip ?? '-' }}
                                     @endif
                                 </td>
                             </tr>
@@ -262,25 +289,25 @@
                         @else
                         <table class="signature-table" style="width: 100%;">
                             <tr>
-                                <td style="width: 50%; text-align: left; vertical-align: top;">
+                                <td style="width: 40%; text-align: left; vertical-align: top;">
                                     <br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
                                     ..........................................
                                 </td>
-                                <td style="width: 50%; text-align: left; padding-left: 80px; vertical-align: top;">
-                                    {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tanggal_rapor ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                                <td style="width: 60%; text-align: left; padding-left: 150px; vertical-align: top;">
+                                    {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tgl_ttd }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
                                     <strong><u>
                                     @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
                                         ..........................................
                                     @else
-                                        {{ $siswa->kelas->waliKelas->nama_lengkap ?? 'Nama Wali Kelas' }}
+                                        {{ $nama_wk }}
                                     @endif
                                     </u></strong><br>
                                     @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
-                                        NIP. {{ $siswa->kelas->waliKelas->nip ?? '-' }}
+                                        NIP. {{ $wk->nip ?? '-' }}
                                     @endif
                                 </td>
                             </tr>
