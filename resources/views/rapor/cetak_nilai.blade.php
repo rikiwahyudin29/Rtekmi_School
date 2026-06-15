@@ -112,10 +112,13 @@
                             </thead>
                             <tbody>
                                 @php
-                                    // Sort by urutan (if exists) and nama_mapel
                                     $sorted_rapor = collect($rapor_akhir)
                                         ->sortBy(function($item) { return strtolower($item->mapel->nama_mapel ?? 'Z'); })
-                                        ->sortBy(function($item) { return (int) ($item->mapel->urutan ?? 999); });
+                                        ->sortBy(function($item) { 
+                                            $u = (int) ($item->mapel->urutan ?? 0); 
+                                            return $u === 0 ? 999 : $u; 
+                                        })
+                                        ->sortBy(function($item) { return strtolower($item->mapel->kelompok ?? 'Z'); });
                                     $nomor = 1;
                                 @endphp
                                 @forelse($sorted_rapor as $rapor)
