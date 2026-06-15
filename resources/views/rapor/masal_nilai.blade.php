@@ -124,43 +124,30 @@
                                         function($item) { return $item->mapel->urutan ?? 999; },
                                         function($item) { return $item->mapel->nama_mapel ?? 'Z'; }
                                     ]);
-                                    $grouped_rapor = $sorted_rapor->groupBy(function($item) {
-                                        return $item->mapel->kelompok ?? 'Lainnya';
-                                    })->sortKeys();
-                                    $no = 1;
+                                    $nomor = 1;
                                 @endphp
-                                @forelse($grouped_rapor as $kelompok => $rapors)
+                                @forelse($sorted_rapor as $rapor)
                                     <tr>
-                                        <td colspan="4" style="font-weight: bold; background-color: #f9f9f9; text-align: left; padding-left: 10px;">
-                                            {{ str_starts_with(strtolower($kelompok), 'kelompok') ? $kelompok : 'Kelompok ' . $kelompok }}
+                                        <td style="text-align: center; vertical-align: top;">{{ $nomor++ }}</td>
+                                        <td style="vertical-align: top;">{{ $rapor->mapel->nama_mapel ?? '-' }}</td>
+                                        <td style="text-align: center; vertical-align: top; font-weight: bold;">
+                                            {{ $rapor->nilai_akhir }}
+                                        </td>
+                                        <td style="vertical-align: top; font-size: 11px;">
+                                            @if($rapor->deskripsi_keterampilan && $rapor->deskripsi_pengetahuan)
+                                                {{ $rapor->deskripsi_keterampilan }} {{ $rapor->deskripsi_pengetahuan }}
+                                            @else
+                                                Menunjukkan penguasaan yang baik dalam kompetensi ini.
+                                            @endif
                                         </td>
                                     </tr>
-                                    @foreach($rapors as $rapor)
-                                    <tr>
-                                        <td style="text-align: center;">{{ $no++ }}</td>
-                                        <td>{{ $rapor->mapel->nama_mapel ?? '-' }}</td>
-                                        <td style="text-align: center;">{{ $rapor->nilai_akhir }}</td>
-                                        <td>
-                                            <div style="margin-bottom: 5px;">{{ $rapor->deskripsi_tertinggi }}</div>
-                                            <div>{{ $rapor->deskripsi_terendah }}</div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
                                 @empty
-                                <tr>
-                                    <td colspan="4" style="text-align: center;">Belum ada data nilai</td>
-                                </tr>
+                                    <tr>
+                                        <td colspan="4" style="text-align: center;">Belum ada data nilai</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
-
-                        <!-- KOKURIKULER -->
-                        <div class="box-wrapper">
-                            <div class="box-title">Kokurikuler</div>
-                            <div class="box-content">
-                                <!-- Data P5 / Kokurikuler -->
-                            </div>
-                        </div>
 
                         <!-- EKSTRAKURIKULER -->
                         <table class="bordered">
@@ -177,7 +164,7 @@
                                     <tr>
                                         <td style="text-align: center;">{{ $index + 1 }}</td>
                                         <td>{{ $ek->ekskul->nama_ekskul ?? '-' }}</td>
-                                        <td>{{ $ek->keterangan ?? 'Baik' }}</td>
+                                        <td>{{ $ek->deskripsi_dapodik ?? 'Baik' }}</td>
                                     </tr>
                                     @endforeach
                                 @else

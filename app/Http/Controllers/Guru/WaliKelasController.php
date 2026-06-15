@@ -256,8 +256,11 @@ class WaliKelasController extends Controller
         $kelas = $this->getKelasWali();
         $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
         $catatan = RaporCatatanWali::whereIn('siswa_id', $siswa->pluck('id'))
-                        ->where('semester', 1)
+                        ->where('semester', $semester_int)
                         ->get()->keyBy('siswa_id');
 
         return Inertia::render('Guru/WaliKelas/Catatan', [
@@ -275,6 +278,7 @@ class WaliKelasController extends Controller
 
         $guru_id = Auth::user()->guru->id ?? 1;
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         foreach ($request->input_data as $siswa_id => $catatan_text) {
             if (!empty($catatan_text)) {
@@ -283,7 +287,7 @@ class WaliKelasController extends Controller
                         'siswa_id' => $siswa_id,
                         'guru_id' => $guru_id,
                         'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                        'semester' => 1
+                        'semester' => $semester_int
                     ],
                     [
                         'catatan' => $catatan_text
