@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
@@ -20,6 +20,18 @@ const printSettings = ref({
     posisi_ttd_ks: 'Dibawah Wali Kelas',
     tampil_nama_wali: 'Isi Nama Wali Kelas',
 });
+
+onMounted(() => {
+    const saved = localStorage.getItem('printSettingsWaliKelas');
+    if (saved) {
+        printSettings.value = JSON.parse(saved);
+    }
+});
+
+const saveSettings = () => {
+    localStorage.setItem('printSettingsWaliKelas', JSON.stringify(printSettings.value));
+    alert('Pengaturan Cetak berhasil disimpan!');
+};
 
 // Helper to build query string
 const buildQuery = () => {
@@ -132,6 +144,11 @@ const printMasalNilai = () => {
                                 <option value="Kosongkan Nama Wali">Kosongkan Nama Wali</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button @click="saveSettings" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm flex items-center gap-2">
+                            <i class="fas fa-save"></i> Simpan Pengaturan Cetak
+                        </button>
                     </div>
                 </div>
             </div>

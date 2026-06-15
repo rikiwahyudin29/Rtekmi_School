@@ -232,22 +232,24 @@
                         </div>
 
                         <!-- SIGNATURES -->
-                        <table class="signature-table">
+                        <!-- SIGNATURES -->
+                        @if(request('posisi_ttd_ks', 'Dibawah Wali Kelas') === 'Sejajar Wali Kelas')
+                        <table class="signature-table" style="width: 100%;">
                             <tr>
-                                <td style="width: 33%; text-align: left;">
+                                <td style="width: 33%; text-align: left; vertical-align: top;">
                                     <br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
                                     ..........................................
                                 </td>
-                                <td style="width: 33%;">
+                                <td style="width: 33%; text-align: center; vertical-align: top;">
                                     <br><br>
                                     Kepala Sekolah
                                     <div class="sig-space"></div>
                                     <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
                                     NIP. {{ $sekolah->nip_kepsek ?? '-' }}
                                 </td>
-                                <td style="width: 33%; text-align: left; padding-left: 30px;">
+                                <td style="width: 33%; text-align: left; padding-left: 30px; vertical-align: top;">
                                     {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tanggal_rapor ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
@@ -264,6 +266,41 @@
                                 </td>
                             </tr>
                         </table>
+                        @else
+                        <table class="signature-table" style="width: 100%;">
+                            <tr>
+                                <td style="width: 50%; text-align: left; vertical-align: top;">
+                                    <br>
+                                    Orang Tua Murid
+                                    <div class="sig-space"></div>
+                                    ..........................................
+                                </td>
+                                <td style="width: 50%; text-align: left; padding-left: 80px; vertical-align: top;">
+                                    {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tanggal_rapor ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                                    Wali Kelas
+                                    <div class="sig-space"></div>
+                                    <strong><u>
+                                    @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
+                                        ..........................................
+                                    @else
+                                        {{ $siswa->kelas->waliKelas->nama_lengkap ?? 'Nama Wali Kelas' }}
+                                    @endif
+                                    </u></strong><br>
+                                    @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
+                                        NIP. {{ $siswa->kelas->waliKelas->nip ?? '-' }}
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="text-align: center; padding-top: 20px;">
+                                    Kepala Sekolah
+                                    <div class="sig-space"></div>
+                                    <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
+                                    NIP. {{ $sekolah->nip_kepsek ?? '-' }}
+                                </td>
+                            </tr>
+                        </table>
+                        @endif
                     </td>
                 </tr>
             </tbody>
