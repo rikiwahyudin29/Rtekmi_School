@@ -609,7 +609,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cetak/rapor/{id}/nilai', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakNilai'])->name('cetak.rapor.nilai');
     Route::get('/cetak/rapor/{id}/p5', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakP5'])->name('cetak.rapor.p5');
     Route::get('/cetak/rapor/{id}/ukk', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakUkk'])->name('cetak.rapor.ukk');
-    Route::get('/cetak/rapor/{id}/buku-induk', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakBukuInduk'])->name('cetak.rapor.buku_induk');
+    Route::get('/cetak/rapor/{id}/pelengkap', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakPelengkap'])->name('cetak.rapor.pelengkap');
     Route::get('/cetak/leger/{kelas_id}', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakLeger'])->name('cetak.leger');
 });
 

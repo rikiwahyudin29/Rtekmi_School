@@ -47,8 +47,9 @@ class CetakRaporController extends Controller
         $kehadiran = RaporKehadiran::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+        $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
 
-        return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'sekolah', 'tahun_ajaran', 'tanggal_rapor'));
+        return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'ekskul', 'sekolah', 'tahun_ajaran', 'tanggal_rapor'));
     }
 
     /**
@@ -93,13 +94,12 @@ class CetakRaporController extends Controller
     /**
      * Cetak Buku Induk / Transkrip
      */
-    public function cetakBukuInduk($id)
+    public function cetakPelengkap($id)
     {
+        $sekolah = Sekolah::first();
+        $tahun_ajaran = TahunAjaran::where('status', 'Aktif')->first();
         $siswa = Siswa::with(['kelas', 'jurusan'])->findOrFail($id);
-        $rapor_akhir = RaporAkhir::with('mapel')->where('siswa_id', $id)->get();
-        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->get();
-        $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->get();
         
-        return view('rapor.cetak_buku_induk', compact('siswa', 'rapor_akhir', 'pkl', 'ekskul'));
+        return view('rapor.cetak_pelengkap', compact('siswa', 'sekolah', 'tahun_ajaran'));
     }
 }

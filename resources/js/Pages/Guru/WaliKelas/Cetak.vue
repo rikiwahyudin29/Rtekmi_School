@@ -8,12 +8,14 @@ const props = defineProps({
 });
 
 const printCover = (siswa_id) => {
-    // Simulasi fungsi print cover rapor
     window.open(`/cetak/rapor/${siswa_id}/cover`, '_blank');
 };
 
+const printPelengkap = (siswa_id) => {
+    window.open(`/cetak/rapor/${siswa_id}/pelengkap`, '_blank');
+};
+
 const printRapor = (siswa_id) => {
-    // Simulasi fungsi print nilai rapor
     window.open(`/cetak/rapor/${siswa_id}/nilai`, '_blank');
 };
 </script>
@@ -68,6 +70,9 @@ const printRapor = (siswa_id) => {
                                 <td class="px-6 py-4 flex gap-2 justify-center">
                                     <button @click="printCover(s.id)" class="px-3 py-1.5 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors text-xs flex items-center gap-1" title="Cetak Cover Depan">
                                         <i class="fas fa-book"></i> Cover
+                                    </button>
+                                    <button @click="printPelengkap(s.id)" class="px-3 py-1.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 rounded hover:bg-indigo-200 dark:hover:bg-indigo-900/50 font-medium transition-colors text-xs flex items-center gap-1" title="Cetak Pelengkap Rapor">
+                                        <i class="fas fa-file-alt"></i> Pelengkap
                                     </button>
                                     <button @click="printRapor(s.id)" class="px-3 py-1.5 bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded hover:bg-primary-200 dark:hover:bg-primary-900/50 font-medium transition-colors text-xs flex items-center gap-1" title="Cetak Halaman Nilai">
                                         <i class="fas fa-print"></i> Nilai
