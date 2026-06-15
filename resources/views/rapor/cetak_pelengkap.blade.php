@@ -9,7 +9,7 @@
             size: {{ request('kertas', 'A4') }};
             margin: {{ request('margin_atas', 20) }}mm {{ request('margin_kanan', 20) }}mm {{ request('margin_bawah', 20) }}mm {{ request('margin_kiri', 20) }}mm;
         }
-        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 16px; line-height: 1.5; }
+        body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 14px; line-height: 1.5; }
         .page { width: 100%; box-sizing: border-box; background: white; page-break-after: always; position: relative; padding: 1.5cm; }
         @media print {
             body { background: white; margin: 0; padding: 0; }
