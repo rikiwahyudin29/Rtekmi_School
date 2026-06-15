@@ -12,10 +12,10 @@
         body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 0; background: #fff; font-size: 14px; line-height: 1.4; color: #000; }
         .page { width: 100%; box-sizing: border-box; background: white; padding: 10px; }
         @media print {
-            html, body { height: 100%; }
             body { background: white; margin: 0; padding: 0; }
-            .page { border: none; box-shadow: none; margin: 0; width: 100%; height: 100%; page-break-after: always; padding: 0; }
-            .report-container { height: 100%; }
+            .page { border: none; box-shadow: none; margin: 0; width: 100%; page-break-after: always; padding: 0; }
+            /* Table Layouts */
+            table.report-container { width: 100%; }
         }
         .page:last-child { page-break-after: auto; }
         
