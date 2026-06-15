@@ -185,6 +185,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('mapel', MapelController::class);
             Route::resource('ruangan', RuanganController::class);
             Route::resource('jenis-ujian', JenisUjianController::class);
+            Route::resource('ekskul', \App\Http\Controllers\Admin\Master\EkskulController::class)->except(['create', 'edit', 'show']);
             
             // Sekolah specific routes (Single record, non-resource)
             Route::get('sekolah', [SekolahController::class, 'index'])->name('sekolah.index');

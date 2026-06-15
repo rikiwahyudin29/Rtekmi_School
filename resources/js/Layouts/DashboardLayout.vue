@@ -149,6 +149,7 @@ const menuItems = computed(() => {
                 { name: 'Data Ruangan', icon: 'fas fa-door-open', route: 'admin.master.ruangan.index', active: route().current('admin.master.ruangan.*') },
                 { name: 'Data Kelas', icon: 'fas fa-layer-group', route: 'admin.master.kelas.index', active: route().current('admin.master.kelas.*') },
                 { name: 'Mata Pelajaran', icon: 'fas fa-book', route: 'admin.master.mapel.index', active: route().current('admin.master.mapel.*') },
+                { name: 'Master Ekskul', icon: 'fas fa-futbol', route: 'admin.master.ekskul.index', active: route().current('admin.master.ekskul.*') },
                 { name: 'Jam Belajar (Bel)', icon: 'fas fa-clock', route: 'admin.master.jam-belajar.index', active: route().current('admin.master.jam-belajar.*') },
                 { name: 'Identitas Sekolah', icon: 'fas fa-school', route: 'admin.master.sekolah.index', active: route().current('admin.master.sekolah.*') },
                 { name: 'Integrasi Dapodik', icon: 'fas fa-sync', route: 'admin.master.dapodik.index', active: route().current('admin.master.dapodik.*') },
