@@ -54,9 +54,9 @@
     @php
         $tgl_ttd = request('tanggal_cetak');
         if(!$tgl_ttd) {
-            $tgl_ttd = $tahun_ajaran && $tahun_ajaran->tanggal_pembagian ? \Carbon\Carbon::parse($tahun_ajaran->tanggal_pembagian)->translatedFormat('d F Y') : \Carbon\Carbon::now()->translatedFormat('d F Y');
+            $tgl_ttd = $tahun_ajaran && $tahun_ajaran->tanggal_pembagian ? \Carbon\Carbon::parse($tahun_ajaran->tanggal_pembagian)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y');
         } else {
-            $tgl_ttd = \Carbon\Carbon::parse($tgl_ttd)->translatedFormat('d F Y');
+            $tgl_ttd = \Carbon\Carbon::parse($tgl_ttd)->locale('id')->isoFormat('D MMMM Y');
         }
     @endphp
 
@@ -285,7 +285,7 @@
             </div>
 
             <div class="signature-box">
-                <p>{{ $sekolah->kabupaten ?? 'Kabupaten' }}, {{ $tgl_ttd }}</p>
+                <p>{{ request('tempat_cetak', $sekolah->kabupaten ?? 'Kabupaten') }}, {{ $tgl_ttd }}</p>
                 <p>Kepala Sekolah</p>
                 <div class="signature-space"></div>
                 <div class="signature-name">{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</div>
