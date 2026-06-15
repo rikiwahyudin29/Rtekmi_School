@@ -2,7 +2,6 @@
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { ref, watch } from 'vue';
-import debounce from 'lodash/debounce';
 
 const props = defineProps({
     ekskul: Array,
@@ -10,6 +9,15 @@ const props = defineProps({
 });
 
 const search = ref(props.filters.search || '');
+
+// Custom debounce implementation
+const debounce = (fn, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
+};
 
 watch(search, debounce(function (value) {
     router.get(route('admin.master.ekskul.index'), { search: value }, {
