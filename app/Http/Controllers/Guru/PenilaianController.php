@@ -155,6 +155,20 @@ class PenilaianController extends Controller
         if ($request->has('mapel_id') && $request->mapel_id != '') {
             $tp_query->where('mapel_id', $request->mapel_id);
         }
+        
+        // Filter by class phase (tingkat)
+        if ($request->has('kelas_id') && $request->kelas_id != '') {
+            $k = Kelas::find($request->kelas_id);
+            if ($k) {
+                $tingkatNum = $k->tingkat;
+                $tingkatStr = 'Fase E (Kelas 10)';
+                if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+                elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+                elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+                $tp_query->where('tingkat', $tingkatStr);
+            }
+        }
+        
         $tp_list = $tp_query->get();
 
         // Jika user memilih kelas, mapel dan TP tertentu untuk dinilai
@@ -394,7 +408,20 @@ class PenilaianController extends Controller
         $detail_nilai = [];
         if ($request->has('kelas_id') && $request->has('mapel_id')) {
             $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
-            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)->where('guru_id', $guru_id)->get();
+            
+            $k = Kelas::find($request->kelas_id);
+            $tingkatStr = 'Fase E (Kelas 10)';
+            if ($k) {
+                $tingkatNum = $k->tingkat;
+                if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+                elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+                elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+            }
+            
+            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)
+                        ->where('guru_id', $guru_id)
+                        ->where('tingkat', $tingkatStr)
+                        ->get();
             $tp_ids = $tps->pluck('id')->toArray();
             
             $formatifs = NilaiFormatif::whereIn('siswa_id', $siswa->pluck('id'))->whereIn('tp_id', $tp_ids)->get();
@@ -456,10 +483,22 @@ class PenilaianController extends Controller
         $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
         $siswa_list = Siswa::where('kelas_id', $request->kelas_id)->get();
 
+        $k = Kelas::find($request->kelas_id);
+        $tingkatStr = 'Fase E (Kelas 10)';
+        if ($k) {
+            $tingkatNum = $k->tingkat;
+            if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+            elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+            elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+        }
+
         foreach ($siswa_list as $siswa) {
             // Logika Sederhana Kurikulum Merdeka:
             // Rata-rata Nilai Formatif
-            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)->where('guru_id', $guru_id)->get();
+            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)
+                        ->where('guru_id', $guru_id)
+                        ->where('tingkat', $tingkatStr)
+                        ->get();
             $tp_ids = $tps->pluck('id')->toArray();
             
             $formatifs = NilaiFormatif::where('siswa_id', $siswa->id)->whereIn('tp_id', $tp_ids)->get();
@@ -560,7 +599,19 @@ class PenilaianController extends Controller
             $mapel = Mapel::find($request->mapel_id);
             $sheet->setCellValue('A2', 'Mata Pelajaran: ' . ($mapel->nama_mapel ?? ''));
             $sheet->setCellValue('A3', 'Tujuan Pembelajaran: SEMUA TP');
-            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)->where('guru_id', Auth::user()->guru->id ?? 1)->get();
+            
+            $tingkatStr = 'Fase E (Kelas 10)';
+            if ($kelas) {
+                $tingkatNum = $kelas->tingkat;
+                if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+                elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+                elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+            }
+            
+            $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)
+                        ->where('guru_id', Auth::user()->guru->id ?? 1)
+                        ->where('tingkat', $tingkatStr)
+                        ->get();
             
             $colIndex = 4; // D
             foreach($tps as $tp) {
