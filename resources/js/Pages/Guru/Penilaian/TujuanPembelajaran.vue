@@ -11,14 +11,32 @@ const props = defineProps({
 const isModalOpen = ref(false);
 
 const form = useForm({
+    id: null,
     mapel_id: '',
     kode_tp: '',
     deskripsi: '',
 });
 
+const isEdit = ref(false);
+
 const openModal = () => {
+    isEdit.value = false;
     isModalOpen.value = true;
     form.reset();
+};
+
+const editTp = (item) => {
+    isEdit.value = true;
+    isModalOpen.value = true;
+    
+    // Find the mapel value that matches the mapel_id AND tingkat from the list
+    // The id in mapel list is "mapel_id|Fase Str"
+    const mapelIdVal = item.mapel_id + '|' + item.tingkat;
+    
+    form.id = item.id;
+    form.mapel_id = mapelIdVal;
+    form.kode_tp = item.kode_tp;
+    form.deskripsi = item.deskripsi;
 };
 
 const closeModal = () => {
@@ -26,10 +44,17 @@ const closeModal = () => {
 };
 
 const submit = () => {
-    form.post(route('guru.penilaian.tp.store'), {
-        preserveScroll: true,
-        onSuccess: () => closeModal()
-    });
+    if (isEdit.value) {
+        form.put(route('guru.penilaian.tp.update', form.id), {
+            preserveScroll: true,
+            onSuccess: () => closeModal()
+        });
+    } else {
+        form.post(route('guru.penilaian.tp.store'), {
+            preserveScroll: true,
+            onSuccess: () => closeModal()
+        });
+    }
 };
 
 const deleteTp = (id) => {
@@ -97,7 +122,10 @@ const deleteTp = (id) => {
                                 </td>
                                 <td class="px-6 py-4">{{ item.deskripsi }}</td>
                                 <td class="px-6 py-4">{{ item.tingkat }} (Sem {{ item.semester }})</td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-4 flex gap-2">
+                                    <button @click="editTp(item)" class="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                     <button @click="deleteTp(item.id)" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -118,7 +146,7 @@ const deleteTp = (id) => {
         <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-lg overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah Tujuan Pembelajaran</h3>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ isEdit ? 'Edit Tujuan Pembelajaran' : 'Tambah Tujuan Pembelajaran' }}</h3>
                     <button @click="closeModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
                         <i class="fas fa-times"></i>
                     </button>
@@ -146,7 +174,7 @@ const deleteTp = (id) => {
                             Batal
                         </button>
                         <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-medium transition-colors">
-                            <i class="fas fa-save mr-1"></i> Simpan TP
+                            <i class="fas fa-save mr-1"></i> {{ isEdit ? 'Update TP' : 'Simpan TP' }}
                         </button>
                     </div>
                 </form>

@@ -539,6 +539,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/tp', [\App\Http\Controllers\Guru\PenilaianController::class, 'tp'])->name('tp');
         Route::post('/tp/store', [\App\Http\Controllers\Guru\PenilaianController::class, 'storeTp'])->name('tp.store');
+        Route::put('/tp/{id}', [\App\Http\Controllers\Guru\PenilaianController::class, 'updateTp'])->name('tp.update');
         Route::delete('/tp/{id}', [\App\Http\Controllers\Guru\PenilaianController::class, 'destroyTp'])->name('tp.destroy');
         
         Route::get('/formatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'formatif'])->name('formatif');

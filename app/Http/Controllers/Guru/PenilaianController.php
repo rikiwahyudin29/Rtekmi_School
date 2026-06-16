@@ -130,6 +130,30 @@ class PenilaianController extends Controller
         return redirect()->back()->with('success', 'Tujuan Pembelajaran berhasil ditambahkan.');
     }
 
+    public function updateTp(Request $request, $id)
+    {
+        $request->validate([
+            'mapel_id' => 'required',
+            'kode_tp' => 'required',
+            'deskripsi' => 'required',
+        ]);
+
+        // Parse mapel_id dan tingkatStr dari input
+        $parts = explode('|', $request->mapel_id);
+        $real_mapel_id = $parts[0];
+        $tingkatStr = count($parts) > 1 ? $parts[1] : 'Fase E (Kelas 10)'; // Default fallback
+
+        $tp = TujuanPembelajaran::findOrFail($id);
+        $tp->update([
+            'mapel_id' => $real_mapel_id,
+            'kode_tp' => $request->kode_tp,
+            'deskripsi' => $request->deskripsi,
+            'tingkat' => $tingkatStr,
+        ]);
+
+        return redirect()->back()->with('success', 'Tujuan Pembelajaran berhasil diperbarui.');
+    }
+
     public function destroyTp($id)
     {
         TujuanPembelajaran::findOrFail($id)->delete();
