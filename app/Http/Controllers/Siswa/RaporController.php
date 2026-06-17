@@ -18,7 +18,13 @@ class RaporController extends Controller
         // Mendapatkan ID siswa dari auth user
         $siswa_id = Auth::user()->siswa->id ?? 1; // Simulasi
 
-        $rapor_akhir = RaporAkhir::with('mapel')->where('siswa_id', $siswa_id)->where('semester', 1)->get();
+        $rapor_akhir = RaporAkhir::with('mapel')
+            ->where('siswa_id', $siswa_id)
+            ->where('semester', 1)
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->unique('mapel_id')
+            ->values();
         $kehadiran = RaporKehadiran::where('siswa_id', $siswa_id)->where('semester', 1)->first();
         $catatan = RaporCatatanWali::where('siswa_id', $siswa_id)->where('semester', 1)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $siswa_id)->where('semester', 1)->get();

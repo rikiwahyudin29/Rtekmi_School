@@ -287,8 +287,7 @@
                                     Mengetahui,<br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
-                                    (..........................................)<br>
-                                    <b>{{ $siswa->nama_lengkap }}</b>
+                                    (..........................................)
                                 </td>
                                 <td style="width: 40%; text-align: center; vertical-align: top;">
                                     <br><br>
@@ -326,8 +325,7 @@
                                     Mengetahui,<br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
-                                    (..........................................)<br>
-                                    <b>{{ $siswa->nama_lengkap }}</b>
+                                    (..........................................)
                                 </td>
                                 <td style="width: 30%;"></td>
                                 <td style="width: 35%; text-align: center; vertical-align: top;">

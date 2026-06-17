@@ -135,7 +135,7 @@ const menuItems = computed(() => {
     
     let menus = [
         { name: 'Dashboard', icon: 'fas fa-th-large', route: 'dashboard', active: route().current('dashboard') },
-        { name: 'Profil Saya', icon: 'fas fa-user-circle', route: '#', active: false },
+        { name: 'Profil Saya', icon: 'fas fa-user-circle', route: 'profile.edit', active: route().current('profile.edit') },
     ];
 
     // --- 1. MENU ADMINISTRATOR ---
@@ -369,7 +369,7 @@ const menuItems = computed(() => {
     if (role === 'siswa') {
         return [
             { name: 'Dashboard', icon: 'fas fa-th-large', route: 'dashboard', active: route().current('dashboard') },
-            { name: 'Profil Saya', icon: 'fas fa-user-circle', route: '#', active: false },
+            { name: 'Profil Saya', icon: 'fas fa-user-circle', route: 'profile.edit', active: route().current('profile.edit') },
             { isHeader: true, name: 'Area Akademik Siswa' },
             { name: 'Materi & Bahan Ajar', icon: 'fas fa-book-reader', route: '#', active: false },
             { name: 'Tugas Sekolah', icon: 'fas fa-tasks', route: '#', active: false },

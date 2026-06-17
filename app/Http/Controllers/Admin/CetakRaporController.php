@@ -44,7 +44,13 @@ class CetakRaporController extends Controller
         $semester_int = ($tahun_ajaran && $tahun_ajaran->semester === 'Genap') ? 2 : 1;
 
         $siswa = Siswa::with(['kelas.waliKelas', 'jurusan'])->findOrFail($id);
-        $rapor_akhir = RaporAkhir::with('mapel')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+        $rapor_akhir = RaporAkhir::with('mapel')
+            ->where('siswa_id', $id)
+            ->where('semester', $semester_int)
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->unique('mapel_id')
+            ->values();
         $kehadiran = RaporKehadiran::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
@@ -87,7 +93,14 @@ class CetakRaporController extends Controller
     {
         $kelas = Kelas::findOrFail($kelas_id);
         $siswa = Siswa::where('kelas_id', $kelas_id)->get();
-        $rapor_akhir = RaporAkhir::with('mapel')->whereIn('siswa_id', $siswa->pluck('id'))->get();
+        $rapor_akhir = RaporAkhir::with('mapel')
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->unique(function ($item) {
+                return $item->siswa_id . '-' . $item->mapel_id;
+            })
+            ->values();
         $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))->get();
         
         return view('rapor.cetak_leger', compact('kelas', 'siswa', 'rapor_akhir', 'kehadiran'));
@@ -149,7 +162,13 @@ class CetakRaporController extends Controller
         $kenaikan_all = collect();
         
         foreach($siswas as $siswa) {
-            $rapor_akhir_all[$siswa->id] = RaporAkhir::with('mapel')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
+            $rapor_akhir_all[$siswa->id] = RaporAkhir::with('mapel')
+                ->where('siswa_id', $siswa->id)
+                ->where('semester', $semester_int)
+                ->orderBy('updated_at', 'desc')
+                ->get()
+                ->unique('mapel_id')
+                ->values();
             $kehadiran_all[$siswa->id] = RaporKehadiran::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
             $catatan_all[$siswa->id] = RaporCatatanWali::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
             $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
