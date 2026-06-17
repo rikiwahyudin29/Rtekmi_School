@@ -12,6 +12,10 @@ defineProps({
     status: {
         type: String,
     },
+    profil: {
+        type: Object,
+        default: null,
+    }
 });
 </script>
 
@@ -35,6 +39,7 @@ defineProps({
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
+                        :profil="profil"
                         class="max-w-xl"
                     />
                 </div>

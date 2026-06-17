@@ -52,7 +52,11 @@ const showingNavigationDropdown = ref(false);
                                                 type="button"
                                                 class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                             >
-                                                {{ $page.props.auth.user.name }}
+                                                <img v-if="$page.props.auth.user.avatar_url" :src="$page.props.auth.user.avatar_url" alt="Profile" class="h-8 w-8 rounded-full object-cover mr-2 border border-gray-200">
+                                                <div v-else class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold mr-2 text-xs">
+                                                    {{ $page.props.auth.user.nama_lengkap ? $page.props.auth.user.nama_lengkap.charAt(0) : 'U' }}
+                                                </div>
+                                                {{ $page.props.auth.user.nama_lengkap }}
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"
@@ -153,13 +157,21 @@ const showingNavigationDropdown = ref(false);
                         class="border-t border-gray-200 pb-1 pt-4"
                     >
                         <div class="px-4">
-                            <div
-                                class="text-base font-medium text-gray-800"
-                            >
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
+                            <div class="flex items-center">
+                                <img v-if="$page.props.auth.user.avatar_url" :src="$page.props.auth.user.avatar_url" alt="Profile" class="h-10 w-10 rounded-full object-cover mr-3 border border-gray-200">
+                                <div v-else class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold mr-3 text-sm">
+                                    {{ $page.props.auth.user.nama_lengkap ? $page.props.auth.user.nama_lengkap.charAt(0) : 'U' }}
+                                </div>
+                                <div>
+                                    <div
+                                        class="text-base font-medium text-gray-800"
+                                    >
+                                        {{ $page.props.auth.user.nama_lengkap }}
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-500">
+                                        {{ $page.props.auth.user.email }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

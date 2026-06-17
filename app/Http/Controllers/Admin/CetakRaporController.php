@@ -49,7 +49,7 @@ class CetakRaporController extends Controller
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
         $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
-        $kenaikan = \App\Models\KenaikanKelas::where('siswa_id', $id)->first();
+        $kenaikan = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $id)->first();
 
         return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'ekskul', 'sekolah', 'tahun_ajaran', 'tanggal_rapor', 'kenaikan'));
     }

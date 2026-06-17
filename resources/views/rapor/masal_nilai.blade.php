@@ -83,7 +83,20 @@
                                 <td class="ht-value">{{ $siswa->nis ?? '-' }} / {{ $siswa->nisn }}</td>
                                 <td class="ht-label-r">Fase</td>
                                 <td class="ht-colon-r">:</td>
-                                <td class="ht-value-r">E</td>
+                                @php
+                                    $fase = 'E';
+                                    if(isset($siswa->kelas->tingkat)) {
+                                        $tingkat = $siswa->kelas->tingkat;
+                                        if($tingkat == '11' || $tingkat == '12' || str_contains(strtolower($siswa->kelas->nama_kelas), 'xi')) {
+                                            $fase = 'F';
+                                        }
+                                    } elseif(isset($siswa->kelas->nama_kelas)) {
+                                        if(str_contains(strtoupper($siswa->kelas->nama_kelas), 'XI') || str_contains(strtoupper($siswa->kelas->nama_kelas), 'XII')) {
+                                            $fase = 'F';
+                                        }
+                                    }
+                                @endphp
+                                <td class="ht-value-r">{{ $fase }}</td>
                             </tr>
                             <tr>
                                 <td class="ht-label">Sekolah</td>
@@ -274,29 +287,34 @@
                                     Mengetahui,<br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
-                                    ..........................................
+                                    (..........................................)<br>
+                                    <b>{{ $siswa->nama_lengkap }}</b>
                                 </td>
                                 <td style="width: 40%; text-align: center; vertical-align: top;">
                                     <br><br>
                                     Kepala Sekolah
                                     <div class="sig-space"></div>
-                                    <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
-                                    NIP. {{ $sekolah->nip_kepsek ?? '-' }}
+                                    <div style="display: inline-block; text-align: left;">
+                                        <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
+                                        NIP. {{ $sekolah->nip_kepsek ?? '-' }}
+                                    </div>
                                 </td>
                                 <td style="width: 30%; text-align: center; vertical-align: top;">
                                     {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tgl_ttd }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
-                                    <strong><u>
-                                    @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
-                                        ..........................................
-                                    @else
-                                        {{ $nama_wk }}
-                                    @endif
-                                    </u></strong><br>
-                                    @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
-                                        NIP. {{ $wk->nip ?? '-' }}
-                                    @endif
+                                    <div style="display: inline-block; text-align: left;">
+                                        <strong><u>
+                                        @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
+                                            ..........................................
+                                        @else
+                                            {{ $nama_wk }}
+                                        @endif
+                                        </u></strong><br>
+                                        @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
+                                            NIP. {{ $wk->nip ?? '-' }}
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         </table>
@@ -308,23 +326,26 @@
                                     Mengetahui,<br>
                                     Orang Tua Murid
                                     <div class="sig-space"></div>
-                                    ..........................................
+                                    (..........................................)<br>
+                                    <b>{{ $siswa->nama_lengkap }}</b>
                                 </td>
                                 <td style="width: 30%;"></td>
                                 <td style="width: 35%; text-align: center; vertical-align: top;">
                                     {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $tgl_ttd }}<br>
                                     Wali Kelas
                                     <div class="sig-space"></div>
-                                    <strong><u>
-                                    @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
-                                        ..........................................
-                                    @else
-                                        {{ $nama_wk }}
-                                    @endif
-                                    </u></strong><br>
-                                    @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
-                                        NIP. {{ $wk->nip ?? '-' }}
-                                    @endif
+                                    <div style="display: inline-block; text-align: left;">
+                                        <strong><u>
+                                        @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
+                                            ..........................................
+                                        @else
+                                            {{ $nama_wk }}
+                                        @endif
+                                        </u></strong><br>
+                                        @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') !== 'Kosongkan Nama Wali')
+                                            NIP. {{ $wk->nip ?? '-' }}
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
@@ -332,8 +353,10 @@
                                     Mengetahui,<br>
                                     Kepala Sekolah
                                     <div class="sig-space"></div>
-                                    <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
-                                    NIP. {{ $sekolah->nip_kepsek ?? '-' }}
+                                    <div style="display: inline-block; text-align: left;">
+                                        <strong><u>{{ $sekolah->nama_kepsek ?? 'Nama Kepala Sekolah' }}</u></strong><br>
+                                        NIP. {{ $sekolah->nip_kepsek ?? '-' }}
+                                    </div>
                                 </td>
                             </tr>
                         </table>
