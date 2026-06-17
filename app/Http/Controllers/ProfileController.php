@@ -91,14 +91,10 @@ class ProfileController extends Controller
 
         $validated = $request->validate($rules);
 
-        // Update User
         $user->nama_lengkap = $validated['nama_lengkap'];
         $user->email = $validated['email'];
         if(isset($validated['nomor_wa'])) $user->nomor_wa = $validated['nomor_wa'];
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
         $user->save();
 
         // Handle Photo Upload
