@@ -58,6 +58,12 @@ class ProfileController extends Controller
                 'tempat_lahir' => ['nullable', 'string', 'max:50'],
                 'tanggal_lahir' => ['nullable', 'date'],
                 'alamat' => ['nullable', 'string'],
+                'nuptk' => ['nullable', 'string', 'max:30'],
+                'pendidikan_terakhir' => ['nullable', 'string', 'max:50'],
+                'sertifikasi' => ['nullable', 'string', 'max:100'],
+                'status_guru' => ['nullable', 'string', 'in:PNS,GTT,GTY,HONORER'],
+                'ibu_kandung' => ['nullable', 'string', 'max:100'],
+                'status_kepegawaian' => ['nullable', 'string', 'max:50'],
             ]);
         } elseif ($user->role === 'siswa') {
             $rules = array_merge($rules, [
@@ -69,6 +75,17 @@ class ProfileController extends Controller
                 'alamat' => ['nullable', 'string'],
                 'nama_ayah' => ['nullable', 'string', 'max:100'],
                 'nama_ibu' => ['nullable', 'string', 'max:100'],
+                'agama' => ['nullable', 'string', 'max:20'],
+                'status_keluarga' => ['nullable', 'string', 'max:50'],
+                'anak_ke' => ['nullable', 'integer'],
+                'sekolah_asal' => ['nullable', 'string', 'max:100'],
+                'diterima_kelas' => ['nullable', 'string', 'max:20'],
+                'tanggal_diterima' => ['nullable', 'date'],
+                'nama_wali' => ['nullable', 'string', 'max:100'],
+                'pekerjaan_wali' => ['nullable', 'string', 'max:50'],
+                'no_hp_ortu' => ['nullable', 'string', 'max:20'],
+                'pekerjaan_ayah' => ['nullable', 'string', 'max:50'],
+                'pekerjaan_ibu' => ['nullable', 'string', 'max:50'],
             ]);
         }
 
@@ -109,6 +126,12 @@ class ProfileController extends Controller
                 $guru->tempat_lahir = $validated['tempat_lahir'] ?? $guru->tempat_lahir;
                 $guru->tanggal_lahir = $validated['tanggal_lahir'] ?? $guru->tanggal_lahir;
                 $guru->alamat = $validated['alamat'] ?? $guru->alamat;
+                $guru->nuptk = $validated['nuptk'] ?? $guru->nuptk;
+                $guru->pendidikan_terakhir = $validated['pendidikan_terakhir'] ?? $guru->pendidikan_terakhir;
+                $guru->sertifikasi = $validated['sertifikasi'] ?? $guru->sertifikasi;
+                $guru->status_guru = $validated['status_guru'] ?? $guru->status_guru;
+                $guru->ibu_kandung = $validated['ibu_kandung'] ?? $guru->ibu_kandung;
+                $guru->status_kepegawaian = $validated['status_kepegawaian'] ?? $guru->status_kepegawaian;
                 if ($fotoPath) {
                     $guru->foto = $fotoPath;
                 }
@@ -127,6 +150,17 @@ class ProfileController extends Controller
                 $siswa->alamat = $validated['alamat'] ?? $siswa->alamat;
                 $siswa->nama_ayah = $validated['nama_ayah'] ?? $siswa->nama_ayah;
                 $siswa->nama_ibu = $validated['nama_ibu'] ?? $siswa->nama_ibu;
+                $siswa->agama = $validated['agama'] ?? $siswa->agama;
+                $siswa->status_keluarga = $validated['status_keluarga'] ?? $siswa->status_keluarga;
+                $siswa->anak_ke = $validated['anak_ke'] ?? $siswa->anak_ke;
+                $siswa->sekolah_asal = $validated['sekolah_asal'] ?? $siswa->sekolah_asal;
+                $siswa->diterima_kelas = $validated['diterima_kelas'] ?? $siswa->diterima_kelas;
+                $siswa->tanggal_diterima = $validated['tanggal_diterima'] ?? $siswa->tanggal_diterima;
+                $siswa->nama_wali = $validated['nama_wali'] ?? $siswa->nama_wali;
+                $siswa->pekerjaan_wali = $validated['pekerjaan_wali'] ?? $siswa->pekerjaan_wali;
+                $siswa->no_hp_ortu = $validated['no_hp_ortu'] ?? $siswa->no_hp_ortu;
+                $siswa->pekerjaan_ayah = $validated['pekerjaan_ayah'] ?? $siswa->pekerjaan_ayah;
+                $siswa->pekerjaan_ibu = $validated['pekerjaan_ibu'] ?? $siswa->pekerjaan_ibu;
                 if ($fotoPath) {
                     $siswa->foto = $fotoPath;
                 }
