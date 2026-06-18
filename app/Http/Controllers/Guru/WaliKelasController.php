@@ -308,8 +308,11 @@ class WaliKelasController extends Controller
         $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
         $dudi_list = Dudi::all();
         
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
         $pkl = RaporPkl::whereIn('siswa_id', $siswa->pluck('id'))
-                        ->where('semester', 1)
+                        ->where('semester', $semester_int)
                         ->get()->keyBy('siswa_id');
 
         return Inertia::render('Guru/WaliKelas/Pkl', [
@@ -327,6 +330,7 @@ class WaliKelasController extends Controller
         ]);
 
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
 
         foreach ($request->input_data as $siswa_id => $p) {
             if (!empty($p['dudi_id']) && !empty($p['lokasi']) && !empty($p['lama_bulan'])) {
@@ -334,7 +338,7 @@ class WaliKelasController extends Controller
                     [
                         'siswa_id' => $siswa_id,
                         'tahun_ajaran_id' => $tahun_ajaran_aktif->id ?? 1,
-                        'semester' => 1
+                        'semester' => $semester_int
                     ],
                     [
                         'dudi_id' => $p['dudi_id'],

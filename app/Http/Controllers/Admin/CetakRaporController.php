@@ -64,7 +64,7 @@ class CetakRaporController extends Controller
             'tanpa_keterangan' => $kehadiran_asli ? $kehadiran_asli->tanpa_keterangan : 0,
         ];
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
-        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->get();
         $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
         $kenaikan = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $id)->first();
 
@@ -383,9 +383,19 @@ class CetakRaporController extends Controller
                 ->get()
                 ->unique('mapel_id')
                 ->values();
-            $kehadiran_all[$siswa->id] = RaporKehadiran::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
+            $kehadiran_asli = \App\Models\Presensi::where('user_id', $siswa->id)
+                ->where('role', 'siswa')
+                ->selectRaw('SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
+                             SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
+                             SUM(CASE WHEN status_kehadiran = "Alpha" THEN 1 ELSE 0 END) as tanpa_keterangan')
+                ->first();
+            $kehadiran_all[$siswa->id] = (object) [
+                'sakit' => $kehadiran_asli ? $kehadiran_asli->sakit : 0,
+                'izin' => $kehadiran_asli ? $kehadiran_asli->izin : 0,
+                'tanpa_keterangan' => $kehadiran_asli ? $kehadiran_asli->tanpa_keterangan : 0,
+            ];
             $catatan_all[$siswa->id] = RaporCatatanWali::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
-            $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
+            $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->get();
             $ekskul_all[$siswa->id] = EkskulNilai::with('ekskul')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
             $kenaikan_all[$siswa->id] = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $siswa->id)->first();
         }
