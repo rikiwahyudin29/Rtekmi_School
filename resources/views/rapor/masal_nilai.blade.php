@@ -14,16 +14,14 @@
         @media print {
             body { background: white; margin: 0; padding: 0; }
             .page { border: none; box-shadow: none; margin: 0; width: 100%; page-break-after: always; padding: 0; }
-            table.report-container { width: 100%; min-height: 98vh; }
         }
         .page:last-child { page-break-after: auto; }
         /* Table Layouts */
         table.report-container { width: 100%; }
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
-        .report-footer td { height: 30px; vertical-align: bottom; }
-        .footer-content { width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; display: flex; justify-content: space-between; }
-        .page-number::after { content: "Halaman " counter(page); }
+        .report-footer td { height: 30px; }
+        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
 
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
         .header-table td { padding: 1px 0; vertical-align: top; }
@@ -53,7 +51,7 @@
 
     </style>
 </head>
-<body onload="window.print()" style="counter-reset: page;">
+<body onload="window.print()">
     @foreach($siswas as $siswa)
     @php
         $rapor_akhir = $rapor_akhir_all[$siswa->id] ?? collect();

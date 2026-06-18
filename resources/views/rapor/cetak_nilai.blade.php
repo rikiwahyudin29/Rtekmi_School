@@ -15,7 +15,7 @@
             body { background: white; margin: 0; padding: 0; }
             .page { border: none; box-shadow: none; margin: 0; width: 100%; page-break-after: always; padding: 0; }
             /* Table Layouts */
-            table.report-container { width: 100%; min-height: 98vh; }
+            table.report-container { width: 100%; }
         }
         .page:last-child { page-break-after: auto; }
         
@@ -48,12 +48,11 @@
         
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
-        .report-footer td { height: 30px; vertical-align: bottom; }
-        .footer-content { width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; display: flex; justify-content: space-between; }
-        .page-number::after { content: "Halaman " counter(page); }
+        .report-footer td { height: 30px; }
+        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
     </style>
 </head>
-<body onload="window.print()" style="counter-reset: page;">
+<body onload="window.print()">
     <div class="page">
         <table class="report-container">
             <thead class="report-header">
