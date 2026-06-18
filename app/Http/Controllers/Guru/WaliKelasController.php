@@ -706,17 +706,5 @@ class WaliKelasController extends Controller
         ]);
     }
 
-    /**
-     * Cetak Rapor (Menampilkan daftar siswa untuk dicetak rapornya)
-     */
-    public function cetakRapor()
-    {
-        $kelas = $this->getKelasWali();
-        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
 
-        return Inertia::render('Guru/WaliKelas/Cetak', [
-            'kelas' => $kelas,
-            'siswa' => $siswa,
-        ]);
-    }
 }
