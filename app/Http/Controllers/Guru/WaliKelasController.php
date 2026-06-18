@@ -700,9 +700,64 @@ class WaliKelasController extends Controller
         $kelas = $this->getKelasWali();
         $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
 
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        $rapor_akhir = \App\Models\RaporAkhir::with('mapel')
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->where('semester', $semester_int)
+            ->get()
+            ->unique(function ($item) {
+                return $item->siswa_id . '-' . $item->mapel_id;
+            })
+            ->values();
+
+        // Dapatkan Mapel Unik
+        $mapels = $rapor_akhir->pluck('mapel')->unique('id')->filter()->sortBy(function($m) { 
+            $u = (int) ($m->urutan ?? 0); 
+            return $u === 0 ? 999 : $u; 
+        })->values();
+
+        // Hitung Peringkat
+        $peringkat_data = [];
+        foreach($siswa as $s) {
+            $total = $rapor_akhir->where('siswa_id', $s->id)->sum('nilai_akhir');
+            $count = $rapor_akhir->where('siswa_id', $s->id)->count();
+            $rata = $count > 0 ? $total / $count : 0;
+            $peringkat_data[$s->id] = [
+                'total' => $total,
+                'rata' => $rata,
+                'rank' => 0
+            ];
+        }
+
+        $sorted = collect($peringkat_data)->sortByDesc('total');
+        $rank = 1;
+        $prevTotal = -1;
+        $prevRank = 1;
+        foreach($sorted as $siswa_id => $data) {
+            if ($data['total'] == $prevTotal) {
+                $peringkat_data[$siswa_id]['rank'] = $prevRank;
+            } else {
+                $peringkat_data[$siswa_id]['rank'] = $rank;
+                $prevRank = $rank;
+            }
+            $prevTotal = $data['total'];
+            $rank++;
+        }
+
+        // Struktur data rapor per siswa agar mudah dirender di Vue
+        $rapor_data = [];
+        foreach ($rapor_akhir as $ra) {
+            $rapor_data[$ra->siswa_id][$ra->mapel_id] = $ra->nilai_akhir;
+        }
+
         return Inertia::render('Guru/WaliKelas/Leger', [
             'kelas' => $kelas,
             'siswa' => $siswa,
+            'mapels' => $mapels,
+            'peringkat_data' => $peringkat_data,
+            'rapor_data' => $rapor_data,
         ]);
     }
 
