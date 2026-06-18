@@ -710,6 +710,7 @@ class WaliKelasController extends Controller
         $rapor_akhir = \App\Models\RaporAkhir::with('mapel')
             ->whereIn('siswa_id', $siswa->pluck('id'))
             ->where('semester', $semester_int)
+            ->orderBy('updated_at', 'desc')
             ->get()
             ->unique(function ($item) {
                 return $item->siswa_id . '-' . $item->mapel_id;
