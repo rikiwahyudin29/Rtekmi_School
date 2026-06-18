@@ -17,15 +17,14 @@
             .report-container { min-height: 100vh; }
         }
         .page:last-child { page-break-after: auto; }
-        
         /* Table Layouts */
         table.report-container { width: 100%; }
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
         .report-footer td { height: 30px; }
-        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
+        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; display: flex; justify-content: space-between; }
+        .page-number::after { content: "Halaman " counter(page); }
 
-        
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
         .header-table td { padding: 1px 0; vertical-align: top; }
         .ht-label { width: 15%; }
@@ -54,7 +53,7 @@
 
     </style>
 </head>
-<body onload="window.print()">
+<body onload="window.print()" style="counter-reset: page;">
     @foreach($siswas as $siswa)
     @php
         $rapor_akhir = $rapor_akhir_all[$siswa->id] ?? collect();
@@ -72,7 +71,8 @@
                 <tr>
                     <td>
                         <div class="footer-content">
-                            {{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}
+                            <span>{{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}</span>
+                            <span class="page-number"></span>
                         </div>
                     </td>
                 </tr>

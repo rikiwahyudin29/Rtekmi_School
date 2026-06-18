@@ -49,10 +49,11 @@
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
         .report-footer td { height: 30px; }
-        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
+        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; display: flex; justify-content: space-between; }
+        .page-number::after { content: "Halaman " counter(page); }
     </style>
 </head>
-<body onload="window.print()">
+<body onload="window.print()" style="counter-reset: page;">
     <div class="page">
         <table class="report-container">
             <thead class="report-header">
@@ -62,7 +63,8 @@
                 <tr>
                     <td>
                         <div class="footer-content">
-                            {{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}
+                            <span>{{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}</span>
+                            <span class="page-number"></span>
                         </div>
                     </td>
                 </tr>
