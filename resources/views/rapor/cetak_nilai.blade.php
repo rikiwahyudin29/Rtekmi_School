@@ -48,7 +48,8 @@
         
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
-        .footer-content { font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; margin-top: 15px; }
+        .report-footer td { height: 30px; }
+        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
     </style>
 </head>
 <body onload="window.print()">

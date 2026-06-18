@@ -746,6 +746,11 @@ class WaliKelasController extends Controller
             $rank++;
         }
 
+        // Sort Siswa by Rank
+        $siswa = $siswa->sortBy(function($s) use ($peringkat_data) {
+            return $peringkat_data[$s->id]['rank'] ?? 999;
+        })->values();
+
         // Struktur data rapor per siswa agar mudah dirender di Vue
         $rapor_data = [];
         foreach ($rapor_akhir as $ra) {

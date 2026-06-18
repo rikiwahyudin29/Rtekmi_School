@@ -133,6 +133,11 @@ class CetakRaporController extends Controller
             $rank++;
         }
 
+        // Sort Siswa by Rank
+        $siswa = $siswa->sortBy(function($s) use ($peringkat_data) {
+            return $peringkat_data[$s->id]['rank'] ?? 999;
+        })->values();
+
         return view('rapor.cetak_leger', compact('kelas', 'siswa', 'rapor_akhir', 'kehadiran', 'peringkat_data'));
     }
 
@@ -186,6 +191,11 @@ class CetakRaporController extends Controller
             $prevTotal = $data['total'];
             $rank++;
         }
+
+        // Sort Siswa by Rank
+        $siswa = $siswa->sortBy(function($s) use ($peringkat_data) {
+            return $peringkat_data[$s->id]['rank'] ?? 999;
+        })->values();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
