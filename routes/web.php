@@ -621,6 +621,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/pkl', [\App\Http\Controllers\Guru\WaliKelasController::class, 'pkl'])->name('pkl');
         Route::post('/pkl/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storePkl'])->name('pkl.store');
+        Route::post('/pkl/dudi/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeDudiPkl'])->name('pkl.dudi.store');
 
         Route::get('/pkl-k13', [\App\Http\Controllers\Guru\WaliKelasController::class, 'pklK13'])->name('pkl_k13');
         Route::post('/pkl-k13/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storePklK13'])->name('pkl_k13.store');
@@ -642,6 +643,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/ekskul', [\App\Http\Controllers\Guru\WaliKelasController::class, 'ekskul'])->name('ekskul');
         Route::post('/ekskul/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeEkskul'])->name('ekskul.store');
+
+        Route::get('/leger', [\App\Http\Controllers\Guru\WaliKelasController::class, 'leger'])->name('leger');
 
         Route::get('/cetak-rapor', [\App\Http\Controllers\Guru\WaliKelasController::class, 'cetakRapor'])->name('cetak_rapor');
         Route::get('/skill-passport', [\App\Http\Controllers\Admin\UkkController::class, 'skillPassport'])->name('skill_passport');

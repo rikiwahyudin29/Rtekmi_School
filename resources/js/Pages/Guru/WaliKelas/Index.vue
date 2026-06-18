@@ -128,6 +128,19 @@ const props = defineProps({
                     </div>
                 </Link>
 
+                <!-- Menu Leger Kelas -->
+                <Link :href="route('guru.walikelas.leger')" class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="absolute right-0 top-0 w-24 h-24 bg-teal-500/10 dark:bg-teal-500/20 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="w-14 h-14 bg-teal-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-list-ol text-2xl text-teal-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Leger Kelas</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Lihat rekap nilai seluruh mapel dan peringkat siswa.</p>
+                    <div class="mt-4 flex items-center text-teal-600 dark:text-teal-400 font-medium text-sm group-hover:translate-x-2 transition-transform">
+                        Buka Leger <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </Link>
+
                 <!-- Menu Cetak Rapor -->
                 <Link :href="route('guru.walikelas.cetak_rapor')" class="group relative bg-gradient-to-br from-primary-600 to-primary-800 rounded-3xl shadow-sm border border-primary-500 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>

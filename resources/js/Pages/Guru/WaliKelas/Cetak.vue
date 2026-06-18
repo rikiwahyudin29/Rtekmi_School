@@ -63,14 +63,6 @@ const printMasalPelengkap = () => {
 const printMasalNilai = () => {
     window.open(`/cetak/rapor-masal/${props.kelas.id}/nilai${buildQuery()}`, '_blank');
 };
-
-const exportLegerExcel = () => {
-    window.open(`/cetak/leger-excel/${props.kelas.id}`, '_blank');
-};
-
-const printLegerPdf = () => {
-    window.open(`/cetak/leger/${props.kelas.id}`, '_blank');
-};
 </script>
 
 <template>
@@ -171,13 +163,6 @@ const printLegerPdf = () => {
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h3 class="font-bold text-gray-900 dark:text-white">Daftar Siswa - {{ kelas?.nama_kelas || '-' }}</h3>
                     <div class="flex flex-wrap gap-2">
-                        <button @click="exportLegerExcel" class="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-bold flex items-center gap-2 transition-colors" title="Export Leger ke Excel">
-                            <i class="fas fa-file-excel"></i> Leger Excel
-                        </button>
-                        <button @click="printLegerPdf" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-bold flex items-center gap-2 transition-colors" title="Cetak Leger ke PDF">
-                            <i class="fas fa-file-pdf"></i> Leger PDF
-                        </button>
-                        <span class="border-l border-gray-300 dark:border-gray-600 mx-1"></span>
                         <button @click="printMasalCover" class="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-bold flex items-center gap-2 transition-colors">
                             <i class="fas fa-file-pdf"></i> Masal Cover
                         </button>

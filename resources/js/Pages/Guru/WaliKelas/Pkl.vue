@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
@@ -12,6 +13,32 @@ const props = defineProps({
 const form = useForm({
     input_data: {}
 });
+
+const isModalOpen = ref(false);
+const dudiForm = useForm({
+    nama_dudi: '',
+    bidang_usaha: '',
+    alamat_lengkap: '',
+    nama_pimpinan: '',
+});
+
+const openDudiModal = () => {
+    isModalOpen.value = true;
+};
+
+const closeDudiModal = () => {
+    isModalOpen.value = false;
+    dudiForm.reset();
+};
+
+const submitDudi = () => {
+    dudiForm.post(route('guru.walikelas.pkl.dudi.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeDudiModal();
+        }
+    });
+};
 
 if (props.siswa && props.siswa.length > 0) {
     props.siswa.forEach(s => {
@@ -63,8 +90,11 @@ const submit = () => {
             <!-- Input Area -->
             <div v-if="siswa && siswa.length > 0" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <form @submit.prevent="submit">
-                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
                         <h3 class="font-bold text-gray-900 dark:text-white">Form Input PKL - {{ kelas?.nama_kelas || '-' }}</h3>
+                        <button type="button" @click="openDudiModal" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-sm flex items-center gap-2 text-sm">
+                            <i class="fas fa-plus"></i> Tambah DUDI Baru
+                        </button>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -115,6 +145,48 @@ const submit = () => {
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Tambah DUDI Modal -->
+        <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity overflow-y-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 w-full max-w-2xl overflow-hidden my-8">
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tambah DUDI / Mitra PKL Baru</h3>
+                    <button @click="closeDudiModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <form @submit.prevent="submitDudi" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Instansi / Perusahaan (DUDI) <span class="text-red-500">*</span></label>
+                            <input v-model="dudiForm.nama_dudi" type="text" required class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bidang Usaha</label>
+                            <input v-model="dudiForm.bidang_usaha" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alamat Lengkap</label>
+                            <textarea v-model="dudiForm.alamat_lengkap" rows="2" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Pimpinan</label>
+                            <input v-model="dudiForm.nama_pimpinan" type="text" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800">
+                    <button type="button" @click="closeDudiModal" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" @click="submitDudi" :disabled="dudiForm.processing" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm shadow-indigo-500/30">
+                        <i v-if="dudiForm.processing" class="fas fa-spinner fa-spin"></i>
+                        <i v-else class="fas fa-save"></i>
+                        Simpan DUDI
+                    </button>
+                </div>
             </div>
         </div>
     </DashboardLayout>

@@ -350,6 +350,25 @@ class WaliKelasController extends Controller
         return redirect()->back()->with('success', 'Data PKL siswa berhasil disimpan.');
     }
 
+    public function storeDudiPkl(Request $request)
+    {
+        $request->validate([
+            'nama_dudi' => 'required|string|max:255',
+            'bidang_usaha' => 'nullable|string|max:255',
+            'alamat_lengkap' => 'nullable|string',
+            'nama_pimpinan' => 'nullable|string|max:255',
+        ]);
+
+        Dudi::create([
+            'nama_dudi' => $request->nama_dudi,
+            'bidang_usaha' => $request->bidang_usaha,
+            'alamat_lengkap' => $request->alamat_lengkap,
+            'nama_pimpinan' => $request->nama_pimpinan,
+        ]);
+
+        return redirect()->back()->with('success', 'Master DUDI / Mitra berhasil ditambahkan.');
+    }
+
     /**
      * Status Kenaikan / Kelulusan Kelas
      */
