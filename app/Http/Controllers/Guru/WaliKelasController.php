@@ -694,4 +694,29 @@ class WaliKelasController extends Controller
 
         return redirect()->back()->with('success', 'Data Nilai Ekskul berhasil disimpan.');
     }
+
+    public function leger()
+    {
+        $kelas = $this->getKelasWali();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
+
+        return Inertia::render('Guru/WaliKelas/Leger', [
+            'kelas' => $kelas,
+            'siswa' => $siswa,
+        ]);
+    }
+
+    /**
+     * Cetak Rapor (Menampilkan daftar siswa untuk dicetak rapornya)
+     */
+    public function cetakRapor()
+    {
+        $kelas = $this->getKelasWali();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
+
+        return Inertia::render('Guru/WaliKelas/Cetak', [
+            'kelas' => $kelas,
+            'siswa' => $siswa,
+        ]);
+    }
 }
