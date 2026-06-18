@@ -47,6 +47,8 @@
         .sig-space { height: 80px; }
         
         thead.report-header { display: table-header-group; }
+        tfoot.report-footer { display: table-footer-group; }
+        .footer-content { font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; margin-top: 15px; }
     </style>
 </head>
 <body onload="window.print()">
@@ -55,6 +57,15 @@
             <thead class="report-header">
                 <tr><td></td></tr>
             </thead>
+            <tfoot class="report-footer">
+                <tr>
+                    <td>
+                        <div class="footer-content">
+                            {{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
             <tbody>
                 <tr>
                     <td>

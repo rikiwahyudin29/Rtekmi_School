@@ -637,6 +637,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/data-siswa', [\App\Http\Controllers\Guru\WaliKelasController::class, 'dataSiswa'])->name('data_siswa');
         Route::post('/data-siswa/{id}', [\App\Http\Controllers\Guru\WaliKelasController::class, 'updateDataSiswa'])->name('data_siswa.update');
 
+        Route::get('/nilai-siswa', [\App\Http\Controllers\Guru\WaliKelasController::class, 'nilaiSiswa'])->name('nilai_siswa');
+        Route::post('/nilai-siswa/{id}', [\App\Http\Controllers\Guru\WaliKelasController::class, 'updateNilaiSiswa'])->name('nilai_siswa.update');
+
         Route::get('/ekskul', [\App\Http\Controllers\Guru\WaliKelasController::class, 'ekskul'])->name('ekskul');
         Route::post('/ekskul/store', [\App\Http\Controllers\Guru\WaliKelasController::class, 'storeEkskul'])->name('ekskul.store');
 
@@ -671,6 +674,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cetak/rapor/{id}/ukk', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakUkk'])->name('cetak.rapor.ukk');
     Route::get('/cetak/rapor/{id}/pelengkap', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakPelengkap'])->name('cetak.rapor.pelengkap');
     Route::get('/cetak/leger/{kelas_id}', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakLeger'])->name('cetak.leger');
+    Route::get('/cetak/leger-excel/{kelas_id}', [\App\Http\Controllers\Admin\CetakRaporController::class, 'exportLegerExcel'])->name('cetak.leger.excel');
 });
 
 Route::get('/test-jadwal-kelas/{id}', function ($id) {

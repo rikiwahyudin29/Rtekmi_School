@@ -103,7 +103,186 @@ class CetakRaporController extends Controller
             ->values();
         $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))->get();
         
-        return view('rapor.cetak_leger', compact('kelas', 'siswa', 'rapor_akhir', 'kehadiran'));
+        // Calculate Peringkat
+        $peringkat_data = [];
+        foreach($siswa as $s) {
+            $total = $rapor_akhir->where('siswa_id', $s->id)->sum('nilai_akhir');
+            $count = $rapor_akhir->where('siswa_id', $s->id)->count();
+            $rata = $count > 0 ? $total / $count : 0;
+            $peringkat_data[$s->id] = [
+                'total' => $total,
+                'rata' => $rata,
+                'rank' => 0
+            ];
+        }
+
+        // Sort by total descending
+        $sorted = collect($peringkat_data)->sortByDesc('total');
+        
+        $rank = 1;
+        $prevTotal = -1;
+        $prevRank = 1;
+        foreach($sorted as $siswa_id => $data) {
+            if ($data['total'] == $prevTotal) {
+                $peringkat_data[$siswa_id]['rank'] = $prevRank;
+            } else {
+                $peringkat_data[$siswa_id]['rank'] = $rank;
+                $prevRank = $rank;
+            }
+            $prevTotal = $data['total'];
+            $rank++;
+        }
+
+        return view('rapor.cetak_leger', compact('kelas', 'siswa', 'rapor_akhir', 'kehadiran', 'peringkat_data'));
+    }
+
+    /**
+     * Export Leger ke Excel
+     */
+    public function exportLegerExcel($kelas_id)
+    {
+        $kelas = Kelas::findOrFail($kelas_id);
+        $siswa = Siswa::where('kelas_id', $kelas_id)->get();
+        $rapor_akhir = RaporAkhir::with('mapel')
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->unique(function ($item) {
+                return $item->siswa_id . '-' . $item->mapel_id;
+            })
+            ->values();
+        $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))->get();
+        
+        // Dapatkan Mapel Unik
+        $mapels = $rapor_akhir->pluck('mapel')->unique('id')->filter()->sortBy(function($m) { 
+            $u = (int) ($m->urutan ?? 0); 
+            return $u === 0 ? 999 : $u; 
+        })->values();
+
+        // Hitung Peringkat
+        $peringkat_data = [];
+        foreach($siswa as $s) {
+            $total = $rapor_akhir->where('siswa_id', $s->id)->sum('nilai_akhir');
+            $count = $rapor_akhir->where('siswa_id', $s->id)->count();
+            $rata = $count > 0 ? $total / $count : 0;
+            $peringkat_data[$s->id] = [
+                'total' => $total,
+                'rata' => $rata,
+                'rank' => 0
+            ];
+        }
+
+        $sorted = collect($peringkat_data)->sortByDesc('total');
+        $rank = 1;
+        $prevTotal = -1;
+        $prevRank = 1;
+        foreach($sorted as $siswa_id => $data) {
+            if ($data['total'] == $prevTotal) {
+                $peringkat_data[$siswa_id]['rank'] = $prevRank;
+            } else {
+                $peringkat_data[$siswa_id]['rank'] = $rank;
+                $prevRank = $rank;
+            }
+            $prevTotal = $data['total'];
+            $rank++;
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Leger ' . str_replace(['/', '\\', '*', '?', '[', ']'], '_', $kelas->nama_kelas));
+
+        // Header Style
+        $headerStyle = [
+            'font' => ['bold' => true],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E2EFDA']]
+        ];
+
+        // Set Headers
+        $sheet->setCellValue('A1', 'NO');
+        $sheet->setCellValue('B1', 'NIS/NISN');
+        $sheet->setCellValue('C1', 'NAMA SISWA');
+        $sheet->setCellValue('D1', 'L/P');
+        
+        $col = 'E';
+        foreach($mapels as $mapel) {
+            $sheet->setCellValue($col . '1', $mapel->singkatan ?? substr($mapel->nama_mapel, 0, 10));
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+        
+        $colTotal = $col;
+        $sheet->setCellValue($colTotal . '1', 'JUMLAH');
+        $col++;
+        $colRata = $col;
+        $sheet->setCellValue($colRata . '1', 'RATA-RATA');
+        $col++;
+        $colRank = $col;
+        $sheet->setCellValue($colRank . '1', 'RANK');
+        $col++;
+        
+        $sheet->setCellValue($col . '1', 'S');
+        $col++;
+        $sheet->setCellValue($col . '1', 'I');
+        $col++;
+        $sheet->setCellValue($col . '1', 'A');
+        
+        $lastCol = $col;
+        $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(30);
+
+        // Fill Data
+        $row = 2;
+        foreach($siswa as $index => $s) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, ($s->nis ?? '-') . '/' . $s->nisn);
+            $sheet->setCellValue('C' . $row, $s->nama_lengkap);
+            $sheet->setCellValue('D' . $row, $s->jk == 'P' || $s->jenis_kelamin == 'P' ? 'P' : 'L');
+            
+            $col = 'E';
+            foreach($mapels as $mapel) {
+                $nilai = $rapor_akhir->where('siswa_id', $s->id)->where('mapel_id', $mapel->id)->first();
+                $sheet->setCellValue($col . $row, $nilai ? $nilai->nilai_akhir : '');
+                $col++;
+            }
+            
+            $sheet->setCellValue($colTotal . $row, $peringkat_data[$s->id]['total']);
+            $sheet->setCellValue($colRata . $row, round($peringkat_data[$s->id]['rata'], 2));
+            $sheet->setCellValue($colRank . $row, $peringkat_data[$s->id]['rank']);
+            
+            $absen = $kehadiran->where('siswa_id', $s->id)->first();
+            $col = $colRank;
+            $col++;
+            $sheet->setCellValue($col . $row, $absen ? $absen->sakit : 0);
+            $col++;
+            $sheet->setCellValue($col . $row, $absen ? $absen->izin : 0);
+            $col++;
+            $sheet->setCellValue($col . $row, $absen ? $absen->tanpa_keterangan : 0);
+
+            $row++;
+        }
+
+        $bodyStyle = [
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $sheet->getStyle('A2:' . $lastCol . ($row - 1))->applyFromArray($bodyStyle);
+
+        // Auto size for main columns
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = 'Leger_Kelas_' . str_replace([' ', '/'], '_', $kelas->nama_kelas) . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="'. urlencode($fileName).'"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
     }
 
     /**

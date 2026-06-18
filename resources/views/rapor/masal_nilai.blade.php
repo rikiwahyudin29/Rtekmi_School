@@ -21,6 +21,8 @@
         /* Table Layouts */
         table.report-container { width: 100%; }
         thead.report-header { display: table-header-group; }
+        tfoot.report-footer { display: table-footer-group; }
+        .footer-content { font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; margin-top: 15px; }
         
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
         .header-table td { padding: 1px 0; vertical-align: top; }
@@ -64,6 +66,15 @@
             <thead class="report-header">
                 <tr><td></td></tr>
             </thead>
+            <tfoot class="report-footer">
+                <tr>
+                    <td>
+                        <div class="footer-content">
+                            {{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
             <tbody>
                 <tr>
                     <td>

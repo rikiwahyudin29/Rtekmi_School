@@ -571,6 +571,55 @@ class WaliKelasController extends Controller
     }
 
     /**
+     * Edit Nilai Siswa Binaan oleh Wali Kelas
+     */
+    public function nilaiSiswa()
+    {
+        $kelas = $this->getKelasWali();
+        $siswa = Siswa::where('kelas_id', $kelas->id ?? 0)->orderBy('nama_lengkap', 'asc')->get();
+        
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        $rapor_akhir = \App\Models\RaporAkhir::with('mapel')
+                        ->whereIn('siswa_id', $siswa->pluck('id'))
+                        ->where('semester', $semester_int)
+                        ->get()
+                        ->groupBy('siswa_id');
+
+        return Inertia::render('Guru/WaliKelas/NilaiSiswa', [
+            'kelas' => $kelas,
+            'siswa' => $siswa,
+            'rapor_akhir' => $rapor_akhir
+        ]);
+    }
+
+    public function updateNilaiSiswa(Request $request, $siswa_id)
+    {
+        $request->validate([
+            'nilai' => 'required|array'
+        ]);
+
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+
+        foreach ($request->nilai as $mapel_id => $data) {
+            if (isset($data['nilai_akhir'])) {
+                \App\Models\RaporAkhir::where('siswa_id', $siswa_id)
+                    ->where('mapel_id', $mapel_id)
+                    ->where('semester', $semester_int)
+                    ->update([
+                        'nilai_akhir' => $data['nilai_akhir'],
+                        'deskripsi_tertinggi' => $data['deskripsi_tertinggi'] ?? null,
+                        'deskripsi_terendah' => $data['deskripsi_terendah'] ?? null,
+                    ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Data Nilai Rapor siswa berhasil diperbarui.');
+    }
+
+    /**
      * Input Data Ekskul oleh Wali Kelas
      */
     public function ekskul()

@@ -50,6 +50,19 @@ const props = defineProps({
                     </div>
                 </Link>
 
+                <!-- Menu Nilai Siswa -->
+                <Link :href="route('guru.walikelas.nilai_siswa')" class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="absolute right-0 top-0 w-24 h-24 bg-sky-500/10 dark:bg-sky-500/20 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                    <div class="w-14 h-14 bg-sky-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fas fa-edit text-2xl text-sky-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Edit Nilai Siswa</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Edit nilai rapor dari guru mapel jika ada kesalahan input.</p>
+                    <div class="mt-4 flex items-center text-sky-600 dark:text-sky-400 font-medium text-sm group-hover:translate-x-2 transition-transform">
+                        Edit Nilai <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </Link>
+
                 <!-- Menu Kehadiran -->
                 <Link :href="route('guru.walikelas.kehadiran')" class="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 dark:bg-blue-500/20 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>

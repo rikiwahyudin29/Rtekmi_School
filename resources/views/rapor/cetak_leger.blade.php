@@ -14,16 +14,34 @@
 <body>
     <div class="header">LEGER NILAI KELAS {{ $kelas->nama_kelas }}</div>
     
+    @php
+        $mapels = $rapor_akhir->pluck('mapel')->unique('id')->filter()->sortBy(function($m) { 
+            $u = (int) ($m->urutan ?? 0); 
+            return $u === 0 ? 999 : $u; 
+        })->values();
+    @endphp
+    
     <table>
         <thead>
             <tr>
                 <th rowspan="2">No</th>
                 <th rowspan="2">NISN</th>
                 <th rowspan="2">Nama Siswa</th>
+                <th rowspan="2">L/P</th>
+                @if($mapels->count() > 0)
+                    <th colspan="{{ $mapels->count() }}">Mata Pelajaran</th>
+                @endif
+                <th rowspan="2">Jumlah</th>
+                <th rowspan="2">Rata-rata</th>
+                <th rowspan="2">Peringkat</th>
                 <th colspan="3">Kehadiran</th>
-                <th rowspan="2">Rata-rata Nilai</th>
             </tr>
             <tr>
+                @foreach($mapels as $mapel)
+                    <th style="writing-mode: vertical-rl; transform: rotate(180deg); height: 100px; max-width: 30px;">
+                        {{ $mapel->singkatan ?? substr($mapel->nama_mapel, 0, 15) }}
+                    </th>
+                @endforeach
                 <th>S</th>
                 <th>I</th>
                 <th>A</th>
@@ -35,16 +53,27 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $s->nisn }}</td>
                 <td class="text-left">{{ $s->nama_lengkap }}</td>
-                <td>{{ $kehadiran->where('siswa_id', $s->id)->first()->sakit ?? 0 }}</td>
-                <td>{{ $kehadiran->where('siswa_id', $s->id)->first()->izin ?? 0 }}</td>
-                <td>{{ $kehadiran->where('siswa_id', $s->id)->first()->tanpa_keterangan ?? 0 }}</td>
-                <td>
+                <td>{{ $s->jk == 'P' || $s->jenis_kelamin == 'P' ? 'P' : 'L' }}</td>
+                
+                @foreach($mapels as $mapel)
                     @php
-                        $nilai = $rapor_akhir->where('siswa_id', $s->id);
-                        $avg = $nilai->count() > 0 ? $nilai->avg('nilai_akhir') : 0;
+                        $nilai = $rapor_akhir->where('siswa_id', $s->id)->where('mapel_id', $mapel->id)->first();
                     @endphp
-                    {{ number_format($avg, 2) }}
-                </td>
+                    <td>{{ $nilai ? $nilai->nilai_akhir : '' }}</td>
+                @endforeach
+                
+                @if(isset($peringkat_data[$s->id]))
+                    <td>{{ $peringkat_data[$s->id]['total'] }}</td>
+                    <td>{{ number_format($peringkat_data[$s->id]['rata'], 2) }}</td>
+                    <td style="font-weight: bold;">{{ $peringkat_data[$s->id]['rank'] }}</td>
+                @else
+                    <td>0</td><td>0</td><td>-</td>
+                @endif
+                
+                @php $absen = $kehadiran->where('siswa_id', $s->id)->first(); @endphp
+                <td>{{ $absen->sakit ?? 0 }}</td>
+                <td>{{ $absen->izin ?? 0 }}</td>
+                <td>{{ $absen->tanpa_keterangan ?? 0 }}</td>
             </tr>
             @endforeach
         </tbody>
