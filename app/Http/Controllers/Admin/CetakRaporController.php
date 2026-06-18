@@ -51,7 +51,18 @@ class CetakRaporController extends Controller
             ->get()
             ->unique('mapel_id')
             ->values();
-        $kehadiran = RaporKehadiran::where('siswa_id', $id)->where('semester', $semester_int)->first();
+        $kehadiran_asli = \App\Models\Presensi::where('user_id', $id)
+            ->where('role', 'siswa')
+            ->selectRaw('SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
+                         SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
+                         SUM(CASE WHEN status_kehadiran = "Alpha" THEN 1 ELSE 0 END) as tanpa_keterangan')
+            ->first();
+        // Fallback or override structure
+        $kehadiran = (object) [
+            'sakit' => $kehadiran_asli ? $kehadiran_asli->sakit : 0,
+            'izin' => $kehadiran_asli ? $kehadiran_asli->izin : 0,
+            'tanpa_keterangan' => $kehadiran_asli ? $kehadiran_asli->tanpa_keterangan : 0,
+        ];
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->where('semester', $semester_int)->get();
         $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
@@ -101,7 +112,14 @@ class CetakRaporController extends Controller
                 return $item->siswa_id . '-' . $item->mapel_id;
             })
             ->values();
-        $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))->get();
+        $kehadiran = \App\Models\Presensi::whereIn('user_id', $siswa->pluck('id'))
+            ->where('role', 'siswa')
+            ->selectRaw('user_id as siswa_id, 
+                SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
+                SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
+                SUM(CASE WHEN status_kehadiran = "Alpha" THEN 1 ELSE 0 END) as tanpa_keterangan')
+            ->groupBy('user_id')
+            ->get();
         
         // Calculate Peringkat
         $peringkat_data = [];
@@ -156,7 +174,14 @@ class CetakRaporController extends Controller
                 return $item->siswa_id . '-' . $item->mapel_id;
             })
             ->values();
-        $kehadiran = RaporKehadiran::whereIn('siswa_id', $siswa->pluck('id'))->get();
+        $kehadiran = \App\Models\Presensi::whereIn('user_id', $siswa->pluck('id'))
+            ->where('role', 'siswa')
+            ->selectRaw('user_id as siswa_id, 
+                SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
+                SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
+                SUM(CASE WHEN status_kehadiran = "Alpha" THEN 1 ELSE 0 END) as tanpa_keterangan')
+            ->groupBy('user_id')
+            ->get();
         
         // Dapatkan Mapel Unik
         $mapels = $rapor_akhir->pluck('mapel')->unique('id')->filter()->sortBy(function($m) { 
