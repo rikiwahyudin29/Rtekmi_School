@@ -64,7 +64,6 @@
                     <td>
                         <div class="footer-content">
                             <span>{{ $siswa->nama_lengkap }} | {{ $siswa->kelas->nama_kelas ?? '' }} | Semester {{ $tahun_ajaran && $tahun_ajaran->semester === 'Genap' ? '2' : '1' }} - {{ $tahun_ajaran->tahun_ajaran ?? '' }}</span>
-                            <span class="page-number"></span>
                         </div>
                     </td>
                 </tr>
