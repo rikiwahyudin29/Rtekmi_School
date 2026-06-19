@@ -56,7 +56,8 @@ class CetakRaporController extends Controller
             ->first() ?? (object) ['sakit' => 0, 'izin' => 0, 'tanpa_keterangan' => 0];
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
         $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->orderBy('updated_at', 'desc')->get()->unique('dudi_id')->values();
-        $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
+        $semester_str = $tahun_ajaran ? ($tahun_ajaran->semester . ' ' . $tahun_ajaran->tahun_ajaran) : '-';
+        $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_str)->get();
         $kenaikan = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $id)->first();
 
         return view('rapor.cetak_nilai', compact('siswa', 'rapor_akhir', 'kehadiran', 'catatan', 'pkl', 'ekskul', 'sekolah', 'tahun_ajaran', 'tanggal_rapor', 'kenaikan'));
@@ -371,7 +372,10 @@ class CetakRaporController extends Controller
             $kehadiran_all[$siswa->id] = RaporKehadiran::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first() ?? (object) ['sakit' => 0, 'izin' => 0, 'tanpa_keterangan' => 0];
             $catatan_all[$siswa->id] = RaporCatatanWali::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
             $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->orderBy('updated_at', 'desc')->get()->unique('dudi_id')->values();
-            $ekskul_all[$siswa->id] = EkskulNilai::with('ekskul')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
+            
+            $semester_str = $tahun_ajaran ? ($tahun_ajaran->semester . ' ' . $tahun_ajaran->tahun_ajaran) : '-';
+            $ekskul_all[$siswa->id] = EkskulNilai::with('ekskul')->where('siswa_id', $siswa->id)->where('semester', $semester_str)->get();
+            
             $kenaikan_all[$siswa->id] = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $siswa->id)->first();
         }
 
