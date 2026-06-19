@@ -49,7 +49,7 @@
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
         .report-footer td { height: 30px; }
-        .footer-content { width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
+        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
     </style>
 </head>
 <body onload="window.print()">
@@ -311,7 +311,6 @@
                                 $nama_wk = trim($gelar_depan . $wk->nama_lengkap . $gelar_belakang);
                             }
                         @endphp
-                        <div style="min-height: 45vh; display: flex; flex-direction: column; justify-content: flex-end;">
                         @if(request('posisi_ttd_ks', 'Dibawah Wali Kelas') === 'Sejajar Wali Kelas')
                         <table class="signature-table" style="width: 100%;">
                             <tr>
@@ -392,7 +391,6 @@
                             </tr>
                         </table>
                         @endif
-                        </div>
                     </td>
                 </tr>
             </tbody>

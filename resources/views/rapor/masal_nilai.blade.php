@@ -289,9 +289,8 @@
                                 $nama_wk = trim($gelar_depan . $wk->nama_lengkap . $gelar_belakang);
                             }
                         @endphp
-                        <div style="min-height: 45vh; display: flex; flex-direction: column; justify-content: flex-end;">
                         @if(request('posisi_ttd_ks', 'Dibawah Wali Kelas') === 'Sejajar Wali Kelas')
-                        <table class="signature-table" style="width: 100%;">
+                        <table class="signature-table" style="width: 100%; margin-top: 250px;">
                             <tr>
                                 <td style="width: 30%; text-align: center; vertical-align: top;">
                                     <br>
@@ -329,7 +328,7 @@
                             </tr>
                         </table>
                         @else
-                        <table class="signature-table" style="width: 100%;">
+                        <table class="signature-table" style="width: 100%; margin-top: 250px;">
                             <tr>
                                 <td style="width: 35%; text-align: center; vertical-align: top;">
                                     <br>
@@ -370,7 +369,6 @@
                             </tr>
                         </table>
                         @endif
-                        </div>
                     </td>
                 </tr>
             </tbody>
