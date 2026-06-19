@@ -51,7 +51,7 @@ class CetakRaporController extends Controller
             ->get()
             ->unique('mapel_id')
             ->values();
-        $kehadiran_asli = \App\Models\Presensi::where('user_id', $id)
+        $kehadiran_asli = \App\Models\Presensi::where('user_id', $siswa->user_id)
             ->where('role', 'siswa')
             ->selectRaw('SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
                          SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
@@ -64,7 +64,7 @@ class CetakRaporController extends Controller
             'tanpa_keterangan' => $kehadiran_asli ? $kehadiran_asli->tanpa_keterangan : 0,
         ];
         $catatan = RaporCatatanWali::where('siswa_id', $id)->where('semester', $semester_int)->first();
-        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->get();
+        $pkl = RaporPkl::with('dudi')->where('siswa_id', $id)->orderBy('updated_at', 'desc')->get()->unique('dudi_id')->values();
         $ekskul = EkskulNilai::with('ekskul')->where('siswa_id', $id)->where('semester', $semester_int)->get();
         $kenaikan = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $id)->first();
 
@@ -112,9 +112,9 @@ class CetakRaporController extends Controller
                 return $item->siswa_id . '-' . $item->mapel_id;
             })
             ->values();
-        $kehadiran = \App\Models\Presensi::whereIn('user_id', $siswa->pluck('id'))
+        $kehadiran = \App\Models\Presensi::whereIn('user_id', $siswa->pluck('user_id'))
             ->where('role', 'siswa')
-            ->selectRaw('user_id as siswa_id, 
+            ->selectRaw('user_id, 
                 SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
                 SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
                 SUM(CASE WHEN status_kehadiran = "Alpha" THEN 1 ELSE 0 END) as tanpa_keterangan')
@@ -174,9 +174,9 @@ class CetakRaporController extends Controller
                 return $item->siswa_id . '-' . $item->mapel_id;
             })
             ->values();
-        $kehadiran = \App\Models\Presensi::whereIn('user_id', $siswa->pluck('id'))
+        $kehadiran = \App\Models\Presensi::whereIn('user_id', $siswa->pluck('user_id'))
             ->where('role', 'siswa')
-            ->selectRaw('user_id as siswa_id, 
+            ->selectRaw('user_id, 
                 SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
                 SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
                 SUM(CASE WHEN status_kehadiran = "Alpha" THEN 1 ELSE 0 END) as tanpa_keterangan')
@@ -289,7 +289,7 @@ class CetakRaporController extends Controller
             $sheet->setCellValue($colRata . $row, round($peringkat_data[$s->id]['rata'], 2));
             $sheet->setCellValue($colRank . $row, $peringkat_data[$s->id]['rank']);
             
-            $absen = $kehadiran->where('siswa_id', $s->id)->first();
+            $absen = $kehadiran->where('user_id', $s->user_id)->first();
             $col = $colRank;
             $col++;
             $sheet->setCellValue($col . $row, $absen ? $absen->sakit : 0);
@@ -383,7 +383,7 @@ class CetakRaporController extends Controller
                 ->get()
                 ->unique('mapel_id')
                 ->values();
-            $kehadiran_asli = \App\Models\Presensi::where('user_id', $siswa->id)
+            $kehadiran_asli = \App\Models\Presensi::where('user_id', $siswa->user_id)
                 ->where('role', 'siswa')
                 ->selectRaw('SUM(CASE WHEN status_kehadiran = "Sakit" THEN 1 ELSE 0 END) as sakit,
                              SUM(CASE WHEN status_kehadiran = "Izin" THEN 1 ELSE 0 END) as izin,
@@ -395,7 +395,7 @@ class CetakRaporController extends Controller
                 'tanpa_keterangan' => $kehadiran_asli ? $kehadiran_asli->tanpa_keterangan : 0,
             ];
             $catatan_all[$siswa->id] = RaporCatatanWali::where('siswa_id', $siswa->id)->where('semester', $semester_int)->first();
-            $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->get();
+            $pkl_all[$siswa->id] = RaporPkl::with('dudi')->where('siswa_id', $siswa->id)->orderBy('updated_at', 'desc')->get()->unique('dudi_id')->values();
             $ekskul_all[$siswa->id] = EkskulNilai::with('ekskul')->where('siswa_id', $siswa->id)->where('semester', $semester_int)->get();
             $kenaikan_all[$siswa->id] = \App\Models\KenaikanKelas::with('kelasTujuan')->where('siswa_id', $siswa->id)->first();
         }

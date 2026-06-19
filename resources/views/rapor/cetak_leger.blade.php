@@ -70,7 +70,7 @@
                     <td>0</td><td>0</td><td>-</td>
                 @endif
                 
-                @php $absen = $kehadiran->where('siswa_id', $s->id)->first(); @endphp
+                @php $absen = $kehadiran->where('user_id', $s->user_id)->first(); @endphp
                 <td>{{ $absen->sakit ?? 0 }}</td>
                 <td>{{ $absen->izin ?? 0 }}</td>
                 <td>{{ $absen->tanpa_keterangan ?? 0 }}</td>
