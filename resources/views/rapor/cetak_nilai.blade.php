@@ -414,14 +414,14 @@
                 const height = table.offsetHeight;
                 const remainder = height % printableHeightPx;
                 // Jika ada sisa ruang lebih dari 100px, kita isi dengan spacer
-                if(remainder > 0 && remainder < (printableHeightPx - 100)) {
-                    // Beri buffer 150px agar tidak tidak sengaja lompat ke halaman baru
-                    const spacerHeight = printableHeightPx - remainder - 150; 
-                    if(spacerHeight > 50) {
+                if(remainder > 0 && remainder < (printableHeightPx - 80)) {
+                    // Beri buffer 50px agar tidak lompat ke halaman baru
+                    const spacerHeight = printableHeightPx - remainder - 50; 
+                    if(spacerHeight > 20) {
                         const tbody = table.querySelector('tbody');
                         if(tbody) {
                             const tr = document.createElement('tr');
-                            tr.innerHTML = '<td colspan="100" style="height:' + spacerHeight + 'px; border:none;"></td>';
+                            tr.innerHTML = '<td colspan="100" style="border:none; padding:0;"><div style="height:' + spacerHeight + 'px; width:10px;"></div></td>';
                             tbody.appendChild(tr);
                         }
                     }
