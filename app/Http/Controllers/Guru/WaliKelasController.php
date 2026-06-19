@@ -652,10 +652,10 @@ class WaliKelasController extends Controller
         $ekskul_list = \App\Models\Ekskul::all();
         
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
-        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+        $semester_str = $tahun_ajaran_aktif ? ($tahun_ajaran_aktif->semester . ' ' . $tahun_ajaran_aktif->tahun_ajaran) : '-';
 
         $ekskul_nilai = \App\Models\EkskulNilai::whereIn('siswa_id', $siswa->pluck('id'))
-                        ->where('semester', $semester_int)
+                        ->where('semester', $semester_str)
                         ->get()->groupBy('siswa_id');
 
         return Inertia::render('Guru/WaliKelas/Ekskul', [
@@ -673,12 +673,12 @@ class WaliKelasController extends Controller
         ]);
 
         $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
-        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+        $semester_str = $tahun_ajaran_aktif ? ($tahun_ajaran_aktif->semester . ' ' . $tahun_ajaran_aktif->tahun_ajaran) : '-';
 
         foreach ($request->input_data as $siswa_id => $data) {
             // Delete existing ekskul for this student and semester to allow clean replacement
             \App\Models\EkskulNilai::where('siswa_id', $siswa_id)
-                ->where('semester', $semester_int)
+                ->where('semester', $semester_str)
                 ->delete();
 
             if (!empty($data) && is_array($data)) {
@@ -687,7 +687,7 @@ class WaliKelasController extends Controller
                         \App\Models\EkskulNilai::create([
                             'siswa_id' => $siswa_id,
                             'ekskul_id' => $e['ekskul_id'],
-                            'semester' => $semester_int,
+                            'semester' => $semester_str,
                             'nilai_huruf' => $e['nilai_huruf'],
                             'deskripsi_dapodik' => $e['deskripsi_dapodik'] ?? '-',
                         ]);
