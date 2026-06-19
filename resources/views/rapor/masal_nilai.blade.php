@@ -21,7 +21,7 @@
         thead.report-header { display: table-header-group; }
         tfoot.report-footer { display: table-footer-group; }
         .report-footer td { height: 30px; }
-        .footer-content { position: fixed; bottom: 0; width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
+        .footer-content { width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
 
         .header-table { width: 100%; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
         .header-table td { padding: 1px 0; vertical-align: top; }
@@ -119,7 +119,7 @@
                             <tr>
                                 <td class="ht-label">Alamat</td>
                                 <td class="ht-colon">:</td>
-                                <td class="ht-value">{{ strtoupper($sekolah->alamat ?? '-') }}</td>
+                                <td class="ht-value">{{ ucwords(strtolower($sekolah->alamat ?? '-')) }}</td>
                                 <td class="ht-label-r">Tahun Ajaran</td>
                                 <td class="ht-colon-r">:</td>
                                 <td class="ht-value-r">{{ $tahun_ajaran->tahun_ajaran ?? '2025/2026' }}</td>
@@ -313,7 +313,7 @@
                                     Wali Kelas
                                     <div class="sig-space"></div>
                                     <div style="display: inline-block; text-align: left;">
-                                        <strong><u>
+                                        <strong style="white-space: nowrap;"><u>
                                         @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
                                             ..........................................
                                         @else
@@ -343,7 +343,7 @@
                                     Wali Kelas
                                     <div class="sig-space"></div>
                                     <div style="display: inline-block; text-align: left;">
-                                        <strong><u>
+                                        <strong style="white-space: nowrap;"><u>
                                         @if(request('tampil_nama_wali', 'Isi Nama Wali Kelas') === 'Kosongkan Nama Wali')
                                             ..........................................
                                         @else
