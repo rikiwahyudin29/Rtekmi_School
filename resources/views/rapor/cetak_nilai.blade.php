@@ -52,7 +52,7 @@
         .footer-content { width: 100%; font-size: 11px; font-style: italic; border-top: 1px solid #000; padding-top: 5px; background: white; }
     </style>
 </head>
-<body onload="window.print()">
+<body class="print-body">
     <div class="page">
         <table class="report-container">
             <thead class="report-header">
@@ -397,5 +397,42 @@
         </table>
 
     </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            // Kalkulasi ruang kosong di halaman terakhir untuk menekan footer ke bawah
+            const pxPerMm = 3.779527559;
+            const mt = {{ request('margin_atas', 20) }};
+            const mb = {{ request('margin_bawah', 20) }};
+            let paperHeightMm = 297; // Default A4
+            const kertas = "{{ request('kertas', 'A4') }}";
+            if(kertas === 'F4' || kertas === 'Legal') paperHeightMm = 330;
+            
+            const printableHeightPx = (paperHeightMm - mt - mb) * pxPerMm;
+
+            document.querySelectorAll('.report-container').forEach(table => {
+                const height = table.offsetHeight;
+                const remainder = height % printableHeightPx;
+                // Jika ada sisa ruang lebih dari 100px, kita isi dengan spacer
+                if(remainder > 0 && remainder < (printableHeightPx - 100)) {
+                    // Beri buffer 150px agar tidak tidak sengaja lompat ke halaman baru
+                    const spacerHeight = printableHeightPx - remainder - 150; 
+                    if(spacerHeight > 50) {
+                        const tbody = table.querySelector('tbody');
+                        if(tbody) {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = '<td colspan="100" style="height:' + spacerHeight + 'px; border:none;"></td>';
+                            tbody.appendChild(tr);
+                        }
+                    }
+                }
+            });
+            
+            // Tunggu sedikit sebelum print otomatis agar render DOM selesai
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        });
+    </script>
 </body>
 </html>
