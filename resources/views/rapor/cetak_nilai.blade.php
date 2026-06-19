@@ -312,7 +312,7 @@
                             }
                         @endphp
                         @if(request('posisi_ttd_ks', 'Dibawah Wali Kelas') === 'Sejajar Wali Kelas')
-                        <table class="signature-table" style="width: 100%;">
+                        <table class="signature-table" style="width: 100%; margin-top: 80px;">
                             <tr>
                                 <td style="width: 30%; text-align: center; vertical-align: top;">
                                     <br><br>
@@ -350,7 +350,7 @@
                             </tr>
                         </table>
                         @else
-                        <table class="signature-table" style="width: 100%;">
+                        <table class="signature-table" style="width: 100%; margin-top: 80px;">
                             <tr>
                                 <td style="width: 35%; text-align: center; vertical-align: top;">
                                     <br>
