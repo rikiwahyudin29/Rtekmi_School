@@ -13,7 +13,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('presensi.hari_libur.store'), {
+    form.post(route('admin.presensi.hari_libur.store'), {
         onSuccess: () => {
             form.reset();
             alert('Hari libur berhasil ditambahkan!');
@@ -23,7 +23,7 @@ const submit = () => {
 
 const hapus = (id) => {
     if (confirm('Hapus Hari Libur? Data yang dihapus tidak bisa dikembalikan!')) {
-        router.delete(route('presensi.hari_libur.destroy', id), {
+        router.delete(route('admin.presensi.hari_libur.destroy', id), {
             onSuccess: () => {
                 alert('Hari libur telah dihapus.');
             }
@@ -33,7 +33,7 @@ const hapus = (id) => {
 
 const syncApi = () => {
     if (confirm('Sinkronisasi hari libur dari API.CO.ID? Tindakan ini akan mengambil data hari libur nasional tahun ini dan menyimpannya ke database.')) {
-        router.post(route('presensi.hari_libur.sync'), {}, {
+        router.post(route('admin.presensi.hari_libur.sync'), {}, {
             onSuccess: (page) => {
                 if (page.props.flash.success) {
                     alert(page.props.flash.success);
