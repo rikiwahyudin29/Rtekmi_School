@@ -965,13 +965,41 @@ Route::get('/dump-migrations', function () {
 
 Route::get('/jalankan-migrasi', function () {
     try {
-        \Illuminate\Support\Facades\DB::statement('ALTER TABLE tbl_buku_tamu MODIFY no_antrian INT NULL');
-        return response("Berhasil alter no_antrian jadi nullable!");
+        $migrations = [
+            '2026_06_21_015044_create_tbl_jadwal_piket_table.php',
+            '2026_06_21_015045_create_tbl_buku_tamu_table.php',
+            '2026_06_21_015945_add_piket_fields_to_tbl_buku_tamu.php',
+            '2026_06_21_090000_create_tbl_pkl_kelas_table.php',
+            '2026_06_21_100000_alter_kategori_on_tbl_inventaris.php',
+            '2026_06_21_100001_create_tbl_peminjaman_ruangan_table.php',
+            '2026_06_21_100002_create_tbl_laporan_kerusakan_table.php',
+            '2026_06_21_110000_create_tbl_konseling_table.php',
+            '2026_06_21_120000_add_ttd_fields_to_tbl_buku_tamu.php',
+            '2026_06_21_130000_add_is_read_to_tbl_disposisi_table.php',
+            '2026_06_21_140000_create_tbl_kokurikuler_tables.php',
+        ];
+
+        $output = "";
+        foreach ($migrations as $file) {
+            $path = database_path('migrations/' . $file);
+            if (file_exists($path)) {
+                $migration = require_once $path;
+                if (is_object($migration) && method_exists($migration, 'up')) {
+                    $migration->up();
+                    $output .= "Berhasil run: $file <br>";
+                } else {
+                    $output .= "Skipped (bukan class migration): $file <br>";
+                }
+            } else {
+                $output .= "File tidak ditemukan: $file <br>";
+            }
+        }
+        
+        return response($output . " <br><b style='color:green'>Semua Migrasi Tambahan Selesai!</b>");
     } catch (\Exception $e) {
-        return response($e->getMessage());
+        return response("<b>Error:</b> " . $e->getMessage() . "<br><br>" . $e->getTraceAsString());
     }
 });
-
 Route::get('/fix-users', function () {
     \Illuminate\Support\Facades\DB::statement('UPDATE tbl_guru SET user_id = id_user WHERE id_user IS NOT NULL AND id_user > 0');
     \Illuminate\Support\Facades\DB::statement('UPDATE tbl_siswa SET user_id = id_user WHERE id_user IS NOT NULL AND id_user > 0');
