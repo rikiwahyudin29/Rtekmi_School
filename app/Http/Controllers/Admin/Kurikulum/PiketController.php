@@ -102,7 +102,7 @@ class PiketController extends Controller
         // Rekap Izin Keluar Siswa Hari Tersebut
         // Note: tbl_izin_keluar pencatat_id is currently user_id. Let's join users.
         $izin_keluar = DB::table('tbl_izin_keluar')
-            ->select('tbl_izin_keluar.*', 'tbl_siswa.nama_lengkap', 'tbl_kelas.nama_kelas', 'users.name as nama_pencatat')
+            ->select('tbl_izin_keluar.*', 'tbl_siswa.nama_lengkap', 'tbl_kelas.nama_kelas', 'users.username as nama_pencatat')
             ->join('tbl_siswa', 'tbl_siswa.id', '=', 'tbl_izin_keluar.siswa_id')
             ->leftJoin('tbl_kelas', 'tbl_kelas.id', '=', 'tbl_siswa.kelas_id')
             ->leftJoin('users', 'users.id', '=', 'tbl_izin_keluar.pencatat_id')
