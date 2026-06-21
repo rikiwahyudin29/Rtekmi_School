@@ -305,7 +305,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::resource('p5', \App\Http\Controllers\Guru\P5Controller::class);
         Route::resource('kokurikuler', \App\Http\Controllers\Guru\KokurikulerController::class);
-        Route::resource('pkl', \App\Http\Controllers\Guru\PklController::class);
         Route::prefix('pkl')->name('pkl.')->group(function () {
             Route::get('monitoring', [\App\Http\Controllers\Guru\PklController::class, 'monitoring'])->name('monitoring');
             Route::get('monitoring/cetak', [\App\Http\Controllers\Guru\PklController::class, 'cetakMonitoring'])->name('monitoring.cetak');
@@ -321,6 +320,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('nilai', [\App\Http\Controllers\Guru\PklController::class, 'simpanNilai'])->name('nilai.simpan');
             Route::get('sertifikat/{id}', [\App\Http\Controllers\Guru\PklController::class, 'cetakSertifikat'])->name('sertifikat.cetak');
         });
+        Route::resource('pkl', \App\Http\Controllers\Guru\PklController::class);
         
         // Guru Piket
         Route::get('/piket/dashboard', [\App\Http\Controllers\Guru\PiketController::class, 'dashboard'])->name('piket.dashboard');
