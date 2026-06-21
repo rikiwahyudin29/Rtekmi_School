@@ -23,7 +23,7 @@ const processScan = async () => {
     scanStatus.value = '';
     
     try {
-        const response = await axios.post(route('guru.ekskul.absen_scan.proses'), {
+        const response = await axios.post(route('guru.ekskul.scanner.proses'), {
             jurnal_id: props.jurnal.id,
             nis: scanInput.value
         });

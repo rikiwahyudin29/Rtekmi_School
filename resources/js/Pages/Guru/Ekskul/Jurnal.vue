@@ -77,7 +77,7 @@ const submitJurnal = () => {
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <Link :href="route('guru.ekskul.absen_scan', j.id)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center gap-2 transition-colors">
+                            <Link :href="route('guru.ekskul.scanner', j.id)" class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center gap-2 transition-colors">
                                 <i class="fas fa-barcode"></i> Scan Presensi
                             </Link>
                         </div>
