@@ -306,6 +306,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('p5', \App\Http\Controllers\Guru\P5Controller::class);
         Route::resource('kokurikuler', \App\Http\Controllers\Guru\KokurikulerController::class);
         Route::resource('pkl', \App\Http\Controllers\Guru\PklController::class);
+        Route::prefix('pkl')->name('pkl.')->group(function () {
+            Route::get('monitoring', [\App\Http\Controllers\Guru\PklController::class, 'monitoring'])->name('monitoring');
+            Route::get('monitoring/cetak', [\App\Http\Controllers\Guru\PklController::class, 'cetakMonitoring'])->name('monitoring.cetak');
+            
+            Route::get('jurnal', [\App\Http\Controllers\Guru\PklController::class, 'jurnal'])->name('jurnal');
+            Route::post('jurnal/validasi', [\App\Http\Controllers\Guru\PklController::class, 'jurnalValidasi'])->name('jurnal.validasi');
+            Route::post('laporan/validasi', [\App\Http\Controllers\Guru\PklController::class, 'laporanValidasi'])->name('laporan.validasi');
+            
+            Route::get('kunjungan', [\App\Http\Controllers\Guru\PklController::class, 'kunjungan'])->name('kunjungan');
+            Route::post('kunjungan', [\App\Http\Controllers\Guru\PklController::class, 'kunjunganSimpan'])->name('kunjungan.simpan');
+            
+            Route::get('nilai', [\App\Http\Controllers\Guru\PklController::class, 'nilai'])->name('nilai');
+            Route::post('nilai', [\App\Http\Controllers\Guru\PklController::class, 'simpanNilai'])->name('nilai.simpan');
+            Route::get('sertifikat/{id}', [\App\Http\Controllers\Guru\PklController::class, 'cetakSertifikat'])->name('sertifikat.cetak');
+        });
         
         // Guru Piket
         Route::get('/piket/dashboard', [\App\Http\Controllers\Guru\PiketController::class, 'dashboard'])->name('piket.dashboard');
