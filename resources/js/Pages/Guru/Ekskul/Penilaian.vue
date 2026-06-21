@@ -100,7 +100,7 @@ const saveNilai = (n) => {
                                             <option value="Y">Layak (Y)</option>
                                             <option value="N">Tidak (N)</option>
                                         </select>
-                                        <a v-if="n.layak_sertifikat === 'Y'" :href="route('guru.ekskul.cetak_sertifikat', n.id)" target="_blank" class="text-[10px] text-indigo-600 font-bold hover:underline">
+                                        <a v-if="n.layak_sertifikat === 'Y'" :href="route('guru.ekskul.penilaian.cetak', n.id)" target="_blank" class="text-[10px] text-indigo-600 font-bold hover:underline">
                                             <i class="fas fa-print"></i> Cetak PDF
                                         </a>
                                     </div>
