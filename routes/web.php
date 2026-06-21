@@ -283,7 +283,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Tugas Tambahan
         Route::resource('walikelas', \App\Http\Controllers\Guru\WalikelasController::class);
         Route::resource('ekskul', \App\Http\Controllers\Guru\EkskulController::class);
-        Route::get('ekskul/anggota/{id_ekskul}', [\App\Http\Controllers\Guru\EkskulController::class, 'anggota'])->name('ekskul.anggota');
+        Route::prefix('ekskul')->name('ekskul.')->group(function () {
+            Route::get('anggota/{id_ekskul}', [\App\Http\Controllers\Guru\EkskulController::class, 'anggota'])->name('anggota');
+            Route::post('anggota/validasi', [\App\Http\Controllers\Guru\EkskulController::class, 'validasiAnggota'])->name('anggota.validasi');
+            Route::get('anggota/calon/{ekskul_id}', [\App\Http\Controllers\Guru\EkskulController::class, 'getCalonAnggota'])->name('anggota.calon');
+            Route::post('anggota/tambah-manual', [\App\Http\Controllers\Guru\EkskulController::class, 'tambahManual'])->name('anggota.tambah_manual');
+            
+            Route::get('jurnal/{id}', [\App\Http\Controllers\Guru\EkskulController::class, 'jurnal'])->name('jurnal');
+            Route::post('jurnal/simpan', [\App\Http\Controllers\Guru\EkskulController::class, 'jurnalSimpan'])->name('jurnal.simpan');
+            
+            Route::get('prestasi/{id}', [\App\Http\Controllers\Guru\EkskulController::class, 'prestasi'])->name('prestasi');
+            Route::post('prestasi/simpan', [\App\Http\Controllers\Guru\EkskulController::class, 'prestasiSimpan'])->name('prestasi.simpan');
+            
+            Route::get('penilaian/{id}', [\App\Http\Controllers\Guru\EkskulController::class, 'penilaian'])->name('penilaian');
+            Route::post('penilaian/simpan', [\App\Http\Controllers\Guru\EkskulController::class, 'penilaianSimpan'])->name('penilaian.simpan');
+            Route::get('penilaian/cetak/{id}', [\App\Http\Controllers\Guru\EkskulController::class, 'cetakSertifikat'])->name('penilaian.cetak');
+            
+            Route::get('scanner/{id}', [\App\Http\Controllers\Guru\EkskulController::class, 'absenScan'])->name('scanner');
+            Route::post('scanner/proses', [\App\Http\Controllers\Guru\EkskulController::class, 'prosesScan'])->name('scanner.proses');
+            Route::post('absen/manual', [\App\Http\Controllers\Guru\EkskulController::class, 'absenManual'])->name('absen.manual');
+        });
         Route::resource('p5', \App\Http\Controllers\Guru\P5Controller::class);
         Route::resource('kokurikuler', \App\Http\Controllers\Guru\KokurikulerController::class);
         Route::resource('pkl', \App\Http\Controllers\Guru\PklController::class);
