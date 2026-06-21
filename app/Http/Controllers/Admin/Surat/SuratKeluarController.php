@@ -101,6 +101,32 @@ class SuratKeluarController extends Controller
     public function cetak($id)
     {
         $surat = SuratKeluar::with(['siswa', 'siswa.kelas'])->findOrFail($id);
+
+        if (strpos($surat->perihal, 'Sertifikat Praktik Kerja Lapangan') !== false) {
+            $nilai = \Illuminate\Support\Facades\DB::table('tbl_pkl_nilai')->where('token_sertifikat', $surat->token_validasi)->first();
+            if($nilai) {
+                $pklController = new \App\Http\Controllers\Guru\PklController();
+                return $pklController->cetakSertifikat($nilai->pkl_id);
+            }
+        }
+
+        if (strpos($surat->perihal, 'Surat Keterangan Lulus') !== false) {
+            $kelulusanController = new \App\Http\Controllers\Admin\KelulusanController();
+            return $kelulusanController->cetakSkl($surat->siswa_id);
+        }
+        if (strpos($surat->perihal, 'Transkrip Nilai') !== false) {
+            $kelulusanController = new \App\Http\Controllers\Admin\KelulusanController();
+            return $kelulusanController->cetakTranskrip($surat->siswa_id);
+        }
+
+        if (strpos($surat->perihal, 'Sertifikat Ekstrakurikuler') !== false) {
+            $nilai = \Illuminate\Support\Facades\DB::table('tbl_ekskul_nilai')->where('token_sertifikat', $surat->token_validasi)->first();
+            if($nilai) {
+                $ekskulController = new \App\Http\Controllers\Guru\EkskulController();
+                return $ekskulController->cetakSertifikat($nilai->id);
+            }
+        }
+
         $sekolah = Sekolah::find(1);
         $qr_link = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode(route('surat.verifikasi', $surat->token_validasi));
         return view('surat.cetak', compact('surat', 'sekolah', 'qr_link'));
@@ -110,12 +136,30 @@ class SuratKeluarController extends Controller
     {
         $surat = SuratKeluar::with(['siswa', 'siswa.kelas'])->where('token_validasi', $token)->firstOrFail();
         
-        if ($surat->perihal == 'Surat Keterangan Lulus') {
+        if (strpos($surat->perihal, 'Sertifikat Praktik Kerja Lapangan') !== false) {
+            $nilai = \Illuminate\Support\Facades\DB::table('tbl_pkl_nilai')->where('token_sertifikat', $surat->token_validasi)->first();
+            if($nilai) {
+                $pklController = new \App\Http\Controllers\Guru\PklController();
+                return $pklController->cetakSertifikat($nilai->pkl_id);
+            }
+        }
+
+        if ($surat->perihal == 'Surat Keterangan Lulus' || strpos($surat->perihal, 'Surat Keterangan Lulus') !== false) {
             $kelulusanController = new \App\Http\Controllers\Admin\KelulusanController();
             return $kelulusanController->cetakSkl($surat->siswa_id);
-        } elseif ($surat->perihal == 'Transkrip Nilai') {
+        } 
+        
+        if ($surat->perihal == 'Transkrip Nilai' || strpos($surat->perihal, 'Transkrip Nilai') !== false) {
             $kelulusanController = new \App\Http\Controllers\Admin\KelulusanController();
             return $kelulusanController->cetakTranskrip($surat->siswa_id);
+        }
+
+        if (strpos($surat->perihal, 'Sertifikat Ekstrakurikuler') !== false) {
+            $nilai = \Illuminate\Support\Facades\DB::table('tbl_ekskul_nilai')->where('token_sertifikat', $surat->token_validasi)->first();
+            if($nilai) {
+                $ekskulController = new \App\Http\Controllers\Guru\EkskulController();
+                return $ekskulController->cetakSertifikat($nilai->id);
+            }
         }
 
         $sekolah = Sekolah::find(1);

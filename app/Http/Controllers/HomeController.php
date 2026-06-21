@@ -88,6 +88,12 @@ class HomeController extends Controller
             return response()->json(['success' => false, 'message' => 'Siswa dengan NISN tersebut tidak ditemukan.']);
         }
 
+        // Get Rekening
+        $rekening = DB::table('tbl_rekening')->where('siswa_id', $siswa->id)->first();
+        if (!$rekening) {
+            return response()->json(['success' => false, 'message' => 'Siswa belum memiliki rekening Bank Mini.']);
+        }
+
         // If checking only NISN (Step 1)
         if (empty($pin)) {
             return response()->json([
@@ -100,25 +106,13 @@ class HomeController extends Controller
         }
 
         // Check PIN (Step 2)
-        // Adjust this logic if the PIN checking is different in CI4. In CI4 it usually checks PIN from tbl_siswa or tbl_tabungan.
-        // Assuming PIN is stored in tbl_siswa or we just accept any pin for demonstration if not set.
-        if (!empty($siswa->pin_tabungan) && $siswa->pin_tabungan !== $pin) {
+        if (!password_verify($pin, $rekening->pin)) {
              return response()->json(['success' => false, 'message' => 'PIN Keamanan salah!']);
         }
 
-        // Get Saldo
-        $saldoMasuk = Schema::hasTable('tbl_tabungan') 
-            ? DB::table('tbl_tabungan')->where('siswa_id', $siswa->id)->where('jenis', 'Setor')->sum('nominal') 
-            : 0;
-        $saldoKeluar = Schema::hasTable('tbl_tabungan') 
-            ? DB::table('tbl_tabungan')->where('siswa_id', $siswa->id)->where('jenis', 'Tarik')->sum('nominal') 
-            : 0;
-
-        $totalSaldo = $saldoMasuk - $saldoKeluar;
-
         return response()->json([
             'success' => true,
-            'saldo' => 'Rp ' . number_format($totalSaldo, 0, ',', '.')
+            'saldo' => 'Rp ' . number_format($rekening->saldo, 0, ',', '.')
         ]);
     }
 }

@@ -81,7 +81,7 @@ const reset2FA = (id) => {
 };
 
 const resetPassword = (id) => {
-    if (confirm('Yakin ingin mereset password guru ini menjadi NIP-nya?')) {
+    if (confirm('Yakin ingin mereset password guru ini menjadi NIK-nya?')) {
         router.post(`/admin/guru/${id}/reset-password`, {}, {
             preserveScroll: true
         });
@@ -128,7 +128,7 @@ const resetPassword = (id) => {
                             </select>
                         </div>
                         <div class="relative w-full sm:w-72">
-                            <input type="text" v-model="search" placeholder="Cari NIP atau Nama..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <input type="text" v-model="search" placeholder="Cari NIK atau Nama..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-sm text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
                     </div>
@@ -165,7 +165,7 @@ const resetPassword = (id) => {
                                                     {{ guru.gelar_depan ? guru.gelar_depan + ' ' : '' }}{{ guru.nama_lengkap }}{{ guru.gelar_belakang ? ', ' + guru.gelar_belakang : '' }}
                                                 </div>
                                                 <div class="text-sm text-gray-500 font-medium flex items-center gap-1 mt-0.5">
-                                                    <i class="fas fa-id-badge text-gray-400"></i> NIP: {{ guru.nip || '-' }}
+                                                    <i class="fas fa-id-badge text-gray-400"></i> NIK: {{ guru.nik || '-' }} <span class="mx-1 text-gray-300">|</span> NIP: {{ guru.nip || '-' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -190,7 +190,7 @@ const resetPassword = (id) => {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center justify-center gap-2">
-                                            <button @click="resetPassword(guru.id)" class="w-9 h-9 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400 dark:hover:bg-gray-900/50 flex items-center justify-center transition-colors" title="Reset Password ke NIP">
+                                            <button @click="resetPassword(guru.id)" class="w-9 h-9 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400 dark:hover:bg-gray-900/50 flex items-center justify-center transition-colors" title="Reset Password ke NIK">
                                                 <i class="fas fa-key"></i>
                                             </button>
                                             <button @click="reset2FA(guru.id)" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 flex items-center justify-center transition-colors" title="Reset Google Authenticator 2FA">

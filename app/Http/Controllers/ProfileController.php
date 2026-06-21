@@ -51,7 +51,7 @@ class ProfileController extends Controller
         if ($user->role === 'guru') {
             $rules = array_merge($rules, [
                 'nip' => ['nullable', 'string', 'max:30'],
-                'nik' => ['nullable', 'string', 'max:20'],
+                'nik' => ['required', 'string', 'max:20', \Illuminate\Validation\Rule::unique('tbl_users', 'username')->ignore($user->id)],
                 'gelar_depan' => ['nullable', 'string', 'max:50'],
                 'gelar_belakang' => ['nullable', 'string', 'max:50'],
                 'jenis_kelamin' => ['nullable', 'in:L,P'],
@@ -95,6 +95,10 @@ class ProfileController extends Controller
         $user->email = $validated['email'];
         if(isset($validated['nomor_wa'])) $user->nomor_wa = $validated['nomor_wa'];
 
+        if ($user->role === 'guru' && isset($validated['nik'])) {
+            $user->username = $validated['nik'];
+        }
+
         $user->save();
 
         // Handle Photo Upload
@@ -114,8 +118,8 @@ class ProfileController extends Controller
             if ($guru) {
                 $guru->nama_lengkap = $validated['nama_lengkap'];
                 $guru->email = $validated['email'];
-                $guru->nip = $validated['nip'] ?? $guru->nip;
-                $guru->nik = $validated['nik'] ?? $guru->nik;
+                $guru->nip = array_key_exists('nip', $validated) ? $validated['nip'] : $guru->nip;
+                $guru->nik = array_key_exists('nik', $validated) ? $validated['nik'] : $guru->nik;
                 $guru->gelar_depan = $validated['gelar_depan'] ?? $guru->gelar_depan;
                 $guru->gelar_belakang = $validated['gelar_belakang'] ?? $guru->gelar_belakang;
                 $guru->jenis_kelamin = $validated['jenis_kelamin'] ?? $guru->jenis_kelamin;

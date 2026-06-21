@@ -1,7 +1,9 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { ref } from 'vue';
+import { ref, nextTick, watch } from 'vue';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const props = defineProps({
     dudi: Array
@@ -36,6 +38,61 @@ const openModal = (d = null) => {
         form.reset();
     }
     isModalOpen.value = true;
+    nextTick(() => {
+        initMap();
+    });
+};
+
+let map = null;
+let marker = null;
+let circle = null;
+
+watch(() => form.radius_absen, (newVal) => {
+    if (circle) {
+        circle.setRadius(newVal || 100);
+    }
+});
+
+const initMap = () => {
+    if (map) {
+        map.remove();
+        map = null;
+    }
+    
+    // Default location (misal Subang) jika belum ada koordinat
+    let lat = form.latitude ? parseFloat(form.latitude) : -6.5615;
+    let lng = form.longitude ? parseFloat(form.longitude) : 107.7513;
+
+    map = L.map('mapDudi').setView([lat, lng], form.latitude ? 16 : 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    
+    circle = L.circle([lat, lng], {
+        color: '#ef4444',
+        fillColor: '#ef4444',
+        fillOpacity: 0.15,
+        radius: form.radius_absen || 100
+    }).addTo(map);
+
+    // Update form saat pin digeser
+    marker.on('dragend', function (e) {
+        const position = marker.getLatLng();
+        form.latitude = position.lat.toFixed(6);
+        form.longitude = position.lng.toFixed(6);
+        if (circle) circle.setLatLng(position);
+    });
+
+    // Update form dan pin saat peta diklik
+    map.on('click', function(e) {
+        const position = e.latlng;
+        marker.setLatLng(position);
+        form.latitude = position.lat.toFixed(6);
+        form.longitude = position.lng.toFixed(6);
+        if (circle) circle.setLatLng(position);
+    });
 };
 
 const submitDudi = () => {
@@ -187,6 +244,11 @@ const deleteDudi = (id, nama) => {
                                     <label class="block text-xs font-bold text-gray-700 mb-1">Radius (Meter)</label>
                                     <input type="number" v-model="form.radius_absen" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" required>
                                 </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-xs font-bold text-gray-700 mb-2"><i class="fas fa-map"></i> Pilih Titik Lokasi di Peta</label>
+                                <div id="mapDudi" class="h-56 w-full rounded-lg border-2 border-blue-200 z-10 relative overflow-hidden shadow-inner"></div>
+                                <p class="text-[10px] text-gray-500 mt-1 italic">*Klik pada peta atau geser pin merah untuk menentukan kordinat secara akurat.</p>
                             </div>
                         </div>
                     </div>

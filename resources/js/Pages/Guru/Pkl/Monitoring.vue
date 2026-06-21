@@ -1,13 +1,45 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     siswa_binaan: Array,
     absen_hari_ini: Object,
     tanggal: String
 });
+
+const selectedDate = ref(props.tanggal);
+
+watch(selectedDate, (newDate) => {
+    router.get(route('guru.pkl.monitoring'), { tanggal: newDate }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true
+    });
+});
+
+const minDate = computed(() => {
+    if(!props.siswa_binaan || props.siswa_binaan.length === 0) return '';
+    return props.siswa_binaan.reduce((min, s) => (s.tgl_mulai && s.tgl_mulai < min) ? s.tgl_mulai : min, props.siswa_binaan[0].tgl_mulai || '2000-01-01');
+});
+const maxDate = computed(() => {
+    if(!props.siswa_binaan || props.siswa_binaan.length === 0) return '';
+    return props.siswa_binaan.reduce((max, s) => (s.tgl_selesai && s.tgl_selesai > max) ? s.tgl_selesai : max, props.siswa_binaan[0].tgl_selesai || '2099-12-31');
+});
+
+const cetakMulai = ref(minDate.value || new Date().toISOString().split('T')[0]);
+const cetakSelesai = ref(maxDate.value || new Date().toISOString().split('T')[0]);
+
+// Watcher to sync refs when props load
+watch(() => props.siswa_binaan, () => {
+    if(props.siswa_binaan && props.siswa_binaan.length > 0) {
+        if(!cetakMulai.value || cetakMulai.value === '2000-01-01') cetakMulai.value = minDate.value;
+        if(!cetakSelesai.value || cetakSelesai.value === '2099-12-31') cetakSelesai.value = maxDate.value;
+    }
+}, { deep: true, immediate: true });
+
 </script>
 
 <template>
@@ -22,8 +54,29 @@ const props = defineProps({
                         Monitoring Kehadiran Siswa
                     </h2>
                     <p class="text-gray-500 dark:text-gray-400 mt-1">
-                        Pantau absensi harian (Geotagging & Selfie) siswa di lokasi PKL pada tanggal <span class="font-bold text-blue-600">{{ tanggal }}</span>.
+                        Pantau absensi harian (Geotagging & Selfie) siswa di lokasi PKL.
                     </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <!-- Date Picker View (Harian) -->
+                    <div class="relative w-full sm:w-auto" title="Tanggal Monitoring Harian">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-day text-gray-400"></i>
+                        </div>
+                        <input type="date" v-model="selectedDate" class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    </div>
+                    
+                    <!-- Cetak Rekap (Rentang Tanggal) -->
+                    <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto bg-gray-50 dark:bg-gray-800 p-2 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <span class="text-xs font-bold text-gray-500 uppercase hidden md:inline">Rekap:</span>
+                        <input type="date" v-model="cetakMulai" :min="minDate" :max="maxDate" class="py-1.5 px-3 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 font-bold focus:ring-2 focus:ring-emerald-500" title="Dari Tanggal">
+                        <span class="text-xs text-gray-400 font-bold">S.D</span>
+                        <input type="date" v-model="cetakSelesai" :min="minDate" :max="maxDate" class="py-1.5 px-3 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 font-bold focus:ring-2 focus:ring-emerald-500" title="Sampai Tanggal">
+                        <a :href="route('guru.pkl.monitoring.cetak') + '?mulai=' + cetakMulai + '&selesai=' + cetakSelesai" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm text-xs flex items-center gap-1 transition-colors whitespace-nowrap">
+                            <i class="fas fa-print"></i> Cetak Rekap
+                        </a>
+                    </div>
                 </div>
             </div>
 

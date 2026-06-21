@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_nilai_formatif', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tp_id')->constrained('tbl_tujuan_pembelajaran')->onDelete('cascade');
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
-            $table->float('nilai')->default(0);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tbl_nilai_formatif')) {
+            Schema::create('tbl_nilai_formatif', function (Blueprint $table) {
+                $table->id();
+                $table->integer('siswa_id');
+                $table->integer('mapel_id');
+                $table->integer('tujuan_pembelajaran_id');
+                $table->integer('tahun_ajaran_id');
+                $table->float('nilai')->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

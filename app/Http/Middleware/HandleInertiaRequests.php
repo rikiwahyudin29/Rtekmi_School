@@ -33,10 +33,11 @@ class HandleInertiaRequests extends Middleware
         $tema = \Illuminate\Support\Facades\DB::table('tbl_pengaturan')->where('kunci', 'tema_warna')->first();
 
         $user = $request->user();
+        $is_piket_today = false;
         $avatar_url = null;
         if ($user) {
             // Coba ambil dari tabel guru terlebih dahulu
-            $guru = \Illuminate\Support\Facades\DB::table('tbl_guru')->where('user_id', $user->id)->first();
+            $guru = \Illuminate\Support\Facades\DB::table('tbl_guru')->where('user_id', $user->id)->orWhere('id_user', $user->id)->first();
             if ($guru && $guru->foto && $guru->foto !== 'default.png') {
                 $avatar_url = asset('uploads/guru/' . $guru->foto);
             } else {
@@ -45,6 +46,16 @@ class HandleInertiaRequests extends Middleware
                 if ($siswa && $siswa->foto && $siswa->foto !== 'default.png') {
                     $avatar_url = asset('uploads/siswa/' . $siswa->foto);
                 }
+            }
+
+            // Cek apakah hari ini jadwal piket (Khusus Guru)
+            if ($guru) {
+                $hari = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
+                $hari_ini = $hari[date('l')] ?? 'Senin';
+                $is_piket_today = \Illuminate\Support\Facades\DB::table('tbl_jadwal_piket')
+                    ->where('hari', $hari_ini)
+                    ->where('guru_id', $guru->id)
+                    ->exists();
             }
         }
 
@@ -64,12 +75,15 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? array_merge($user->toArray(), ['avatar_url' => $avatar_url]) : null,
                 'role' => $request->session()->get('role_active', 'guest'),
                 'roles' => $request->session()->get('roles', []),
+                'is_piket_today' => $is_piket_today,
             ],
             'flash' => [
-                'message' => fn () => $request->session()->get('message'),
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'message'      => fn () => $request->session()->get('message'),
+                'success'      => fn () => $request->session()->get('success'),
+                'error'        => fn () => $request->session()->get('error'),
                 'detail_gagal' => fn () => $request->session()->get('detail_gagal'),
+                'antrian'      => fn () => $request->session()->get('antrian'),
+                'tamu_id'      => fn () => $request->session()->get('tamu_id'),
             ],
             'web_settings' => $web,
             'theme' => $tema ? $tema->nilai : 'theme-green',

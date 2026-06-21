@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_nilai_sumatif', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('mapel_id')->constrained('tbl_mapel')->onDelete('cascade');
-            $table->foreignId('guru_id')->constrained('tbl_guru')->onDelete('cascade');
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
-            $table->string('jenis'); // 'STS' atau 'SAS'
-            $table->float('nilai')->default(0);
-            $table->integer('semester');
-            $table->foreignId('tahun_ajaran_id')->constrained('tbl_tahun_ajaran')->onDelete('cascade');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tbl_nilai_sumatif')) {
+            Schema::create('tbl_nilai_sumatif', function (Blueprint $table) {
+                $table->id();
+                $table->integer('mapel_id');
+                $table->integer('guru_id');
+                $table->integer('siswa_id');
+                $table->string('jenis'); // 'STS' atau 'SAS'
+                $table->float('nilai')->default(0);
+                $table->integer('semester');
+                $table->integer('tahun_ajaran_id');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

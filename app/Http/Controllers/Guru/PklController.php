@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\PklKelompok;
 use App\Models\PklTp;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PklController extends Controller
 {
@@ -114,7 +115,7 @@ class PklController extends Controller
         ]);
     }
 
-    public function monitoring()
+    public function monitoring(Request $request)
     {
         $guru_id = Auth::user()->guru->id ?? 1;
 
@@ -126,7 +127,7 @@ class PklController extends Controller
             ->where('tbl_pkl.status_pkl', 'Aktif')
             ->get();
 
-        $tanggal_hari_ini = date('Y-m-d');
+        $tanggal_hari_ini = $request->input('tanggal', date('Y-m-d'));
         $absen_hari_ini = [];
         
         if ($siswa_binaan->count() > 0) {
@@ -146,6 +147,59 @@ class PklController extends Controller
             'absen_hari_ini' => $absen_hari_ini,
             'tanggal' => $tanggal_hari_ini
         ]);
+    }
+
+    public function cetakMonitoring(Request $request)
+    {
+        $guru_id = Auth::user()->guru->id ?? 1;
+        $mulai = $request->input('mulai', date('Y-m-d'));
+        $selesai = $request->input('selesai', date('Y-m-d'));
+
+        $guru = DB::table('tbl_guru')->where('id', $guru_id)->first();
+
+        $siswa_binaan = DB::table('tbl_pkl')
+            ->select('tbl_pkl.*', 'tbl_siswa.nama_lengkap as nama_siswa', 'tbl_siswa.nis', 'tbl_dudi.nama_dudi')
+            ->join('tbl_siswa', 'tbl_siswa.id', '=', 'tbl_pkl.siswa_id')
+            ->join('tbl_dudi', 'tbl_dudi.id', '=', 'tbl_pkl.dudi_id')
+            ->where('tbl_pkl.guru_id', $guru_id)
+            ->where('tbl_pkl.status_pkl', 'Aktif')
+            ->get();
+
+        $rekap_absen = [];
+        if ($siswa_binaan->count() > 0) {
+            $pkl_ids = $siswa_binaan->pluck('id')->toArray();
+            
+            // Inisialisasi default 0
+            foreach ($siswa_binaan as $s) {
+                $rekap_absen[$s->id] = ['Hadir' => 0, 'Izin' => 0, 'Sakit' => 0, 'Alpa' => 0];
+            }
+
+            $absen = DB::table('tbl_pkl_absen')
+                ->select('pkl_id', 'status', DB::raw('count(*) as total'))
+                ->whereIn('pkl_id', $pkl_ids)
+                ->whereBetween('tanggal', [$mulai, $selesai])
+                ->groupBy('pkl_id', 'status')
+                ->get();
+                               
+            foreach ($absen as $a) {
+                if (isset($rekap_absen[$a->pkl_id][$a->status])) {
+                    $rekap_absen[$a->pkl_id][$a->status] = $a->total;
+                }
+            }
+        }
+
+        $sekolah = DB::table('tbl_sekolah')->first();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('cetak.pkl_monitoring', [
+            'siswa_binaan' => $siswa_binaan,
+            'rekap_absen' => $rekap_absen,
+            'mulai' => $mulai,
+            'selesai' => $selesai,
+            'guru' => $guru,
+            'sekolah' => $sekolah
+        ]);
+
+        return $pdf->stream('Rekapitulasi_Kehadiran_PKL_'.$mulai.'_sd_'.$selesai.'.pdf');
     }
 
     public function jurnal()
@@ -341,5 +395,82 @@ class PklController extends Controller
         );
 
         return redirect()->back()->with('message', 'Penilaian PKL dan E-Sertifikat berhasil diterbitkan!');
+    }
+
+    public function cetakSertifikat($id_pkl)
+    {
+        $d = DB::table('tbl_pkl_nilai')
+            ->join('tbl_pkl', 'tbl_pkl.id', '=', 'tbl_pkl_nilai.pkl_id')
+            ->join('tbl_siswa', 'tbl_siswa.id', '=', 'tbl_pkl.siswa_id')
+            ->join('tbl_dudi', 'tbl_dudi.id', '=', 'tbl_pkl.dudi_id')
+            ->where('tbl_pkl_nilai.pkl_id', $id_pkl)
+            ->select('tbl_pkl_nilai.*', 'tbl_siswa.nama_lengkap', 'tbl_siswa.nisn', 'tbl_siswa.nis', 'tbl_dudi.nama_dudi', 'tbl_pkl.tgl_selesai')
+            ->first();
+
+        if(!$d) {
+            abort(404, "Sertifikat belum tersedia.");
+        }
+
+        $sekolah = DB::table('tbl_sekolah')->first();
+
+        $sikap = DB::table('tbl_pkl_nilai_detail')->where('pkl_id', $id_pkl)->where('kategori', 'Sikap')->get();
+        $pengetahuan = DB::table('tbl_pkl_nilai_detail')->where('pkl_id', $id_pkl)->where('kategori', 'Pengetahuan')->get();
+        $keterampilan = DB::table('tbl_pkl_nilai_detail')->where('pkl_id', $id_pkl)->where('kategori', 'Keterampilan')->get();
+
+        // Kalkulasi Rata-rata seperti CI4
+        $nilai_sikap_rata = $sikap->avg('skor') ?? 0;
+        $nilai_pengetahuan_rata = $pengetahuan->avg('skor') ?? 0;
+        $nilai_keterampilan_rata = $keterampilan->avg('skor') ?? 0;
+        
+        $laporan = DB::table('tbl_pkl_laporan')->where('pkl_id', $id_pkl)->first();
+        $nilai_laporan = $laporan ? ($laporan->status_laporan == 'Disetujui' ? 100 : ($laporan->status_laporan == 'Revisi' ? 50 : 25)) : 0;
+
+        $d->nilai_sikap_rata = $nilai_sikap_rata;
+        $d->nilai_pengetahuan_rata = $nilai_pengetahuan_rata;
+        $d->nilai_keterampilan_rata = $nilai_keterampilan_rata;
+        $d->nilai_laporan = $nilai_laporan;
+
+        $pathLogo = public_path('uploads/identitas/' . ($sekolah->logo ?? 'default_logo.png'));
+        $logoBase64 = '';
+        if(file_exists($pathLogo) && !is_dir($pathLogo)) {
+            $type = pathinfo($pathLogo, PATHINFO_EXTENSION);
+            $dataLogo = file_get_contents($pathLogo);
+            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($dataLogo);
+        }
+
+        $qr_url = route('surat.verifikasi', $d->token_sertifikat);
+        $qr_api = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&margin=0&data=" . urlencode($qr_url);
+        $dataQr = @file_get_contents($qr_api);
+        $qrBase64 = $dataQr ? 'data:image/png;base64,' . base64_encode($dataQr) : '';
+
+        // Hitung total baris untuk styling
+        $total_baris = 9 + count($keterampilan);
+        $fs_tabel = '10pt'; $pd_tabel = '3px 5px'; $mb_tabel = '10px'; $fs_info  = '10.5pt'; $fs_ttd   = '9.5pt'; $gap_ttd  = '40px';
+        if ($total_baris > 12 && $total_baris <= 17) {
+            $fs_tabel = '9pt'; $pd_tabel = '2px 4px'; $mb_tabel = '8px'; $fs_info  = '10pt'; $gap_ttd  = '30px'; $fs_ttd   = '9pt';
+        } elseif ($total_baris > 17) {
+            $fs_tabel = '8pt'; $pd_tabel = '1px 3px'; $mb_tabel = '5px'; $fs_info  = '9pt'; $fs_ttd   = '8.5pt'; $gap_ttd  = '20px';
+        }
+
+        $data = [
+            'd' => $d,
+            'sekolah' => $sekolah,
+            'sikap' => $sikap,
+            'pengetahuan' => $pengetahuan,
+            'keterampilan' => $keterampilan,
+            'logoBase64' => $logoBase64,
+            'qrBase64' => $qrBase64,
+            'fs_tabel' => $fs_tabel,
+            'pd_tabel' => $pd_tabel,
+            'mb_tabel' => $mb_tabel,
+            'fs_info' => $fs_info,
+            'fs_ttd' => $fs_ttd,
+            'gap_ttd' => $gap_ttd
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sertifikat_pkl', $data)
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream("Sertifikat_PKL_{$d->nama_lengkap}.pdf");
     }
 }

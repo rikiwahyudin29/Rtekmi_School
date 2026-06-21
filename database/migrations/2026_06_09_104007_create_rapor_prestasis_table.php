@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_rapor_prestasi', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
-            $table->foreignId('tahun_ajaran_id')->constrained('tbl_tahun_ajaran')->onDelete('cascade');
-            $table->integer('semester');
-            $table->string('jenis_prestasi');
-            $table->string('nama_prestasi');
-            $table->string('keterangan')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tbl_rapor_prestasi')) {
+            Schema::create('tbl_rapor_prestasi', function (Blueprint $table) {
+                $table->id();
+                $table->integer('siswa_id');
+                $table->integer('tahun_ajaran_id');
+                $table->integer('semester');
+                $table->string('jenis_prestasi');
+                $table->string('nama_prestasi');
+                $table->string('keterangan')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

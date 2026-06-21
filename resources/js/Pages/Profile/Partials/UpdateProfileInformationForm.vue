@@ -170,10 +170,12 @@ const submitForm = () => {
                     <div>
                         <InputLabel for="nip" class="font-semibold text-gray-700 dark:text-gray-300">NIP</InputLabel>
                         <TextInput id="nip" type="text" class="mt-1.5 block w-full rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-sm" v-model="form.nip" />
+                        <InputError class="mt-1.5" :message="form.errors.nip" />
                     </div>
                     <div>
-                        <InputLabel for="nik" class="font-semibold text-gray-700 dark:text-gray-300">NIK</InputLabel>
-                        <TextInput id="nik" type="text" class="mt-1.5 block w-full rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-sm" v-model="form.nik" />
+                        <InputLabel for="nik" class="font-semibold text-gray-700 dark:text-gray-300">NIK <span class="text-red-500">*</span></InputLabel>
+                        <TextInput id="nik" type="text" class="mt-1.5 block w-full rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-sm" v-model="form.nik" required />
+                        <InputError class="mt-1.5" :message="form.errors.nik" />
                     </div>
                     <div>
                         <InputLabel for="nuptk" class="font-semibold text-gray-700 dark:text-gray-300">NUPTK</InputLabel>

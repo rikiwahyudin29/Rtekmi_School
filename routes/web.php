@@ -90,9 +90,24 @@ Route::get('/api/holidays', [\App\Http\Controllers\ApiController::class, 'getHol
 Route::get('/verifikasi/{token}', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'verifikasi'])->name('surat.verifikasi');
 Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\SuratKeluarController::class, 'cetakPublic'])->name('surat.verifikasi.cetak');
 
-// Portal Kelulusan Public
-Route::get('/kelulusan', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'index'])->name('kelulusan.index');
-Route::post('/kelulusan/login', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'login'])->name('kelulusan.login');
+// Cek Kelulusan
+Route::get('/cek-kelulusan', [\App\Http\Controllers\Front\KelulusanController::class, 'index'])->name('kelulusan.index');
+Route::post('/cek-kelulusan', [\App\Http\Controllers\Front\KelulusanController::class, 'cek'])->name('kelulusan.cek');
+
+// Tracer Study (Alumni)
+Route::get('/tracer', [\App\Http\Controllers\Front\TracerFrontController::class, 'index'])->name('tracer.index');
+Route::post('/tracer/cek-nisn', [\App\Http\Controllers\Front\TracerFrontController::class, 'cekNisn'])->name('tracer.cek_nisn');
+Route::post('/tracer', [\App\Http\Controllers\Front\TracerFrontController::class, 'simpan'])->name('tracer.simpan');
+// Public PPDB Routes
+Route::get('/ppdb', [\App\Http\Controllers\Public\PpdbPublicController::class, 'index'])->name('ppdb.index');
+Route::get('/ppdb/pendaftaran', [\App\Http\Controllers\Public\PpdbPublicController::class, 'pendaftaran'])->name('ppdb.pendaftaran');
+Route::post('/ppdb/pendaftaran', [\App\Http\Controllers\Public\PpdbPublicController::class, 'storePendaftaran'])->name('ppdb.pendaftaran.store');
+Route::get('/ppdb/cek-status', [\App\Http\Controllers\Public\PpdbPublicController::class, 'cekStatus'])->name('ppdb.cek-status');
+
+// Public Buku Tamu
+Route::get('/buku-tamu', [\App\Http\Controllers\Public\BukuTamuController::class, 'index'])->name('buku-tamu.index');
+Route::post('/buku-tamu', [\App\Http\Controllers\Public\BukuTamuController::class, 'store'])->name('buku-tamu.store');
+Route::get('/buku-tamu/{id}/cetak', [\App\Http\Controllers\Public\BukuTamuController::class, 'cetak'])->name('buku-tamu.cetak');
 Route::get('/kelulusan/hasil', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'getHasil'])->name('kelulusan.hasil');
 Route::get('/kelulusan/antrian/request', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'requestAntrian'])->name('kelulusan.antrian.request');
 Route::get('/kelulusan/antrian/cek/{id}', [\App\Http\Controllers\Public\PortalKelulusanController::class, 'cekAntrian'])->name('kelulusan.antrian.cek');
@@ -114,6 +129,19 @@ Route::get('/debug-siswa', function() {
 Route::post('/cek-saldo', [HomeController::class, 'cekSaldo'])->name('cek-saldo');
 
 // Authenticated Routes
+Route::get('/debug-jadwal', function() {
+    return \App\Models\JadwalPelajaran::all();
+});
+
+Route::get('/debug-jam', function() {
+    return \App\Models\JamMaster::all();
+});
+
+Route::get('/debug-sidebar', function() {
+    $lines = file('c:\\Users\\Rik\\Documents\\Web\\siakad rj\\app\\Views\\layout\\sidebar.php');
+    return implode("", array_slice($lines, 500, 30));
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -152,8 +180,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/hapus-pembina/{id}', [\App\Http\Controllers\Admin\EkskulController::class, 'hapusPembina'])->name('hapus_pembina');
     });
 
+    // I. Admin Keuangan
+    Route::prefix('admin/keuangan')->name('admin.keuangan.')->group(function () {
+        Route::get('dashboard', [\App\Http\Controllers\Admin\Keuangan\DashboardController::class, 'index'])->name('dashboard');
+        
+        // Tabungan / Bank Mini
+        Route::get('tabungan', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'index'])->name('tabungan.index');
+        Route::post('tabungan/buka-rekening', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'store'])->name('tabungan.store');
+        Route::get('tabungan/detail/{id}', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'show'])->name('tabungan.show');
+        Route::post('tabungan/transaksi', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'prosesTransaksi'])->name('tabungan.transaksi');
+    });
+
     // Admin PKL
     Route::prefix('admin/pkl')->name('admin.pkl.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\PklController::class, 'dashboard'])->name('dashboard');
+        Route::post('/set-kelas-pkl', [\App\Http\Controllers\Admin\PklController::class, 'set_kelas_pkl'])->name('set_kelas_pkl');
+
         Route::get('/', [\App\Http\Controllers\Admin\PklController::class, 'index'])->name('index');
         Route::post('/dudi/simpan', [\App\Http\Controllers\Admin\PklController::class, 'simpanDudi'])->name('dudi.simpan');
         Route::post('/dudi/update', [\App\Http\Controllers\Admin\PklController::class, 'updateDudi'])->name('dudi.update');
@@ -183,6 +225,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin/pkl')->name('admin.pkl.')->group(function () {
         Route::get('/kelompok', [\App\Http\Controllers\Admin\PklController::class, 'kelompok'])->name('kelompok');
         Route::post('/kelompok', [\App\Http\Controllers\Admin\PklController::class, 'storeKelompok'])->name('kelompok.store');
+        Route::put('/kelompok/{id}', [\App\Http\Controllers\Admin\PklController::class, 'updateKelompok'])->name('kelompok.update');
+        Route::delete('/kelompok/{id}', [\App\Http\Controllers\Admin\PklController::class, 'deleteKelompok'])->name('kelompok.destroy');
     });
 
     // H. Admin Transkrip Ijazah
@@ -191,8 +235,91 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/data', [\App\Http\Controllers\Admin\IjazahController::class, 'storeDataIjazah'])->name('data.store');
     });
 
+    // J. Admin Sarpras (Aset & Fasilitas)
+    Route::prefix('admin/sarpras')->name('admin.sarpras.')->group(function () {
+        // Inventaris
+        Route::get('inventaris/print', [\App\Http\Controllers\Admin\Sarpras\InventarisController::class, 'printLabel'])->name('inventaris.print');
+        Route::get('inventaris/pdf', [\App\Http\Controllers\Admin\Sarpras\InventarisController::class, 'exportPdf'])->name('inventaris.pdf');
+        Route::resource('inventaris', \App\Http\Controllers\Admin\Sarpras\InventarisController::class)->except(['create', 'show', 'edit']);
+        
+        // Peminjaman
+        Route::get('peminjaman', [\App\Http\Controllers\Admin\Sarpras\PeminjamanRuanganController::class, 'index'])->name('peminjaman.index');
+        Route::post('peminjaman', [\App\Http\Controllers\Admin\Sarpras\PeminjamanRuanganController::class, 'store'])->name('peminjaman.store');
+        Route::put('peminjaman/{id}/status', [\App\Http\Controllers\Admin\Sarpras\PeminjamanRuanganController::class, 'updateStatus'])->name('peminjaman.update-status');
+        Route::delete('peminjaman/{id}', [\App\Http\Controllers\Admin\Sarpras\PeminjamanRuanganController::class, 'destroy'])->name('peminjaman.destroy');
+        
+        // Kerusakan
+        Route::get('kerusakan', [\App\Http\Controllers\Admin\Sarpras\LaporanKerusakanController::class, 'index'])->name('kerusakan.index');
+        Route::post('kerusakan', [\App\Http\Controllers\Admin\Sarpras\LaporanKerusakanController::class, 'store'])->name('kerusakan.store');
+        Route::put('kerusakan/{id}/status', [\App\Http\Controllers\Admin\Sarpras\LaporanKerusakanController::class, 'updateStatus'])->name('kerusakan.update-status');
+        Route::delete('kerusakan/{id}', [\App\Http\Controllers\Admin\Sarpras\LaporanKerusakanController::class, 'destroy'])->name('kerusakan.destroy');
+    });
+
+    // --- 7. PERPUSTAKAAN ---
+    Route::prefix('admin/perpus')->name('admin.perpus.')->group(function () {
+        Route::get('katalog', [\App\Http\Controllers\Admin\PerpustakaanController::class, 'katalog'])->name('katalog');
+        Route::post('simpan-buku', [\App\Http\Controllers\Admin\PerpustakaanController::class, 'simpanBuku'])->name('simpan-buku');
+        Route::delete('hapus-buku/{id}', [\App\Http\Controllers\Admin\PerpustakaanController::class, 'hapusBuku'])->name('hapus-buku');
+        
+        Route::get('sirkulasi', [\App\Http\Controllers\Admin\PerpustakaanController::class, 'sirkulasi'])->name('sirkulasi');
+        Route::post('proses-pinjam', [\App\Http\Controllers\Admin\PerpustakaanController::class, 'prosesPinjam'])->name('proses-pinjam');
+        Route::post('proses-kembali/{id}', [\App\Http\Controllers\Admin\PerpustakaanController::class, 'prosesKembali'])->name('proses-kembali');
+    });
+
     // I. Admin Perkembangan Nilai
     Route::get('perkembangan-nilai', [\App\Http\Controllers\Admin\PerkembanganNilaiController::class, 'index'])->name('admin.perkembangan-nilai.index');
+
+    // Guru Group
+    Route::prefix('guru')->name('guru.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\GuruController::class, 'dashboard'])->name('dashboard');
+        // KBM & Penilaian
+        Route::get('jadwal-mengajar', [\App\Http\Controllers\Guru\JadwalMengajarController::class, 'index'])->name('jadwal-mengajar.index');
+        Route::get('penilaian/tp', [\App\Http\Controllers\Guru\PenilaianController::class, 'tp'])->name('penilaian.tp');
+        Route::get('penilaian/formatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'formatif'])->name('penilaian.formatif');
+        Route::get('penilaian/sumatif', [\App\Http\Controllers\Guru\PenilaianController::class, 'sumatif'])->name('penilaian.sumatif');
+        Route::get('penilaian/sikap-k13', [\App\Http\Controllers\Guru\PenilaianController::class, 'sikapK13'])->name('penilaian.sikap_k13');
+        Route::get('penilaian/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'halamanGenerateNilaiAkhir'])->name('penilaian.halaman_generate_nilai_akhir');
+        
+        // Tugas Tambahan
+        Route::resource('walikelas', \App\Http\Controllers\Guru\WalikelasController::class);
+        Route::resource('ekskul', \App\Http\Controllers\Guru\EkskulController::class);
+        Route::get('ekskul/anggota/{id_ekskul}', [\App\Http\Controllers\Guru\EkskulController::class, 'anggota'])->name('ekskul.anggota');
+        Route::resource('p5', \App\Http\Controllers\Guru\P5Controller::class);
+        Route::resource('kokurikuler', \App\Http\Controllers\Guru\KokurikulerController::class);
+        Route::resource('pkl', \App\Http\Controllers\Guru\PklController::class);
+        
+        // Guru Piket
+        Route::get('/piket/dashboard', [\App\Http\Controllers\Guru\PiketController::class, 'dashboard'])->name('piket.dashboard');
+        Route::resource('piket/buku-tamu', \App\Http\Controllers\Guru\PiketBukuTamuController::class)->names('piket.buku-tamu');
+        Route::patch('piket/buku-tamu/{id}/pulang', [\App\Http\Controllers\Guru\PiketBukuTamuController::class, 'pulang'])->name('piket.buku-tamu.pulang');
+        
+        // Presensi & Layanan Mandiri Guru
+        Route::get('presensi', [\App\Http\Controllers\Guru\PresensiController::class, 'index'])->name('presensi.index');
+        Route::get('presensi/absen-harian', [\App\Http\Controllers\Guru\PresensiController::class, 'absenHarian'])->name('presensi.absen_harian');
+        Route::get('presensi/rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'rekap'])->name('presensi.rekap');
+        Route::get('presensi/izin', [\App\Http\Controllers\Guru\PresensiController::class, 'izin'])->name('presensi.izin');
+    });
+
+    // --- BK AREA ---
+    Route::prefix('bk')->name('bk.')->group(function () {
+        // Pelanggaran / Buku Kasus
+        Route::get('pelanggaran/pdf', [\App\Http\Controllers\Bk\PelanggaranController::class, 'exportPdf'])->name('pelanggaran.pdf');
+        Route::get('pelanggaran', [\App\Http\Controllers\Bk\PelanggaranController::class, 'index'])->name('pelanggaran.index');
+        Route::post('pelanggaran/store', [\App\Http\Controllers\Bk\PelanggaranController::class, 'store'])->name('pelanggaran.store');
+        Route::delete('pelanggaran/destroy/{id}', [\App\Http\Controllers\Bk\PelanggaranController::class, 'destroy'])->name('pelanggaran.destroy');
+
+        // Master Pelanggaran
+        Route::get('master-pelanggaran', [\App\Http\Controllers\Bk\MasterPelanggaranController::class, 'index'])->name('master-pelanggaran.index');
+        Route::post('master-pelanggaran', [\App\Http\Controllers\Bk\MasterPelanggaranController::class, 'store'])->name('master-pelanggaran.store');
+        Route::put('master-pelanggaran/{id}', [\App\Http\Controllers\Bk\MasterPelanggaranController::class, 'update'])->name('master-pelanggaran.update');
+        Route::delete('master-pelanggaran/{id}', [\App\Http\Controllers\Bk\MasterPelanggaranController::class, 'destroy'])->name('master-pelanggaran.destroy');
+
+        // Catatan Konseling
+        Route::get('konseling', [\App\Http\Controllers\Bk\KonselingController::class, 'index'])->name('konseling.index');
+        Route::post('konseling', [\App\Http\Controllers\Bk\KonselingController::class, 'store'])->name('konseling.store');
+        Route::put('konseling/{id}', [\App\Http\Controllers\Bk\KonselingController::class, 'update'])->name('konseling.update');
+        Route::delete('konseling/{id}', [\App\Http\Controllers\Bk\KonselingController::class, 'destroy'])->name('konseling.destroy');
+    });
 
     // Admin Group
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -288,7 +415,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/get-belum-absen', [\App\Http\Controllers\Admin\PresensiController::class, 'getBelumAbsen'])->name('get_belum_absen');
             Route::post('/simpan-manual', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanManual'])->name('simpan_manual');
             Route::post('/simpan-manual-ajax', [\App\Http\Controllers\Admin\PresensiController::class, 'simpanManualAjax'])->name('simpan_manual_ajax');
-            Route::delete('/hapus-manual/{id}', [\App\Http\Controllers\Admin\PresensiController::class, 'hapusManual'])->name('hapus_manual');
+            Route::delete('/hapus-manual/{id}', [\App\Http\Controllers\Admin\PresensiController::class, 'hapus_manual'])->name('hapus_manual');
             Route::get('verifikasi/{id}/{status}', [\App\Http\Controllers\Admin\PresensiController::class, 'verifikasi'])->name('verifikasi');
             Route::get('get-siswa/{id_kelas}', [\App\Http\Controllers\Admin\PresensiController::class, 'getSiswaByKelas'])->name('get_siswa_by_kelas');
             
@@ -324,6 +451,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // E-Arsip
             Route::get('arsip', [\App\Http\Controllers\Admin\Surat\EArsipController::class, 'index'])->name('arsip.index');
         });
+        
+        // Admin Humas Hubin Group
+        Route::prefix('humas')->name('humas.')->group(function () {
+            Route::get('buku-tamu/cetak/rekap', [\App\Http\Controllers\Admin\Humas\BukuTamuController::class, 'cetakRekap'])->name('buku-tamu.cetak');
+            Route::resource('buku-tamu', \App\Http\Controllers\Admin\Humas\BukuTamuController::class)->except(['create', 'show', 'edit', 'update', 'store']);
+        });
+
         // Admin Kelulusan & SKL Group
         Route::prefix('kelulusan')->name('kelulusan.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\KelulusanController::class, 'index'])->name('index');
@@ -447,6 +581,48 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // WAKASEK KESISWAAN
         // ==========================================
         
+        // Buku Induk Siswa
+        Route::prefix('kesiswaan/buku-induk')->name('kesiswaan.buku_induk.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Kesiswaan\BukuIndukController::class, 'index'])->name('index');
+            Route::get('/detail/{id}', [\App\Http\Controllers\Admin\Kesiswaan\BukuIndukController::class, 'detail'])->name('detail');
+            Route::post('/simpan-detail', [\App\Http\Controllers\Admin\Kesiswaan\BukuIndukController::class, 'simpanDetail'])->name('simpan_detail');
+            Route::get('/cetak-pdf/{id}', [\App\Http\Controllers\Admin\Kesiswaan\BukuIndukController::class, 'cetakPdf'])->name('cetak_pdf');
+        });
+
+        // Manajemen Rombel & Kenaikan Kelas
+        Route::prefix('kesiswaan/rombel')->name('kesiswaan.rombel.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'index'])->name('index');
+            Route::get('/atur/{id}', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'atur'])->name('atur');
+            Route::post('/pindah', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'prosesPindah'])->name('pindah');
+        });
+
+        // Data Alumni
+        Route::prefix('kesiswaan/alumni')->name('kesiswaan.alumni.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'alumni'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'simpanAlumni'])->name('simpan');
+            Route::get('/template-import', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'templateImport'])->name('template_import');
+            Route::post('/import', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'prosesImport'])->name('import');
+            Route::get('/export', [\App\Http\Controllers\Admin\Kesiswaan\RombelController::class, 'exportAlumni'])->name('export');
+        });
+        
+        // Tracer Study (Admin Kesiswaan)
+        Route::prefix('kesiswaan/tracer')->name('kesiswaan.tracer.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Kesiswaan\TracerController::class, 'index'])->name('index');
+            Route::post('/pertanyaan', [\App\Http\Controllers\Admin\Kesiswaan\TracerController::class, 'simpanPertanyaan'])->name('pertanyaan.simpan');
+            Route::delete('/pertanyaan/{id}', [\App\Http\Controllers\Admin\Kesiswaan\TracerController::class, 'hapusPertanyaan'])->name('pertanyaan.hapus');
+            Route::get('/detail/{id}', [\App\Http\Controllers\Admin\Kesiswaan\TracerController::class, 'detail'])->name('detail');
+            Route::delete('/reset/{id}', [\App\Http\Controllers\Admin\Kesiswaan\TracerController::class, 'resetResponden'])->name('reset');
+            Route::get('/export', [\App\Http\Controllers\Admin\Kesiswaan\TracerController::class, 'exportTracer'])->name('export');
+        });
+        
+        // TUGAS PIKET (Kurikulum)
+        Route::prefix('kurikulum/piket')->name('kurikulum.piket.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\Kurikulum\PiketController::class, 'index'])->name('index');
+            Route::get('/jadwal', [\App\Http\Controllers\Admin\Kurikulum\PiketController::class, 'jadwal'])->name('jadwal');
+            Route::post('/jadwal', [\App\Http\Controllers\Admin\Kurikulum\PiketController::class, 'simpanJadwal'])->name('simpan_jadwal');
+            Route::delete('/jadwal/{id}', [\App\Http\Controllers\Admin\Kurikulum\PiketController::class, 'hapusJadwal'])->name('hapus_jadwal');
+        });
+        
         // PPDB
         Route::get('ppdb/dashboard', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'dashboard'])->name('ppdb.dashboard');
         Route::get('ppdb', [\App\Http\Controllers\Admin\Kesiswaan\PpdbController::class, 'index'])->name('ppdb.index');
@@ -493,6 +669,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/settings/theme', [SettingController::class, 'updateTheme'])->name('settings.theme');
     Route::resource('setting', SettingController::class);
 
+    // D. Siswa Pembelajaran (KBM) & Keuangan
+    Route::prefix('siswa')->name('siswa.')->group(function () {
+        Route::get('materi', [\App\Http\Controllers\Siswa\MateriController::class, 'index'])->name('materi.index');
+        Route::get('tugas', [\App\Http\Controllers\Siswa\TugasController::class, 'index'])->name('tugas.index');
+        Route::get('ujian', [\App\Http\Controllers\Siswa\UjianController::class, 'index'])->name('ujian.index');
+        
+        // Tabungan
+        Route::get('tabungan', [\App\Http\Controllers\Siswa\TabunganController::class, 'index'])->name('tabungan.index');
+        Route::post('tabungan/transfer', [\App\Http\Controllers\Siswa\TabunganController::class, 'prosesTransfer'])->name('tabungan.transfer');
+    });
+
     // Siswa CBT (Computer Based Test) Group
     Route::prefix('siswa/ujian')->name('siswa.ujian.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Siswa\UjianController::class, 'index'])->name('index');
@@ -519,6 +706,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Siswa Rapor
     Route::get('/siswa/rapor', [\App\Http\Controllers\Siswa\RaporController::class, 'index'])->name('siswa.rapor.index');
 
+    // Guru Piket Group
+    Route::prefix('guru/piket')->name('guru.piket.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Guru\PiketController::class, 'dashboard'])->name('dashboard');
+        Route::post('/tamu', [\App\Http\Controllers\Guru\PiketController::class, 'simpanBukuTamu'])->name('simpan_tamu');
+        Route::post('/tamu/{id}/pulang', [\App\Http\Controllers\Guru\PiketController::class, 'updateJamPulangTamu'])->name('pulang_tamu');
+        Route::delete('/tamu/{id}', [\App\Http\Controllers\Guru\PiketController::class, 'hapusBukuTamu'])->name('hapus_tamu');
+        Route::post('/izin', [\App\Http\Controllers\Guru\PiketController::class, 'simpanIzinKeluar'])->name('simpan_izin');
+        Route::delete('/izin/{id}', [\App\Http\Controllers\Guru\PiketController::class, 'hapusIzinKeluar'])->name('hapus_izin');
+        Route::post('/jurnal', [\App\Http\Controllers\Guru\PiketController::class, 'simpanJurnal'])->name('simpan_jurnal');
+        
+        // Buku Tamu Digital Integration
+        Route::get('/buku-tamu', [\App\Http\Controllers\Guru\PiketController::class, 'bukuTamu'])->name('buku-tamu.index');
+        Route::post('/buku-tamu/ttd', [\App\Http\Controllers\Guru\PiketController::class, 'simpanTtd'])->name('buku-tamu.ttd');
+        Route::get('/buku-tamu/{id}/cetak', [\App\Http\Controllers\Guru\PiketController::class, 'cetakThermal'])->name('buku-tamu.cetak');
+    });
+
     // Guru Presensi Group
     Route::prefix('guru/presensi')->name('guru.presensi.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guru\PresensiController::class, 'index'])->name('index');
@@ -529,9 +732,62 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'rekap'])->name('rekap');
         Route::get('/cetak-rekap', [\App\Http\Controllers\Guru\PresensiController::class, 'cetakRekap'])->name('cetak_rekap');
     });
+    // Guru Disposisi (Kotak Disposisi Surat)
+    Route::prefix('guru/disposisi')->name('guru.disposisi.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Guru\DisposisiController::class, 'index'])->name('index');
+        Route::patch('/{id}/baca', [\App\Http\Controllers\Guru\DisposisiController::class, 'baca'])->name('baca');
+        Route::post('/baca-semua', [\App\Http\Controllers\Guru\DisposisiController::class, 'bacaSemua'])->name('baca_semua');
+    });
     // Guru Jadwal Mengajar Group
     Route::prefix('guru/jadwal-mengajar')->name('guru.jadwal-mengajar.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guru\JadwalMengajarController::class, 'index'])->name('index');
+    });
+
+    // Guru E-Learning (Materi, Tugas, Jurnal)
+    Route::prefix('guru/elearning')->name('guru.elearning.')->group(function () {
+        // Materi
+        Route::prefix('materi')->name('materi.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Guru\MateriController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Guru\MateriController::class, 'store'])->name('store');
+            Route::post('/{id}', [\App\Http\Controllers\Guru\MateriController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Guru\MateriController::class, 'destroy'])->name('destroy');
+        });
+        
+        // Tugas
+        Route::prefix('tugas')->name('tugas.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Guru\TugasKbmController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Guru\TugasKbmController::class, 'store'])->name('store');
+            Route::delete('/{id}', [\App\Http\Controllers\Guru\TugasKbmController::class, 'destroy'])->name('destroy');
+            Route::get('/{tugas_id}/hasil', [\App\Http\Controllers\Guru\TugasKbmController::class, 'hasil'])->name('hasil');
+            Route::post('/simpan-nilai', [\App\Http\Controllers\Guru\TugasKbmController::class, 'simpanNilai'])->name('simpan_nilai');
+        });
+
+        // Jurnal
+        Route::prefix('jurnal')->name('jurnal.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'index'])->name('index');
+            Route::get('/input', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'input'])->name('input');
+            Route::post('/simpan', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'simpan'])->name('simpan');
+            Route::get('/{id}/absen', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'absen'])->name('absen');
+            Route::post('/simpan-absen', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'simpanAbsen'])->name('simpan_absen');
+            Route::get('/{id}/detail', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'detailAbsen'])->name('detail');
+            Route::delete('/{id}', [\App\Http\Controllers\Guru\JurnalKbmController::class, 'hapus'])->name('hapus');
+        });
+
+        // Kelas Virtual (Google Meet)
+        Route::prefix('kelas-virtual')->name('kelas-virtual.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Guru\KelasVirtualController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Guru\KelasVirtualController::class, 'store'])->name('store');
+            Route::delete('/{id}', [\App\Http\Controllers\Guru\KelasVirtualController::class, 'destroy'])->name('destroy');
+        });
+
+        // Perpustakaan Digital (E-Book)
+        Route::prefix('perpustakaan')->name('perpustakaan.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Guru\PerpustakaanController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Guru\PerpustakaanController::class, 'store'])->name('store');
+            Route::delete('/{id}', [\App\Http\Controllers\Guru\PerpustakaanController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/counter', [\App\Http\Controllers\Guru\PerpustakaanController::class, 'counter'])->name('counter');
+            Route::get('/{id}/baca', [\App\Http\Controllers\Guru\PerpustakaanController::class, 'baca'])->name('baca');
+        });
     });
 
     // Guru Penilaian (eRapor) Group
@@ -568,6 +824,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/tp', [\App\Http\Controllers\Guru\PklController::class, 'storeTp'])->name('tp.store');
         
         Route::get('/monitoring', [\App\Http\Controllers\Guru\PklController::class, 'monitoring'])->name('monitoring');
+        Route::get('/monitoring/cetak', [\App\Http\Controllers\Guru\PklController::class, 'cetakMonitoring'])->name('monitoring.cetak');
         Route::get('/jurnal', [\App\Http\Controllers\Guru\PklController::class, 'jurnal'])->name('jurnal');
         Route::post('/jurnal/validasi', [\App\Http\Controllers\Guru\PklController::class, 'jurnalValidasi'])->name('jurnal.validasi');
         Route::post('/laporan/validasi', [\App\Http\Controllers\Guru\PklController::class, 'laporanValidasi'])->name('laporan.validasi');
@@ -580,26 +837,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/cetak-sertifikat/{id}', [\App\Http\Controllers\Guru\PklController::class, 'cetakSertifikat'])->name('cetak_sertifikat');
     });
 
-    // Guru Ekskul Group
-    Route::prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'index'])->name('index');
-        Route::get('/anggota/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'anggota'])->name('anggota');
-        Route::post('/anggota/{id}/validasi', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'validasiAnggota'])->name('anggota.validasi');
-        
-        Route::get('/jurnal/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'jurnal'])->name('jurnal');
-        Route::post('/jurnal/simpan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'jurnalSimpan'])->name('jurnal.simpan');
-        Route::get('/absen-scan/{jurnal_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'absenScan'])->name('absen_scan');
-        Route::post('/proses-scan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'prosesScan'])->name('proses_scan');
-        Route::post('/absen-manual', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'absenManual'])->name('absen_manual');
-        
-        Route::get('/prestasi/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'prestasi'])->name('prestasi');
-        Route::post('/prestasi/simpan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'prestasiSimpan'])->name('prestasi.simpan');
-        
-        Route::get('/penilaian/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'penilaian'])->name('penilaian');
-        Route::post('/penilaian/simpan', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'penilaianSimpan'])->name('penilaian.simpan');
-        Route::get('/cetak-sertifikat/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'cetakSertifikat'])->name('cetak_sertifikat');
-        Route::get('/cetak-lpj/{ekskul_id}', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'cetakLpj'])->name('cetak_lpj');
-    });
+
 
     // H. Guru Kokurikuler
     Route::prefix('guru/kokurikuler')->name('guru.kokurikuler.')->group(function () {
@@ -660,11 +898,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/kelompok/{id}/input-nilai', [\App\Http\Controllers\Guru\P5Controller::class, 'storeNilai'])->name('store_nilai');
     });
 
-    // Guru Ekstrakurikuler Group
-    Route::prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'index'])->name('index');
-        Route::post('/store-nilai', [\App\Http\Controllers\Guru\EkstrakurikulerController::class, 'storeNilai'])->name('store_nilai');
-    });
+
 
     // Rapor Printing Routes
     Route::get('/cetak/rapor-masal/{kelas_id}/cover', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakCoverMasal'])->name('cetak.rapor-masal.cover');
@@ -718,6 +952,26 @@ Route::get('/cetak-surat/{id}', [\App\Http\Controllers\Admin\Surat\SuratKeluarCo
 // API Routes are now served via routes/api.php and configured in bootstrap/app.php
 
 // Temporary Route to Fix CI4 User ID Mapping
+
+Route::get('/dump-migrations', function () {
+    $files = glob(database_path('migrations/2026_{05_28,05_29,06_*}*.php'), GLOB_BRACE);
+    $output = "";
+    foreach ($files as $file) {
+        $output .= "\n\n--- " . basename($file) . " ---\n";
+        $output .= file_get_contents($file);
+    }
+    return response($output)->header('Content-Type', 'text/plain');
+});
+
+Route::get('/jalankan-migrasi', function () {
+    try {
+        \Illuminate\Support\Facades\DB::statement('ALTER TABLE tbl_buku_tamu MODIFY no_antrian INT NULL');
+        return response("Berhasil alter no_antrian jadi nullable!");
+    } catch (\Exception $e) {
+        return response($e->getMessage());
+    }
+});
+
 Route::get('/fix-users', function () {
     \Illuminate\Support\Facades\DB::statement('UPDATE tbl_guru SET user_id = id_user WHERE id_user IS NOT NULL AND id_user > 0');
     \Illuminate\Support\Facades\DB::statement('UPDATE tbl_siswa SET user_id = id_user WHERE id_user IS NOT NULL AND id_user > 0');

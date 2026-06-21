@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_rapor_catatan_wali', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
-            $table->foreignId('guru_id')->constrained('tbl_guru')->onDelete('cascade');
-            $table->foreignId('tahun_ajaran_id')->constrained('tbl_tahun_ajaran')->onDelete('cascade');
-            $table->integer('semester');
-            $table->text('catatan')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tbl_rapor_catatan_wali')) {
+            Schema::create('tbl_rapor_catatan_wali', function (Blueprint $table) {
+                $table->id();
+                $table->integer('siswa_id');
+                $table->integer('guru_id');
+                $table->integer('tahun_ajaran_id');
+                $table->integer('semester');
+                $table->text('catatan')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

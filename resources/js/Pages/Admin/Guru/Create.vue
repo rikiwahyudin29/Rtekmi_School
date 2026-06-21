@@ -72,8 +72,8 @@ const submit = () => {
                         </div>
                         <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">NIP / Username <span class="text-red-500">*</span></label>
-                                <input type="text" v-model="form.nip" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" required>
+                                <label class="block text-sm font-medium text-gray-700">NIP</label>
+                                <input type="text" v-model="form.nip" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 <div v-if="form.errors.nip" class="text-red-500 text-xs mt-1">{{ form.errors.nip }}</div>
                             </div>
                             <div>
@@ -132,8 +132,9 @@ const submit = () => {
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">NIK (KTP)</label>
-                                <input type="text" v-model="form.nik" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                <label class="block text-sm font-medium text-gray-700">NIK (KTP) / Username <span class="text-red-500">*</span></label>
+                                <input type="text" v-model="form.nik" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" required>
+                                <div v-if="form.errors.nik" class="text-red-500 text-xs mt-1">{{ form.errors.nik }}</div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Tempat Lahir</label>

@@ -61,6 +61,34 @@ const props = defineProps({
                 </div>
             </div>
 
+            <!-- Menu Cepat (Akses Fitur) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link :href="route('guru.pkl.monitoring')" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-3xl shadow-sm transition-all flex flex-col items-center justify-center gap-2 group">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-map-marker-alt text-xl"></i>
+                    </div>
+                    <span class="font-bold text-sm mt-1">Monitoring Kehadiran</span>
+                </Link>
+                <Link :href="route('guru.pkl.jurnal')" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-3xl shadow-sm transition-all flex flex-col items-center justify-center gap-2 group">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-book text-xl"></i>
+                    </div>
+                    <span class="font-bold text-sm mt-1">Jurnal & Laporan</span>
+                </Link>
+                <Link :href="route('guru.pkl.kunjungan')" class="bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-3xl shadow-sm transition-all flex flex-col items-center justify-center gap-2 group">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-camera-retro text-xl"></i>
+                    </div>
+                    <span class="font-bold text-sm mt-1">Jurnal Kunjungan</span>
+                </Link>
+                <Link :href="route('guru.pkl.nilai')" class="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-3xl shadow-sm transition-all flex flex-col items-center justify-center gap-2 group">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-certificate text-xl"></i>
+                    </div>
+                    <span class="font-bold text-sm mt-1">Nilai & Sertifikat</span>
+                </Link>
+            </div>
+
             <!-- KPI Siswa Binaan -->
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700">

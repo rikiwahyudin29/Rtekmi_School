@@ -1,5 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { Head, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
@@ -39,10 +41,15 @@ const generateNewQR = () => {
 const mapContainer = ref(null);
 let map = null;
 let marker = null;
+let circle = null;
+
+watch(() => form.radius, (newVal) => {
+    if (circle) {
+        circle.setRadius(newVal || 100);
+    }
+});
 
 const initMap = () => {
-    if (typeof L === 'undefined') return;
-
     const lat = parseFloat(form.latitude) || -6.200000;
     const lng = parseFloat(form.longitude) || 106.816666;
 
@@ -53,12 +60,20 @@ const initMap = () => {
     }).addTo(map);
 
     marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    
+    circle = L.circle([lat, lng], {
+        color: '#ef4444',
+        fillColor: '#ef4444',
+        fillOpacity: 0.15,
+        radius: form.radius || 100
+    }).addTo(map);
 
     // Update form when marker is dragged
     marker.on('dragend', function (e) {
         const position = marker.getLatLng();
         form.latitude = position.lat.toString();
         form.longitude = position.lng.toString();
+        if (circle) circle.setLatLng(position);
     });
 
     // Move marker when clicking on map
@@ -66,6 +81,7 @@ const initMap = () => {
         marker.setLatLng(e.latlng);
         form.latitude = e.latlng.lat.toString();
         form.longitude = e.latlng.lng.toString();
+        if (circle) circle.setLatLng(e.latlng);
     });
 };
 
@@ -91,26 +107,7 @@ const detectLocation = () => {
 };
 
 onMounted(() => {
-    // Load Leaflet dynamically
-    if (!document.getElementById('leaflet-css')) {
-        const link = document.createElement('link');
-        link.id = 'leaflet-css';
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-    }
-    
-    if (!document.getElementById('leaflet-js')) {
-        const script = document.createElement('script');
-        script.id = 'leaflet-js';
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.onload = () => {
-            initMap();
-        };
-        document.head.appendChild(script);
-    } else {
-        setTimeout(initMap, 500); // Wait for L to be available if already loaded
-    }
+    initMap();
 });
 </script>
 

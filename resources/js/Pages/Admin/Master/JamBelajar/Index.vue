@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
@@ -39,10 +41,15 @@ const generateNewQR = () => {
 const mapContainer = ref(null);
 let map = null;
 let marker = null;
+let circle = null;
+
+watch(() => sekolahForm.radius, (newVal) => {
+    if (circle) {
+        circle.setRadius(newVal || 100);
+    }
+});
 
 const initMap = () => {
-    if (typeof L === 'undefined') return;
-
     const lat = parseFloat(sekolahForm.latitude) || -6.200000;
     const lng = parseFloat(sekolahForm.longitude) || 106.816666;
 
@@ -54,11 +61,19 @@ const initMap = () => {
 
     marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
+    circle = L.circle([lat, lng], {
+        color: '#ef4444',
+        fillColor: '#ef4444',
+        fillOpacity: 0.15,
+        radius: sekolahForm.radius || 100
+    }).addTo(map);
+
     // Update form when marker is dragged
     marker.on('dragend', function (e) {
         const position = marker.getLatLng();
         sekolahForm.latitude = position.lat.toString();
         sekolahForm.longitude = position.lng.toString();
+        if (circle) circle.setLatLng(position);
     });
 
     // Move marker when clicking on map
@@ -66,6 +81,7 @@ const initMap = () => {
         marker.setLatLng(e.latlng);
         sekolahForm.latitude = e.latlng.lat.toString();
         sekolahForm.longitude = e.latlng.lng.toString();
+        if (circle) circle.setLatLng(e.latlng);
     });
 };
 
@@ -151,26 +167,7 @@ const deleteMaster = (id) => {
 };
 
 onMounted(() => {
-    // Load Leaflet dynamically
-    if (!document.getElementById('leaflet-css')) {
-        const link = document.createElement('link');
-        link.id = 'leaflet-css';
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-    }
-    
-    if (!document.getElementById('leaflet-js')) {
-        const script = document.createElement('script');
-        script.id = 'leaflet-js';
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.onload = () => {
-            initMap();
-        };
-        document.head.appendChild(script);
-    } else {
-        setTimeout(initMap, 500); // Wait for L to be available if already loaded
-    }
+    initMap();
 });
 
 const activeTab = ref('presensi');

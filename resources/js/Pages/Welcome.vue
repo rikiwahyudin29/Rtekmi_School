@@ -93,7 +93,7 @@ const checkNISN = async () => {
     isLoading.value = true;
     errorMessage.value = '';
     try {
-        const res = await axios.post('/api/cek-saldo', { nisn: formTabungan.value.nisn });
+        const res = await axios.post('/cek-saldo', { nisn: formTabungan.value.nisn });
         if (res.data.success) {
             siswaInfo.value.nama = res.data.data.nama_lengkap;
             siswaInfo.value.nisn = res.data.data.nisn;
@@ -112,7 +112,7 @@ const checkPINAndSaldo = async () => {
     isLoading.value = true;
     errorMessage.value = '';
     try {
-        const res = await axios.post('/api/cek-saldo', { 
+        const res = await axios.post('/cek-saldo', { 
             nisn: formTabungan.value.nisn, 
             pin: formTabungan.value.pin 
         });
@@ -371,13 +371,16 @@ input[type="number"] { -moz-appearance: textfield; }
                         {{ web.deskripsi_hero || 'Mencetak lulusan kompeten, siap kerja, santun, mandiri, dan kreatif. Dibekali skill industri terkini dan karakter profesional.' }}
                     </p>
                     
-                    <div class="flex flex-col sm:flex-row items-center gap-4 pt-4 w-full lg:w-auto relative z-10">
-                        <Link href="/spmb/register" class="w-full sm:w-auto inline-flex justify-center items-center py-3.5 md:py-4 px-8 md:px-10 text-sm md:text-base font-black text-slate-900 uppercase tracking-widest rounded-xl bg-amber-400 hover:bg-amber-300 focus:ring-4 focus:ring-amber-500/30 transition-all shadow-lg shadow-amber-500/20 transform hover:-translate-y-1">
-                            Daftar PPDB <i class="fas fa-rocket ml-3"></i>
+                    <div class="flex flex-col sm:flex-row flex-wrap items-center gap-4 pt-4 w-full lg:w-auto relative z-10">
+                        <Link href="/spmb/register" class="w-full sm:w-auto inline-flex justify-center items-center py-3.5 md:py-4 px-6 text-sm font-black text-slate-900 uppercase tracking-widest rounded-xl bg-amber-400 hover:bg-amber-300 focus:ring-4 focus:ring-amber-500/30 transition-all shadow-lg shadow-amber-500/20 transform hover:-translate-y-1">
+                            Daftar PPDB <i class="fas fa-rocket ml-2"></i>
                         </Link>
-                        <a href="#jurusan" class="w-full sm:w-auto inline-flex justify-center items-center py-3.5 md:py-4 px-8 md:px-10 text-sm md:text-base font-bold text-white rounded-xl border border-slate-600 hover:bg-slate-800 hover:border-emerald-500 transition-all backdrop-blur-md">
-                            Lihat Jurusan <i class="fas fa-arrow-down ml-3 text-emerald-400"></i>
+                        <a href="#jurusan" class="w-full sm:w-auto inline-flex justify-center items-center py-3.5 md:py-4 px-6 text-sm font-bold text-white rounded-xl border border-slate-600 hover:bg-slate-800 hover:border-emerald-500 transition-all backdrop-blur-md">
+                            Lihat Jurusan <i class="fas fa-arrow-down ml-2 text-emerald-400"></i>
                         </a>
+                        <Link href="/tracer" class="w-full sm:w-auto inline-flex justify-center items-center py-3.5 md:py-4 px-6 text-sm font-bold text-emerald-400 rounded-xl border border-emerald-500/30 hover:bg-emerald-900/40 transition-all backdrop-blur-md">
+                            <i class="fas fa-search-location mr-2"></i> Tracer Alumni
+                        </Link>
                     </div>
                     
                     <!-- Stats Badges (Moved under text for better layout) -->

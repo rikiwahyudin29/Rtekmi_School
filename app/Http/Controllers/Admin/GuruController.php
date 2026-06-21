@@ -45,9 +45,9 @@ class GuruController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nip'                 => 'required|unique:tbl_guru,nip',
+            'nik'                 => 'required|unique:tbl_guru,nik',
             'nama_lengkap'        => 'required|string|max:100',
-            'nik'                 => 'nullable|string',
+            'nip'                 => 'nullable|string',
             'nuptk'               => 'nullable|string',
             'dapodik_id'          => 'nullable|string',
             'tempat_lahir'        => 'nullable|string',
@@ -67,9 +67,9 @@ class GuruController extends Controller
         DB::beginTransaction();
         try {
             // Create User
-            $userEmail = $validated['email'] ?? ($validated['nip'] . '@sekolah.id');
+            $userEmail = $validated['email'] ?? ($validated['nik'] . '@sekolah.id');
             $user = User::create([
-                'username'     => $validated['nip'],
+                'username'     => $validated['nik'],
                 'password'     => Hash::make($passwordAsli),
                 'email'        => $userEmail,
                 'nama_lengkap' => $validated['nama_lengkap'],
@@ -97,8 +97,8 @@ class GuruController extends Controller
             // Create Guru
             Guru::create([
                 'user_id'             => $user->id,
-                'nip'                 => $validated['nip'],
-                'nik'                 => $request->nik,
+                'nik'                 => $validated['nik'],
+                'nip'                 => $request->nip,
                 'nuptk'               => $request->nuptk,
                 'dapodik_id'          => $request->dapodik_id,
                 'nama_lengkap'        => $validated['nama_lengkap'],
@@ -123,7 +123,7 @@ class GuruController extends Controller
             DB::commit();
 
             return redirect()->route('admin.guru.index')
-                ->with('message', "Berhasil! Username: {$validated['nip']}, Password: {$passwordAsli}");
+                ->with('message', "Berhasil! Username: {$validated['nik']}, Password: {$passwordAsli}");
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -162,9 +162,9 @@ class GuruController extends Controller
         $guru = Guru::findOrFail($id);
         
         $validated = $request->validate([
-            'nip'                 => 'required|unique:tbl_guru,nip,' . $id,
+            'nik'                 => 'required|unique:tbl_guru,nik,' . $id,
             'nama_lengkap'        => 'required|string|max:100',
-            'nik'                 => 'nullable|string',
+            'nip'                 => 'nullable|string',
             'nuptk'               => 'nullable|string',
             'dapodik_id'          => 'nullable|string',
             'tempat_lahir'        => 'nullable|string',
@@ -198,11 +198,11 @@ class GuruController extends Controller
                 $file->move($dir, $namaFoto);
             }
 
-            $userEmail = $validated['email'] ?? ($validated['nip'] . '@sekolah.id');
+            $userEmail = $validated['email'] ?? ($validated['nik'] . '@sekolah.id');
 
             $guru->update([
-                'nip'                 => $validated['nip'],
-                'nik'                 => $request->nik,
+                'nik'                 => $validated['nik'],
+                'nip'                 => $request->nip,
                 'nuptk'               => $request->nuptk,
                 'dapodik_id'          => $request->dapodik_id,
                 'nama_lengkap'        => $validated['nama_lengkap'],
@@ -228,7 +228,7 @@ class GuruController extends Controller
                 $user = User::find($guru->user_id);
                 if ($user) {
                     $user->update([
-                        'username'     => $validated['nip'],
+                        'username'     => $validated['nik'],
                         'email'        => $userEmail,
                         'nama_lengkap' => $validated['nama_lengkap'],
                         'nomor_wa'     => $validated['nomor_wa'] ?? null,
@@ -267,9 +267,9 @@ class GuruController extends Controller
             $user = User::find($guru->user_id);
             if ($user) {
                 $user->update([
-                    'password' => Hash::make($guru->nip)
+                    'password' => Hash::make($guru->nik)
                 ]);
-                return back()->with('message', "Password guru berhasil di-reset menjadi NIP: {$guru->nip}");
+                return back()->with('message', "Password guru berhasil di-reset menjadi NIK: {$guru->nik}");
             }
         }
         
@@ -292,14 +292,14 @@ class GuruController extends Controller
         // AUTO HEAL: Jika user_id kosong atau user tidak ditemukan di tabel users
         if (!$user) {
             $passwordAsli = Str::random(8);
-            $userEmail = $guru->email ?? ($guru->nip . '@sekolah.id');
+            $userEmail = $guru->email ?? ($guru->nik . '@sekolah.id');
             
-            // Cek apakah username dengan NIP ini sudah ada di tabel users
-            $user = User::where('username', $guru->nip)->first();
+            // Cek apakah username dengan NIK ini sudah ada di tabel users
+            $user = User::where('username', $guru->nik)->first();
             
             if (!$user) {
                 $user = User::create([
-                    'username'     => $guru->nip,
+                    'username'     => $guru->nik,
                     'password'     => Hash::make($passwordAsli),
                     'email'        => $userEmail,
                     'nama_lengkap' => $guru->nama_lengkap,
@@ -341,8 +341,8 @@ class GuruController extends Controller
 
         $callback = function () {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['NIP', 'NamaLengkap', 'GelarDepan', 'GelarBelakang', 'JenisKelamin', 'NomorWA', 'Alamat']);
-            fputcsv($file, ['123456789', 'Budi Santoso', 'Drs.', 'M.Pd', 'L', '081234567890', 'Jl. Pendidikan No. 1']);
+            fputcsv($file, ['NIK', 'NIP', 'NamaLengkap', 'GelarDepan', 'GelarBelakang', 'JenisKelamin', 'NomorWA', 'Alamat']);
+            fputcsv($file, ['3201234567890001', '123456789', 'Budi Santoso', 'Drs.', 'M.Pd', 'L', '081234567890', 'Jl. Pendidikan No. 1']);
             fclose($file);
         };
 
@@ -359,12 +359,13 @@ class GuruController extends Controller
         $callback = function () {
             $file = fopen('php://output', 'w');
             // Add headers
-            fputcsv($file, ['NIP', 'NamaLengkap', 'GelarDepan', 'GelarBelakang', 'JenisKelamin', 'TempatLahir', 'TanggalLahir', 'StatusGuru', 'Sertifikasi', 'PendidikanTerakhir', 'NomorWA', 'Email', 'Alamat']);
+            fputcsv($file, ['NIK', 'NIP', 'NamaLengkap', 'GelarDepan', 'GelarBelakang', 'JenisKelamin', 'TempatLahir', 'TanggalLahir', 'StatusGuru', 'Sertifikasi', 'PendidikanTerakhir', 'NomorWA', 'Email', 'Alamat']);
             
             // Get all data
             $gurus = Guru::with('user')->get();
             foreach ($gurus as $guru) {
                 fputcsv($file, [
+                    $guru->nik,
                     $guru->nip,
                     $guru->nama_lengkap,
                     $guru->gelar_depan,
@@ -407,23 +408,24 @@ class GuruController extends Controller
                     continue;
                 }
 
-                if (empty($data[0]) || empty($data[1])) continue; // Skip if NIP or Nama is empty
+                if (empty($data[0]) || empty($data[2])) continue; // Skip if NIK or Nama is empty
 
-                $nip = trim($data[0]);
-                $nama = trim($data[1]);
+                $nik = trim($data[0]);
+                $nip = trim($data[1]);
+                $nama = trim($data[2]);
                 $passwordAsli = Str::random(8);
 
                 // Check if exists
-                if (Guru::where('nip', $nip)->exists()) {
+                if (Guru::where('nik', $nik)->exists()) {
                     continue; // Skip existing
                 }
 
                 $user = User::create([
-                    'username'     => $nip,
+                    'username'     => $nik,
                     'password'     => Hash::make($passwordAsli),
-                    'email'        => $nip . '@sekolah.id',
+                    'email'        => $nik . '@sekolah.id',
                     'nama_lengkap' => $nama,
-                    'nomor_wa'     => $data[5] ?? null,
+                    'nomor_wa'     => $data[6] ?? null,
                 ]);
 
                 if ($roleGuru) {
@@ -432,13 +434,14 @@ class GuruController extends Controller
 
                 Guru::create([
                     'user_id'        => $user->id,
+                    'nik'            => $nik,
                     'nip'            => $nip,
                     'nama_lengkap'   => $nama,
-                    'gelar_depan'    => $data[2] ?? null,
-                    'gelar_belakang' => $data[3] ?? null,
-                    'jenis_kelamin'  => $data[4] ?? 'L',
-                    'nomor_wa'       => $data[5] ?? null,
-                    'alamat'         => $data[6] ?? null,
+                    'gelar_depan'    => $data[3] ?? null,
+                    'gelar_belakang' => $data[4] ?? null,
+                    'jenis_kelamin'  => $data[5] ?? 'L',
+                    'nomor_wa'       => $data[6] ?? null,
+                    'alamat'         => $data[7] ?? null,
                     'foto'           => 'default.png'
                 ]);
                 $count++;

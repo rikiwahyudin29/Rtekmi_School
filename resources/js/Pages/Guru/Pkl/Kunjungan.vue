@@ -1,7 +1,9 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const props = defineProps({
     riwayat: Array,
@@ -25,6 +27,31 @@ const form = useForm({
     foto_kunjungan_base64: ''
 });
 
+let map = null;
+let marker = null;
+
+const initMap = (lat, lng) => {
+    if (!map) {
+        map = L.map('map').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        
+        // Fix Leaflet marker icons not showing in Vue/Vite
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        });
+        
+        marker = L.marker([lat, lng]).addTo(map);
+    } else {
+        map.setView([lat, lng], 15);
+        marker.setLatLng([lat, lng]);
+    }
+};
+
 // Camera logic sama dengan Ekskul absen scan
 const initCamera = async () => {
     try {
@@ -37,7 +64,7 @@ const initCamera = async () => {
     } catch (err) {
         console.error("Camera error:", err);
         hasCamera.value = false;
-        alert("Kamera tidak dapat diakses.");
+        // Don't alert immediately to be less annoying, just set status
     }
 };
 
@@ -73,10 +100,14 @@ const getLocation = () => {
     locationStatus.value = 'Mendapatkan lokasi...';
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
                 form.lat = position.coords.latitude;
                 form.long = position.coords.longitude;
                 locationStatus.value = 'Lokasi berhasil didapatkan!';
+                await nextTick();
+                if (document.getElementById('map')) {
+                    initMap(form.lat, form.long);
+                }
             },
             (error) => {
                 locationStatus.value = 'Gagal mendapatkan lokasi. Pastikan GPS aktif.';
@@ -91,13 +122,21 @@ const getLocation = () => {
 const openModal = () => {
     form.reset();
     form.tanggal = new Date().toISOString().slice(0, 10);
+    form.foto_kunjungan_base64 = ''; // Reset photo
     isModalOpen.value = true;
     getLocation();
+    nextTick(() => {
+        initCamera(); // Auto-start camera
+    });
 };
 
 const closeModal = () => {
     isModalOpen.value = false;
     stopCamera();
+    if (map) {
+        map.remove();
+        map = null;
+    }
 };
 
 const submitKunjungan = () => {
@@ -206,14 +245,14 @@ onUnmounted(() => {
                             <textarea v-model="form.catatan" rows="3" class="w-full rounded-xl border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500" placeholder="Jelaskan kondisi siswa, masukan dari industri, dll." required></textarea>
                         </div>
 
-                        <!-- Lokasi GPS -->
+                        <!-- Lokasi GPS & Map -->
                         <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
                             <div class="flex justify-between items-center mb-2">
                                 <h4 class="font-bold text-blue-800 dark:text-blue-400 text-sm"><i class="fas fa-map-marker-alt"></i> Data Geolocation</h4>
                                 <button type="button" @click="getLocation" class="text-xs text-blue-600 hover:text-blue-800 font-bold bg-blue-100 px-2 py-1 rounded">Refresh Lokasi</button>
                             </div>
                             <div class="text-xs text-blue-700 mb-2">{{ locationStatus }}</div>
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-2 gap-4 mb-3 hidden">
                                 <div>
                                     <label class="block text-xs font-bold text-blue-700 mb-1">Latitude</label>
                                     <input type="text" v-model="form.lat" class="w-full rounded-lg border-blue-200 bg-white/50 text-sm" readonly required>
@@ -223,29 +262,22 @@ onUnmounted(() => {
                                     <input type="text" v-model="form.long" class="w-full rounded-lg border-blue-200 bg-white/50 text-sm" readonly required>
                                 </div>
                             </div>
+                            <!-- Peta -->
+                            <div id="map" class="w-full h-40 rounded-xl border border-blue-200 shadow-inner z-10"></div>
                         </div>
 
-                        <!-- Kamera -->
+                        <!-- Kamera Embedded -->
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Foto Bukti Kunjungan (Selfie di Lokasi)</label>
+                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Foto Bukti Kunjungan (Kamera Tertanam)</label>
                             
-                            <div v-if="!form.foto_kunjungan_base64 && !showCamera" class="flex items-center justify-center w-full">
-                                <label @click="initCamera" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <i class="fas fa-camera text-3xl text-gray-400 mb-2"></i>
-                                        <p class="text-sm font-bold text-gray-500">Buka Kamera</p>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div v-if="showCamera" class="relative rounded-xl overflow-hidden bg-black aspect-video w-full">
+                            <div v-if="!form.foto_kunjungan_base64" class="relative rounded-xl overflow-hidden bg-black aspect-video w-full border border-gray-200 shadow-sm">
                                 <video ref="videoRef" autoplay playsinline class="w-full h-full object-cover"></video>
-                                <button type="button" @click="capturePhoto" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-14 h-14 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center shadow-lg active:scale-95 transition-transform">
-                                    <div class="w-10 h-10 bg-white rounded-full border-2 border-gray-300"></div>
+                                <button type="button" @click="capturePhoto" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-14 h-14 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center shadow-lg active:scale-95 transition-transform" title="Ambil Foto">
+                                    <div class="w-10 h-10 bg-red-500 rounded-full border-2 border-white"></div>
                                 </button>
-                                <button type="button" @click="stopCamera" class="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <div v-if="!hasCamera && !stream" class="absolute inset-0 flex items-center justify-center text-white text-sm bg-gray-800">
+                                    Menghidupkan kamera... (Izinkan akses kamera jika diminta)
+                                </div>
                             </div>
                             
                             <canvas ref="canvasRef" class="hidden"></canvas>

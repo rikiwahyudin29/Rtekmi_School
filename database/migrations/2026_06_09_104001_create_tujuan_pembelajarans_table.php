@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_tujuan_pembelajaran', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('mapel_id')->constrained('tbl_mapel')->onDelete('cascade');
-            $table->foreignId('guru_id')->constrained('tbl_guru')->onDelete('cascade');
-            $table->string('kode_tp');
-            $table->text('deskripsi');
-            $table->string('semester');
-            $table->string('tingkat'); // Misal: Fase E, Fase F, dll
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tbl_tujuan_pembelajaran')) {
+            Schema::create('tbl_tujuan_pembelajaran', function (Blueprint $table) {
+                $table->id();
+                $table->integer('mapel_id');
+                $table->integer('guru_id');
+                $table->string('kode_tp');
+                $table->text('deskripsi');
+                $table->string('semester');
+                $table->string('tingkat'); // Misal: Fase E, Fase F, dll
+                $table->timestamps();
+            });
+        }
     }
 
     /**

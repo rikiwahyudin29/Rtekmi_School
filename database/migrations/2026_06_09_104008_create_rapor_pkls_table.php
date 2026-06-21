@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_rapor_pkl', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
-            $table->foreignId('dudi_id')->constrained('tbl_dudi')->onDelete('cascade');
-            $table->foreignId('tahun_ajaran_id')->constrained('tbl_tahun_ajaran')->onDelete('cascade');
-            $table->integer('semester');
-            $table->string('lokasi');
-            $table->integer('lama_bulan');
-            $table->text('keterangan')->nullable();
-            $table->integer('nilai')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('tbl_rapor_pkl')) {
+            Schema::create('tbl_rapor_pkl', function (Blueprint $table) {
+                $table->id();
+                $table->integer('siswa_id');
+                $table->integer('dudi_id');
+                $table->integer('tahun_ajaran_id');
+                $table->integer('semester');
+                $table->string('lokasi');
+                $table->integer('lama_bulan');
+                $table->text('keterangan')->nullable();
+                $table->integer('nilai')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
