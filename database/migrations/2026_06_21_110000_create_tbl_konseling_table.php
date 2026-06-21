@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('tbl_konseling', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('siswa_id')->constrained('tbl_siswa')->onDelete('cascade');
-            $table->foreignId('guru_id')->constrained('users')->onDelete('cascade');
+            $table->integer('siswa_id');
+            $table->integer('guru_id');
             $table->date('tanggal_konseling');
             $table->enum('jenis_konseling', ['Pribadi', 'Sosial', 'Belajar', 'Karir']);
             $table->string('topik');
