@@ -985,8 +985,12 @@ Route::get('/jalankan-migrasi', function () {
             if (file_exists($path)) {
                 $migration = require_once $path;
                 if (is_object($migration) && method_exists($migration, 'up')) {
-                    $migration->up();
-                    $output .= "Berhasil run: $file <br>";
+                    try {
+                        $migration->up();
+                        $output .= "Berhasil run: $file <br>";
+                    } catch (\Exception $e) {
+                        $output .= "<span style='color:orange'>Skipped/Error $file: " . $e->getMessage() . "</span><br>";
+                    }
                 } else {
                     $output .= "Skipped (bukan class migration): $file <br>";
                 }
