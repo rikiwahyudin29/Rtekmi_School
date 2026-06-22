@@ -532,8 +532,8 @@ input[type="number"] { -moz-appearance: textfield; }
                                 <Link href="/spmb/register" class="inline-flex justify-center items-center py-4 px-8 font-black text-slate-900 uppercase tracking-widest rounded-xl bg-amber-400 hover:bg-amber-300 transition-all shadow-lg shadow-amber-500/20">
                                     Mulai Pendaftaran <i class="fas fa-arrow-right ml-3"></i>
                                 </Link>
-                                <Link href="/pengumuman" class="inline-flex justify-center items-center py-4 px-8 font-bold text-white rounded-xl border border-slate-600 hover:bg-slate-700 transition-all">
-                                    <i class="fas fa-bullhorn mr-3 text-emerald-400"></i> Info Kelulusan
+                                <Link href="/cek-kelulusan" class="inline-flex justify-center items-center py-4 px-8 font-bold text-white rounded-xl border border-slate-600 hover:bg-slate-700 transition-all">
+                                    <i class="fas fa-bullhorn mr-3 text-emerald-400"></i> Cek Kelulusan
                                 </Link>
                             </div>
                         </div>
