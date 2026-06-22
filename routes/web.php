@@ -93,6 +93,8 @@ Route::get('/verifikasi/{token}/cetak', [\App\Http\Controllers\Admin\Surat\Surat
 // Cek Kelulusan
 Route::get('/cek-kelulusan', [\App\Http\Controllers\Front\KelulusanController::class, 'index'])->name('kelulusan.index');
 Route::post('/cek-kelulusan', [\App\Http\Controllers\Front\KelulusanController::class, 'cek'])->name('kelulusan.cek');
+Route::post('/cek-kelulusan/hasil', [\App\Http\Controllers\Front\KelulusanController::class, 'getHasil'])->name('kelulusan.hasil');
+Route::get('/cek-kelulusan/download', [\App\Http\Controllers\Front\KelulusanController::class, 'downloadDokumen'])->name('kelulusan.download');
 
 // Tracer Study (Alumni)
 Route::get('/tracer', [\App\Http\Controllers\Front\TracerFrontController::class, 'index'])->name('tracer.index');
