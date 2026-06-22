@@ -243,8 +243,8 @@ class DashboardController extends Controller
         // 4. E-Rapor
         $totalTP = DB::table('tbl_tujuan_pembelajaran')->where('guru_id', $guruId)->count();
         $totalFormatif = DB::table('tbl_nilai_formatif')
-            ->join('tbl_kompetensi', 'tbl_nilai_formatif.kompetensi_id', '=', 'tbl_kompetensi.id')
-            ->where('tbl_kompetensi.guru_id', $guruId)
+            ->join('tbl_tujuan_pembelajaran', 'tbl_nilai_formatif.tp_id', '=', 'tbl_tujuan_pembelajaran.id')
+            ->where('tbl_tujuan_pembelajaran.guru_id', $guruId)
             ->count();
         $totalSumatif = 0;
         if (\Illuminate\Support\Facades\Schema::hasTable('tbl_nilai_sumatif')) {
