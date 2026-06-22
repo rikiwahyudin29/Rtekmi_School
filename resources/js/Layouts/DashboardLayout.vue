@@ -123,7 +123,7 @@ const menuItems = computed(() => {
     // If 'roles' isn't available, fallback to checking the active 'role'
     const userRoles = (auth.value.roles || [role]).map(r => r.toLowerCase()); 
 
-    const isSuperAdmin = userRoles.some(r => r.includes('superadmin') || r.includes('kepsek'));
+    const isSuperAdmin = userRoles.some(r => r.includes('superadmin') || r.includes('kepsek') || (r.includes('admin') && !r.includes('web')));
     const isAdmin = userRoles.some(r => r.includes('admin') && !r.includes('web'));
     const isKurikulum = userRoles.some(r => r.includes('kurikulum'));
     const isKesiswaan = userRoles.some(r => r.includes('kesiswaan'));
@@ -311,7 +311,8 @@ const menuItems = computed(() => {
             { isHeader: true, name: 'Wakasek Bimbingan Konseling' },
             { name: 'Bimbingan Konseling', icon: 'fas fa-hands-helping', route: '#', active: route().current('bk.*'), children: [
                 { name: 'Master Pelanggaran', icon: 'fas fa-balance-scale', route: 'bk.master-pelanggaran.index', active: route().current('bk.master-pelanggaran.*') },
-                { name: 'Buku Kasus Siswa', icon: 'fas fa-gavel', route: 'bk.pelanggaran.index', active: route().current('bk.pelanggaran.*') },
+                { name: 'Buku Kasus Siswa', icon: 'fas fa-gavel', route: 'bk.pelanggaran.index', active: route().current('bk.pelanggaran.index') },
+                { name: 'Rekap Poin Siswa', icon: 'fas fa-users-slash', route: 'bk.pelanggaran.rekap', active: route().current('bk.pelanggaran.rekap') },
                 { name: 'Catatan Konseling', icon: 'fas fa-notes-medical', route: 'bk.konseling.index', active: route().current('bk.konseling.*') },
             ]}
         );
@@ -372,14 +373,14 @@ const menuItems = computed(() => {
             { name: 'Dashboard', icon: 'fas fa-th-large', route: 'dashboard', active: route().current('dashboard') },
             { name: 'Profil Saya', icon: 'fas fa-user-circle', route: 'profile.edit', active: route().current('profile.edit') },
             { isHeader: true, name: 'Area Akademik Siswa' },
-            { name: 'Materi & Bahan Ajar', icon: 'fas fa-book-reader', route: '#', active: false },
-            { name: 'Tugas Sekolah', icon: 'fas fa-tasks', route: '#', active: false },
+            { name: 'Materi & Bahan Ajar', icon: 'fas fa-book-reader', route: 'siswa.materi.index', active: route().current('siswa.materi.*') },
+            { name: 'Tugas Sekolah', icon: 'fas fa-tasks', route: 'siswa.tugas.index', active: route().current('siswa.tugas.*') },
             { name: 'Rapor (Hasil Belajar)', icon: 'fas fa-file-signature', route: 'siswa.rapor.index', active: route().current('siswa.rapor.*') },
             { isHeader: true, name: 'Computer Based Test' },
             { name: 'Masuk Ujian CBT', icon: 'fas fa-laptop-code', route: 'siswa.ujian.index', active: route().current('siswa.ujian.*') },
             { isHeader: true, name: 'Layanan & Administrasi' },
-            { name: 'Kedisiplinan Saya', icon: 'fas fa-user-shield', route: '#', active: false },
-            { name: 'Keuangan Saya', icon: 'fas fa-wallet', route: '#', active: false },
+            { name: 'Kedisiplinan Saya', icon: 'fas fa-user-shield', route: 'siswa.kedisiplinan.index', active: route().current('siswa.kedisiplinan.*') },
+            { name: 'Keuangan Saya', icon: 'fas fa-wallet', route: 'siswa.keuangan.index', active: route().current('siswa.keuangan.*') },
             { name: 'Buku Tabungan', icon: 'fas fa-piggy-bank', route: 'siswa.tabungan.index', active: route().current('siswa.tabungan.*') },
             { name: 'Presensi', icon: 'fas fa-user-clock', route: '#', active: route().current('siswa.presensi.*'), children: [
                 { name: 'Absen Datang/Pulang', route: 'siswa.presensi.absen_harian', active: route().current('siswa.presensi.absen_harian') },

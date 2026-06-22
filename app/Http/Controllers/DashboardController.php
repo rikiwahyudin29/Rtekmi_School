@@ -323,29 +323,113 @@ class DashboardController extends Controller
 
     private function siswaDashboard()
     {
-        $siswa = auth()->user()->siswa ?? \App\Models\Siswa::where('user_id', auth()->id())->first();
+        $siswa = \App\Models\Siswa::with(['kelas', 'jurusan'])->where('user_id', auth()->id())->first();
         $siswaId = $siswa->id ?? null;
+        $kelasId = $siswa->kelas_id ?? null;
         
+        // 1. E-Learning (Ujian & Tugas)
         $totalUjianDiikuti = \App\Models\UjianSiswa::where('siswa_id', $siswaId)->count();
         $ujianAktif = \App\Models\UjianSiswa::where('siswa_id', $siswaId)
             ->whereHas('jadwal', function($q) {
                 $q->where('status_ujian', 'AKTIF');
             })->count();
+            
+        $tugasBelumSelesai = \App\Models\Tugas::where('kelas_id', $kelasId)
+            ->where('status', 1)
+            ->whereDoesntHave('kumpul', function($query) use ($siswaId) {
+                $query->where('siswa_id', $siswaId);
+            })->count();
 
-        // Dummy Data untuk Chart Kehadiran (bisa diganti query db asli nanti)
+        // 2. Keuangan (Tabungan & Tagihan)
+        $saldoTabungan = \App\Models\Rekening::where('siswa_id', $siswaId)->value('saldo') ?? 0;
+        
+        $totalTagihanAktif = \App\Models\Tagihan::where('id_siswa', $siswaId)
+            ->where('status_bayar', '!=', 'LUNAS')
+            ->get()
+            ->sum(function($q) {
+                return $q->nominal_tagihan - $q->nominal_terbayar;
+            });
+
+        // 3. Kedisiplinan (Sisa Poin)
+        $poinPelanggaran = \App\Models\SiswaPelanggaran::with('pelanggaran')
+            ->where('siswa_id', $siswaId)
+            ->get()
+            ->sum(function($p) {
+                return $p->pelanggaran->poin ?? 0;
+            });
+            
+        $sisaPoin = 100 - $poinPelanggaran;
+        
+        $setSp = \App\Models\SetSp::first();
+        $batasSp1 = $setSp ? $setSp->sp_1 : 50;
+        $batasSp2 = $setSp ? $setSp->sp_2 : 30;
+        $batasSp3 = $setSp ? $setSp->sp_3 : 0;
+        
+        $statusSp = 'Aman';
+        if ($sisaPoin <= $batasSp3) {
+            $statusSp = 'SP 3 (Dikeluarkan)';
+        } elseif ($sisaPoin <= $batasSp2) {
+            $statusSp = 'SP 2';
+        } elseif ($sisaPoin <= $batasSp1) {
+            $statusSp = 'SP 1';
+        }
+
+        // 4. Kehadiran (Presensi Bulan Ini)
+        $bulanIni = date('Y-m');
+        $presensiBulanIni = \App\Models\Presensi::where('user_id', $siswaId)
+            ->where('role', 'siswa')
+            ->where('tanggal', 'like', "$bulanIni%")
+            ->get();
+            
+        $totalHadir = $presensiBulanIni->whereIn('status_kehadiran', ['Hadir', 'Terlambat', 'Dinas Luar'])->count();
+        $totalAlpha = $presensiBulanIni->where('status_kehadiran', 'Alpha')->count();
+
+        // Data Grafik 7 Hari Terakhir
         $labels = [];
         $kehadiran = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = date('Y-m-d', strtotime("-$i days"));
             $labels[] = date('d M', strtotime($date)); 
-            $kehadiran[] = rand(90, 100); 
+            
+            // Cek presensi di tanggal ini
+            $absenHariIni = \App\Models\Presensi::where('user_id', $siswaId)
+                ->where('role', 'siswa')
+                ->where('tanggal', $date)
+                ->first();
+                
+            if ($absenHariIni && in_array($absenHariIni->status_kehadiran, ['Hadir', 'Terlambat', 'Dinas Luar'])) {
+                $kehadiran[] = 100;
+            } else if ($absenHariIni && in_array($absenHariIni->status_kehadiran, ['Sakit', 'Izin'])) {
+                $kehadiran[] = 50; // Setengah/Izin
+            } else {
+                // Jika libur (hari minggu)
+                $kodeHari = date('N', strtotime($date));
+                if ($kodeHari == 6 || $kodeHari == 7) {
+                    $kehadiran[] = 0;
+                } else {
+                    $kehadiran[] = 0; // Alpha atau belum diabsen
+                }
+            }
         }
 
         return Inertia::render('Siswa/Dashboard', [
+            'siswa' => $siswa,
             'stats' => [
                 'ujian_diikuti' => $totalUjianDiikuti,
                 'ujian_aktif' => $ujianAktif,
-                'tugas_belum' => 0, // Dummy
+                'tugas_belum' => $tugasBelumSelesai,
+            ],
+            'keuangan' => [
+                'saldo_tabungan' => $saldoTabungan,
+                'tagihan_aktif' => $totalTagihanAktif,
+            ],
+            'kedisiplinan' => [
+                'sisa_poin' => $sisaPoin,
+                'status_sp' => $statusSp,
+            ],
+            'kehadiran' => [
+                'hadir' => $totalHadir,
+                'alpha' => $totalAlpha,
             ],
             'chart' => [
                 'labels' => $labels,

@@ -195,68 +195,88 @@ class PresensiController extends Controller
     {
         $bulan = $request->get('bulan') ?? date('Y-m');
         $id_siswa = Auth::user()->siswa->id ?? 0;
-        $jml_hari = date('t', strtotime($bulan));
+
+        $selected_time = strtotime($bulan . '-01');
+        $prev_month_time = strtotime('-1 month', $selected_time);
+        
+        $start_date = date('Y-m', $prev_month_time) . '-19';
+        $end_date = $bulan . '-18';
+
+        $period = \Carbon\CarbonPeriod::create($start_date, $end_date);
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
 
         $absen = Presensi::where('user_id', $id_siswa)
             ->where('role', 'siswa')
-            ->where('tanggal', 'like', "$bulan%")
+            ->whereBetween('tanggal', [$start_date, $end_date])
             ->get();
 
-        $absen_map = [];
+        $absen_db_map = [];
         foreach ($absen as $a) {
-            $tgl = (int) date('d', strtotime($a->tanggal));
-            $absen_map[$tgl] = [
+            $verif = $a->status_verifikasi ?? 'Disetujui';
+            $absen_db_map[$a->tanggal] = [
                 'status' => $a->status_kehadiran,
-                'verif' => $a->status_verifikasi
+                'verif' => $verif,
+                'menit' => $a->menit_terlambat ?? 0
             ];
         }
 
         $libur_array = [];
-        $liburs = \App\Models\HariLibur::where('tanggal', 'like', "$bulan%")->get();
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
         foreach ($liburs as $lbr) {
-            $libur_array[] = (int) date('d', strtotime($lbr->tanggal));
+            $libur_array[] = $lbr->tanggal;
         }
 
         $map = [];
         $total = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0];
+        $total_menit = 0;
         $hari_ini_real = date('Y-m-d');
 
-        for ($d = 1; $d <= $jml_hari; $d++) {
-            $tanggal_loop = $bulan . '-' . str_pad($d, 2, '0', STR_PAD_LEFT);
-            $kode_hari = date('N', strtotime($tanggal_loop));
-
+        foreach ($dates as $tgl) {
+            $kode_hari = date('N', strtotime($tgl));
             $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-            $is_libur_nasional = in_array($d, $libur_array);
-            $is_future = (strtotime($tanggal_loop) > strtotime($hari_ini_real));
+            $is_libur_nasional = in_array($tgl, $libur_array);
+            $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
-            $data_tgl = $absen_map[$d] ?? null;
+            $data_tgl = $absen_db_map[$tgl] ?? null;
 
             if ($is_weekend || $is_libur_nasional || $is_future) {
-                $st_final = '-';
+                $status_final = '-';
             } else {
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
                     $verif = $data_tgl['verif'];
-                    $st_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    $status_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    
+                    if ($status_final == 'Terlambat') {
+                        $total_menit += $data_tgl['menit'];
+                    }
                 } else {
-                    $st_final = 'Alpha';
+                    $status_final = 'Alpha';
                 }
             }
 
-            $map[$d] = $st_final;
+            $map[$tgl] = $status_final;
 
-            if ($st_final == 'Hadir') $total['H']++;
-            if ($st_final == 'Terlambat') { $total['T']++; $total['H']++; }
-            if ($st_final == 'Sakit') $total['S']++;
-            if ($st_final == 'Izin') $total['I']++;
-            if ($st_final == 'Alpha') $total['A']++;
+            if ($status_final == 'Hadir') $total['H']++;
+            if ($status_final == 'Terlambat') { $total['T']++; $total['H']++; }
+            if ($status_final == 'Sakit') $total['S']++;
+            if ($status_final == 'Izin') $total['I']++;
+            if ($status_final == 'Alpha') $total['A']++;
         }
+        
+        $jam_t = floor($total_menit / 60);
+        $menit_t = $total_menit % 60;
+        $format_terlambat = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
 
         return Inertia::render('Siswa/Presensi/Rekap', [
             'bulan' => $bulan,
             'map' => $map,
             'total' => $total,
-            'jml_hari' => $jml_hari
+            'dates' => $dates,
+            'format_terlambat' => $format_terlambat
         ]);
     }
 
@@ -264,72 +284,94 @@ class PresensiController extends Controller
     {
         $bulan = $request->get('bulan') ?? date('Y-m');
         $id_siswa = Auth::user()->siswa->id ?? 0;
-        $jml_hari = date('t', strtotime($bulan));
+        
+        $selected_time = strtotime($bulan . '-01');
+        $prev_month_time = strtotime('-1 month', $selected_time);
+        
+        $start_date = date('Y-m', $prev_month_time) . '-19';
+        $end_date = $bulan . '-18';
 
-        $siswa = Siswa::with('kelas')->find($id_siswa);
+        $period = \Carbon\CarbonPeriod::create($start_date, $end_date);
+        $dates = [];
+        foreach ($period as $date) {
+            $dates[] = $date->format('Y-m-d');
+        }
+
+        $siswa = \App\Models\Siswa::find($id_siswa);
+        $nama_siswa = $siswa->nama_lengkap ?? 'Siswa';
 
         $absen = Presensi::where('user_id', $id_siswa)
             ->where('role', 'siswa')
-            ->where('tanggal', 'like', "$bulan%")
+            ->whereBetween('tanggal', [$start_date, $end_date])
             ->get();
 
-        $absen_map = [];
+        $absen_db_map = [];
         foreach ($absen as $a) {
-            $tgl = (int) date('d', strtotime($a->tanggal));
-            $absen_map[$tgl] = [
-                'status' => $a->status_kehadiran,
-                'verif' => $a->status_verifikasi
+            $verif = $a->status_verifikasi ?? 'Disetujui';
+            $absen_db_map[$a->tanggal] = [
+                'status' => $a->status_kehadiran, 
+                'verif' => $verif,
+                'menit' => $a->menit_terlambat ?? 0
             ];
         }
 
         $libur_array = [];
-        $liburs = \App\Models\HariLibur::where('tanggal', 'like', "$bulan%")->get();
+        $liburs = \App\Models\HariLibur::whereBetween('tanggal', [$start_date, $end_date])->get();
         foreach ($liburs as $lbr) {
-            $libur_array[] = (int) date('d', strtotime($lbr->tanggal));
+            $libur_array[] = $lbr->tanggal;
         }
 
         $map = [];
         $total = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0, 'T' => 0];
+        $total_menit = 0;
         $hari_ini_real = date('Y-m-d');
 
-        for ($d = 1; $d <= $jml_hari; $d++) {
-            $tanggal_loop = $bulan . '-' . str_pad($d, 2, '0', STR_PAD_LEFT);
-            $kode_hari = date('N', strtotime($tanggal_loop));
-
+        foreach ($dates as $tgl) {
+            $kode_hari = date('N', strtotime($tgl));
             $is_weekend = ($kode_hari == 6 || $kode_hari == 7);
-            $is_libur_nasional = in_array($d, $libur_array);
-            $is_future = (strtotime($tanggal_loop) > strtotime($hari_ini_real));
+            $is_libur_nasional = in_array($tgl, $libur_array);
+            $is_future = (strtotime($tgl) > strtotime($hari_ini_real));
 
-            $data_tgl = $absen_map[$d] ?? null;
+            $data_tgl = $absen_db_map[$tgl] ?? null;
 
             if ($is_weekend || $is_libur_nasional || $is_future) {
-                $st_final = '-';
+                $status_final = '-';
             } else {
                 if ($data_tgl) {
                     $st_asli = $data_tgl['status'];
                     $verif = $data_tgl['verif'];
-                    $st_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    $status_final = (in_array($st_asli, ['Izin', 'Sakit']) && $verif !== 'Disetujui') ? 'Alpha' : $st_asli;
+                    
+                    if ($status_final == 'Terlambat') {
+                        $total_menit += $data_tgl['menit'];
+                    }
                 } else {
-                    $st_final = 'Alpha';
+                    $status_final = 'Alpha';
                 }
             }
 
-            $map[$d] = $st_final;
+            $map[$tgl] = $status_final;
 
-            if ($st_final == 'Hadir') $total['H']++;
-            if ($st_final == 'Terlambat') { $total['T']++; $total['H']++; }
-            if ($st_final == 'Sakit') $total['S']++;
-            if ($st_final == 'Izin') $total['I']++;
-            if ($st_final == 'Alpha') $total['A']++;
+            if ($status_final == 'Hadir') $total['H']++;
+            if ($status_final == 'Terlambat') { $total['T']++; $total['H']++; }
+            if ($status_final == 'Sakit') $total['S']++;
+            if ($status_final == 'Izin') $total['I']++;
+            if ($status_final == 'Alpha') $total['A']++;
         }
+        
+        $jam_t = floor($total_menit / 60);
+        $menit_t = $total_menit % 60;
+        $format_terlambat = ($jam_t > 0 ? $jam_t . 'j ' : '') . ($menit_t > 0 || $jam_t == 0 ? $menit_t . 'm' : '');
 
         return view('presensi.cetak_rekap_siswa', [
             'siswa' => $siswa,
+            'nama_siswa' => $nama_siswa,
             'bulan' => $bulan,
             'map' => $map,
             'total' => $total,
-            'jml_hari' => $jml_hari,
-            'sekolah' => Sekolah::find(1)
+            'dates' => $dates,
+            'format_terlambat' => $format_terlambat,
+            'sekolah' => \App\Models\Sekolah::find(1)
         ]);
     }
 }

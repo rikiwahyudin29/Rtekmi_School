@@ -142,6 +142,64 @@ Route::get('/debug-sidebar', function() {
     return implode("", array_slice($lines, 500, 30));
 });
 
+Route::get('/clear-all', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return 'Caches cleared! Please go back and hard refresh (Ctrl+F5).';
+});
+
+Route::get('/recreate-tbl-formatif', function() {
+    try {
+        \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS tbl_nilai_formatif');
+        \Illuminate\Support\Facades\DB::statement('CREATE TABLE tbl_nilai_formatif (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            siswa_id INT NOT NULL,
+            mapel_id INT NOT NULL,
+            tp_id INT NOT NULL,
+            tahun_ajaran_id INT DEFAULT NULL,
+            nilai DOUBLE(8, 2) DEFAULT 0,
+            created_at TIMESTAMP NULL DEFAULT NULL,
+            updated_at TIMESTAMP NULL DEFAULT NULL
+        )');
+        
+        \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS tbl_nilai_sumatif');
+        \Illuminate\Support\Facades\DB::statement('CREATE TABLE tbl_nilai_sumatif (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            mapel_id INT NOT NULL,
+            guru_id INT NOT NULL,
+            siswa_id INT NOT NULL,
+            jenis VARCHAR(255) NOT NULL,
+            nilai DOUBLE(8, 2) DEFAULT 0,
+            semester INT NOT NULL,
+            tahun_ajaran_id INT NOT NULL,
+            created_at TIMESTAMP NULL DEFAULT NULL,
+            updated_at TIMESTAMP NULL DEFAULT NULL
+        )');
+        
+        return 'Tables recreated successfully!';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+
+Route::get('/fix-db', function() {
+    try {
+        \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS tbl_nilai_formatif');
+        \Illuminate\Support\Facades\DB::statement('CREATE TABLE tbl_nilai_formatif (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            siswa_id INT NOT NULL,
+            mapel_id INT NOT NULL,
+            tp_id INT NOT NULL,
+            tahun_ajaran_id INT DEFAULT NULL,
+            nilai DOUBLE(8, 2) DEFAULT 0,
+            created_at TIMESTAMP NULL DEFAULT NULL,
+            updated_at TIMESTAMP NULL DEFAULT NULL
+        )');
+        return 'Table tbl_nilai_formatif recreated successfully!';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -281,7 +339,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('penilaian/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'halamanGenerateNilaiAkhir'])->name('penilaian.halaman_generate_nilai_akhir');
         
         // Tugas Tambahan
-        Route::resource('walikelas', \App\Http\Controllers\Guru\WalikelasController::class);
+        // Route::resource('walikelas', \App\Http\Controllers\Guru\WalikelasController::class);
         Route::resource('ekskul', \App\Http\Controllers\Guru\EkskulController::class);
         Route::prefix('ekskul')->name('ekskul.')->group(function () {
             Route::get('anggota/{id_ekskul}', [\App\Http\Controllers\Guru\EkskulController::class, 'anggota'])->name('anggota');
@@ -338,8 +396,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('bk')->name('bk.')->group(function () {
         // Pelanggaran / Buku Kasus
         Route::get('pelanggaran/pdf', [\App\Http\Controllers\Bk\PelanggaranController::class, 'exportPdf'])->name('pelanggaran.pdf');
+        Route::get('pelanggaran/rekap', [\App\Http\Controllers\Bk\PelanggaranController::class, 'rekapSiswa'])->name('pelanggaran.rekap');
         Route::get('pelanggaran', [\App\Http\Controllers\Bk\PelanggaranController::class, 'index'])->name('pelanggaran.index');
         Route::post('pelanggaran/store', [\App\Http\Controllers\Bk\PelanggaranController::class, 'store'])->name('pelanggaran.store');
+        Route::post('pelanggaran/sp', [\App\Http\Controllers\Bk\PelanggaranController::class, 'updateSp'])->name('pelanggaran.sp.update');
         Route::delete('pelanggaran/destroy/{id}', [\App\Http\Controllers\Bk\PelanggaranController::class, 'destroy'])->name('pelanggaran.destroy');
 
         // Master Pelanggaran
@@ -697,7 +757,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/galeri/{id}', [\App\Http\Controllers\Admin\Web\GaleriController::class, 'destroy'])->name('galeri.destroy');
         });
 
-    });
+    }); // Close Route::prefix('admin')
 
     // App Setting and Role Group
     Route::post('/settings/theme', [SettingController::class, 'updateTheme'])->name('settings.theme');
@@ -707,11 +767,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::get('materi', [\App\Http\Controllers\Siswa\MateriController::class, 'index'])->name('materi.index');
         Route::get('tugas', [\App\Http\Controllers\Siswa\TugasController::class, 'index'])->name('tugas.index');
+        Route::post('tugas/upload', [\App\Http\Controllers\Siswa\TugasController::class, 'upload'])->name('tugas.upload');
         Route::get('ujian', [\App\Http\Controllers\Siswa\UjianController::class, 'index'])->name('ujian.index');
         
         // Tabungan
         Route::get('tabungan', [\App\Http\Controllers\Siswa\TabunganController::class, 'index'])->name('tabungan.index');
         Route::post('tabungan/transfer', [\App\Http\Controllers\Siswa\TabunganController::class, 'prosesTransfer'])->name('tabungan.transfer');
+        Route::post('tabungan/bayar-tagihan', [\App\Http\Controllers\Siswa\TabunganController::class, 'prosesBayarTagihan'])->name('tabungan.bayar-tagihan');
+
+        // Kedisiplinan
+        Route::get('kedisiplinan', [\App\Http\Controllers\Siswa\KedisiplinanController::class, 'index'])->name('kedisiplinan.index');
+
+        // Keuangan
+        Route::get('keuangan', [\App\Http\Controllers\Siswa\KeuanganController::class, 'index'])->name('keuangan.index');
+        Route::post('keuangan/bayar-qris', [\App\Http\Controllers\Siswa\KeuanganController::class, 'bayarQris'])->name('keuangan.bayar-qris');
     });
 
     // Siswa CBT (Computer Based Test) Group

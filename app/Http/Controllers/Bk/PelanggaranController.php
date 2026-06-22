@@ -39,14 +39,19 @@ class PelanggaranController extends Controller
         // 1. Ambil Riwayat Pelanggaran (Paginasi)
         $riwayat = $query->orderBy('tanggal', 'DESC')->paginate(10)->withQueryString();
 
-        // 2. Data Statistik Top Point
+        $set_sp = \App\Models\SetSp::first();
+        if (!$set_sp) {
+            $set_sp = \App\Models\SetSp::create(['sp_1' => 50, 'sp_2' => 30, 'sp_3' => 0]);
+        }
+
+        // 2. Data Statistik Siswa Paling Kritis
         $total_kasus = $riwayat->count();
-        $poin_tertinggi = DB::table('tbl_siswa_pelanggaran as p')
+        $poin_kritis = DB::table('tbl_siswa_pelanggaran as p')
             ->join('tbl_siswa as s', 's.id', '=', 'p.siswa_id')
             ->join('tbl_master_pelanggaran as m', 'm.id', '=', 'p.pelanggaran_id')
-            ->select('s.nama_lengkap', DB::raw('SUM(m.poin) as total_poin'))
+            ->select('s.nama_lengkap', DB::raw('100 - SUM(m.poin) as sisa_poin'))
             ->groupBy('p.siswa_id', 's.nama_lengkap')
-            ->orderBy('total_poin', 'DESC')
+            ->orderBy('sisa_poin', 'ASC')
             ->limit(1)
             ->first();
 
@@ -58,9 +63,10 @@ class PelanggaranController extends Controller
             'riwayat' => $riwayat,
             'siswa' => $siswa,
             'jenis' => $jenis,
+            'set_sp' => $set_sp,
             'stats' => [
                 'total' => $total_kasus,
-                'top_siswa' => $poin_tertinggi ? $poin_tertinggi->nama_lengkap . ' (' . $poin_tertinggi->total_poin . ' Poin)' : '-'
+                'top_siswa' => $poin_kritis ? $poin_kritis->nama_lengkap . ' (Sisa ' . $poin_kritis->sisa_poin . ' Poin)' : '-'
             ],
             'filters' => $request->only(['search', 'start_date', 'end_date'])
         ]);
@@ -125,5 +131,68 @@ class PelanggaranController extends Controller
         $pelanggaran = SiswaPelanggaran::findOrFail($id);
         $pelanggaran->delete();
         return back()->with('message', 'Data pelanggaran berhasil dihapus.');
+    }
+
+    public function updateSp(Request $request)
+    {
+        $request->validate([
+            'sp_1' => 'required|numeric',
+            'sp_2' => 'required|numeric',
+            'sp_3' => 'required|numeric',
+        ]);
+
+        $set_sp = \App\Models\SetSp::first();
+        if ($set_sp) {
+            $set_sp->update([
+                'sp_1' => $request->sp_1,
+                'sp_2' => $request->sp_2,
+                'sp_3' => $request->sp_3
+            ]);
+        } else {
+            \App\Models\SetSp::create([
+                'sp_1' => $request->sp_1,
+                'sp_2' => $request->sp_2,
+                'sp_3' => $request->sp_3
+            ]);
+        }
+
+        return back()->with('message', 'Pengaturan Batas SP berhasil diperbarui.');
+    }
+
+    public function rekapSiswa(Request $request)
+    {
+        $kelas = \App\Models\Kelas::orderBy('nama_kelas', 'ASC')->get();
+        
+        $set_sp = \App\Models\SetSp::first();
+        if (!$set_sp) {
+            $set_sp = \App\Models\SetSp::create(['sp_1' => 50, 'sp_2' => 30, 'sp_3' => 0]);
+        }
+
+        $siswa = [];
+        $selected_kelas = $request->kelas_id;
+
+        if ($selected_kelas) {
+            $siswa = \App\Models\Siswa::with('kelas')
+                ->where('kelas_id', $selected_kelas)
+                ->orderBy('nama_lengkap', 'ASC')
+                ->get()
+                ->map(function ($s) {
+                    $total_poin = DB::table('tbl_siswa_pelanggaran as p')
+                        ->join('tbl_master_pelanggaran as m', 'm.id', '=', 'p.pelanggaran_id')
+                        ->where('p.siswa_id', $s->id)
+                        ->sum('m.poin');
+                    
+                    $sisa_poin = 100 - $total_poin;
+                    $s->sisa_poin = $sisa_poin;
+                    return $s;
+                });
+        }
+
+        return Inertia::render('Bk/Pelanggaran/RekapSiswa', [
+            'kelas' => $kelas,
+            'siswa' => $siswa,
+            'set_sp' => $set_sp,
+            'selected_kelas' => $selected_kelas
+        ]);
     }
 }

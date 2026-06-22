@@ -94,19 +94,19 @@ const formatTanggal = (tgl) => {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
-                                <th class="p-4 font-bold">No</th>
+                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200 whitespace-nowrap">
+                                <th class="p-4 font-bold w-12 text-center">No</th>
                                 <th class="p-4 font-bold">Nama Siswa</th>
-                                <th class="p-4 font-bold">Status</th>
-                                <th class="p-4 font-bold">Waktu Kumpul</th>
-                                <th class="p-4 font-bold">File Jawaban</th>
-                                <th class="p-4 font-bold text-center">Nilai</th>
-                                <th class="p-4 font-bold text-right">Aksi</th>
+                                <th class="p-4 font-bold w-32">Status</th>
+                                <th class="p-4 font-bold w-48">Waktu Kumpul</th>
+                                <th class="p-4 font-bold w-36 text-center">File Jawaban</th>
+                                <th class="p-4 font-bold w-28 text-center">Nilai</th>
+                                <th class="p-4 font-bold w-36 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 text-sm">
                             <tr v-for="(s, index) in siswa" :key="s.id" class="hover:bg-gray-50/50 transition">
-                                <td class="p-4 text-gray-500">{{ index + 1 }}</td>
+                                <td class="p-4 text-gray-500 text-center">{{ index + 1 }}</td>
                                 <td class="p-4">
                                     <p class="font-bold text-gray-800">{{ s.nama_lengkap }}</p>
                                     <p class="text-xs text-gray-500">NIS: {{ s.nis }}</p>
@@ -125,13 +125,13 @@ const formatTanggal = (tgl) => {
                                 </td>
 
                                 <!-- Waktu -->
-                                <td class="p-4 text-gray-600">
-                                    {{ pengumpulan[s.id] ? formatTanggal(pengumpulan[s.id].created_at) : '-' }}
+                                <td class="p-4 text-gray-600 whitespace-nowrap text-xs font-medium">
+                                    {{ pengumpulan[s.id] ? formatTanggal(pengumpulan[s.id].tgl_kumpul || pengumpulan[s.id].created_at) : '-' }}
                                 </td>
 
                                 <!-- File -->
-                                <td class="p-4">
-                                    <a v-if="pengumpulan[s.id] && pengumpulan[s.id].file_jawaban" :href="`/uploads/tugas_kumpul/${pengumpulan[s.id].file_jawaban}`" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition">
+                                <td class="p-4 text-center">
+                                    <a v-if="pengumpulan[s.id] && pengumpulan[s.id].file_jawaban" :href="`/uploads/tugas_siswa/${pengumpulan[s.id].file_jawaban}`" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition">
                                         <i class="fas fa-file-download"></i> Download
                                     </a>
                                     <span v-else class="text-gray-400 italic text-xs">-</span>
@@ -146,9 +146,9 @@ const formatTanggal = (tgl) => {
                                 </td>
 
                                 <!-- Aksi -->
-                                <td class="p-4 text-right">
-                                    <button @click="openGradeModal(s)" class="px-3 py-1.5 bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-700 text-xs font-bold rounded-lg transition">
-                                        Beri Nilai
+                                <td class="p-4 text-right whitespace-nowrap">
+                                    <button @click="openGradeModal(s)" class="px-3 py-1.5 bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-700 text-xs font-bold rounded-lg transition shadow-sm border border-gray-200">
+                                        <i class="fas fa-search mr-1 text-[10px]"></i> Review & Nilai
                                     </button>
                                 </td>
                             </tr>
@@ -174,6 +174,11 @@ const formatTanggal = (tgl) => {
                         <p class="text-xs text-indigo-500 font-bold uppercase tracking-wider mb-1">Nama Siswa</p>
                         <p class="font-black text-indigo-900 text-xl">{{ selectedSiswa?.nama_lengkap }}</p>
                         <p class="text-sm text-indigo-600 mt-1">NIS: {{ selectedSiswa?.nis }}</p>
+                    </div>
+
+                    <div v-if="pengumpulan[selectedSiswa?.id] && pengumpulan[selectedSiswa?.id].catatan_siswa" class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2"><i class="fas fa-comment-alt mr-1"></i> Jawaban / Catatan Siswa</p>
+                        <div class="text-gray-700 text-sm whitespace-pre-wrap">{{ pengumpulan[selectedSiswa?.id].catatan_siswa }}</div>
                     </div>
 
                     <form @submit.prevent="submitGrade" class="space-y-5">

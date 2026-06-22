@@ -9,7 +9,8 @@ const props = defineProps({
     siswa: Array,
     jenis: Array,
     stats: Object,
-    filters: Object
+    filters: Object,
+    set_sp: Object
 });
 
 const search = ref(props.filters?.search || '');
@@ -78,6 +79,30 @@ const deletePelanggaran = (id) => {
         router.delete(route('bk.pelanggaran.destroy', id));
     }
 };
+
+const isSettingModalOpen = ref(false);
+const spForm = useForm({
+    sp_1: props.set_sp?.sp_1 || 50,
+    sp_2: props.set_sp?.sp_2 || 30,
+    sp_3: props.set_sp?.sp_3 || 0
+});
+
+const openSettingModal = () => {
+    spForm.sp_1 = props.set_sp?.sp_1 || 50;
+    spForm.sp_2 = props.set_sp?.sp_2 || 30;
+    spForm.sp_3 = props.set_sp?.sp_3 || 0;
+    isSettingModalOpen.value = true;
+};
+
+const closeSettingModal = () => {
+    isSettingModalOpen.value = false;
+};
+
+const submitSetting = () => {
+    spForm.post(route('pelanggaran.sp.update'), {
+        onSuccess: () => closeSettingModal()
+    });
+};
 </script>
 
 <template>
@@ -95,7 +120,10 @@ const deletePelanggaran = (id) => {
                             <h2 class="text-3xl font-black tracking-tight mb-2">Buku Kasus Siswa</h2>
                             <p class="text-rose-200/90 font-medium text-sm">Monitoring kedisiplinan dan poin pelanggaran siswa.</p>
                         </div>
-                        <div class="relative z-10 mt-6 md:mt-0">
+                        <div class="relative z-10 mt-6 md:mt-0 flex gap-3 flex-wrap">
+                            <button @click="openSettingModal" class="px-5 py-3.5 bg-rose-800 border border-rose-600 text-rose-100 font-bold rounded-2xl shadow-xl hover:bg-rose-900 transition-all flex items-center">
+                                <i class="fas fa-cog mr-2"></i> Pengaturan
+                            </button>
                             <button @click="openModal" class="px-6 py-3.5 bg-white text-rose-700 font-black rounded-2xl shadow-xl shadow-rose-900/20 hover:scale-105 transition-all flex items-center">
                                 <i class="fas fa-plus-circle mr-2 text-lg"></i> Catat Pelanggaran
                             </button>
@@ -115,8 +143,8 @@ const deletePelanggaran = (id) => {
                                 </div>
                             </div>
                             <div class="pt-4 border-t border-gray-100">
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Top Poin Pelanggaran</p>
-                                <p class="text-sm font-black text-gray-800 flex items-center"><i class="fas fa-crown text-amber-400 mr-2"></i> {{ stats.top_siswa }}</p>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Siswa Paling Kritis</p>
+                                <p class="text-sm font-black text-rose-600 flex items-center"><i class="fas fa-exclamation-circle text-rose-400 mr-2"></i> {{ stats.top_siswa }}</p>
                             </div>
                         </div>
                     </div>
@@ -279,6 +307,48 @@ const deletePelanggaran = (id) => {
                     <button @click="closeModal" class="px-5 py-3 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">Batal</button>
                     <button @click="submitForm" class="px-6 py-3 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-600/20 disabled:opacity-50 transition-all flex items-center" :disabled="form.processing">
                         {{ form.processing ? 'Menyimpan...' : 'Simpan Kasus' }} <i class="fas fa-save ml-2" v-if="!form.processing"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Pengaturan SP -->
+        <div v-if="isSettingModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm" @click="closeSettingModal"></div>
+            <div class="bg-white rounded-3xl w-full max-w-sm relative z-10 overflow-hidden shadow-2xl">
+                <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gray-200 text-gray-600 rounded-2xl flex items-center justify-center shadow-inner">
+                        <i class="fas fa-cog text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-gray-900">Pengaturan SP</h3>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Batas Sisa Poin</p>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2 ml-1">Ambang Batas SP 1</label>
+                        <input type="number" v-model="spForm.sp_1" class="w-full rounded-xl border-gray-200 text-sm focus:ring-rose-500 font-bold text-center" placeholder="50">
+                        <p class="text-[10px] text-gray-500 mt-1 ml-1">Sisa poin <= nilai ini memicu SP 1.</p>
+                        <div v-if="spForm.errors.sp_1" class="text-rose-500 text-xs mt-1 ml-1 font-bold">{{ spForm.errors.sp_1 }}</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2 ml-1">Ambang Batas SP 2</label>
+                        <input type="number" v-model="spForm.sp_2" class="w-full rounded-xl border-gray-200 text-sm focus:ring-rose-500 font-bold text-center" placeholder="30">
+                        <p class="text-[10px] text-gray-500 mt-1 ml-1">Sisa poin <= nilai ini memicu SP 2.</p>
+                        <div v-if="spForm.errors.sp_2" class="text-rose-500 text-xs mt-1 ml-1 font-bold">{{ spForm.errors.sp_2 }}</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2 ml-1">Ambang Batas SP 3 (DO)</label>
+                        <input type="number" v-model="spForm.sp_3" class="w-full rounded-xl border-gray-200 text-sm focus:ring-rose-500 font-bold text-center text-rose-600" placeholder="0">
+                        <p class="text-[10px] text-gray-500 mt-1 ml-1">Sisa poin <= nilai ini memicu SP 3 (Dikeluarkan).</p>
+                        <div v-if="spForm.errors.sp_3" class="text-rose-500 text-xs mt-1 ml-1 font-bold">{{ spForm.errors.sp_3 }}</div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                    <button @click="closeSettingModal" class="px-5 py-3 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">Batal</button>
+                    <button @click="submitSetting" class="px-6 py-3 rounded-xl text-sm font-bold text-white bg-gray-800 hover:bg-gray-900 shadow-lg disabled:opacity-50 transition-all flex items-center" :disabled="spForm.processing">
+                        {{ spForm.processing ? 'Menyimpan...' : 'Simpan' }}
                     </button>
                 </div>
             </div>

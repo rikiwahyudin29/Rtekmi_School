@@ -69,7 +69,7 @@
             <tr><td class="text-left">Sakit (S)</td><td>{{ $total['S'] }} Hari</td></tr>
             <tr><td class="text-left">Izin (I)</td><td>{{ $total['I'] }} Hari</td></tr>
             <tr><td class="text-left">Alpha (A)</td><td>{{ $total['A'] }} Hari</td></tr>
-            <tr><td class="text-left">Terlambat (T)</td><td>{{ $total['T'] }} Kali</td></tr>
+            <tr><td class="text-left">Terlambat (T)</td><td>{{ $total['T'] }} Kali @if($format_terlambat) ({{ $format_terlambat }}) @endif</td></tr>
         </tbody>
     </table>
 
@@ -82,10 +82,10 @@
             </tr>
         </thead>
         <tbody>
-            @for($d=1; $d<=$jml_hari; $d++)
+            @foreach($dates as $dateStr)
                 @php 
-                    $tglStr = str_pad($d, 2, '0', STR_PAD_LEFT);
-                    $status = $map[$d];
+                    $tglStr = \Carbon\Carbon::parse($dateStr)->translatedFormat('d M Y');
+                    $status = $map[$dateStr] ?? '-';
                 @endphp
                 <tr>
                     <td>{{ $tglStr }}</td>
@@ -100,7 +100,7 @@
                         @endif
                     </td>
                 </tr>
-            @endfor
+            @endforeach
         </tbody>
     </table>
 

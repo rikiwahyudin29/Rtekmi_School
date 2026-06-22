@@ -248,6 +248,8 @@ class PenilaianController extends Controller
         ]);
 
         $isAll = $request->tp_id === 'all';
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $tahun_ajaran_id = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->id : 1;
 
         foreach ($request->nilai as $siswa_id => $nilai_data) {
             if ($isAll) {
@@ -257,7 +259,11 @@ class PenilaianController extends Controller
                         if ($n !== null && $n !== '') {
                             NilaiFormatif::updateOrCreate(
                                 ['tp_id' => $tp_id, 'siswa_id' => $siswa_id],
-                                ['nilai' => $n]
+                                [
+                                    'nilai' => $n,
+                                    'mapel_id' => $request->mapel_id,
+                                    'tahun_ajaran_id' => $tahun_ajaran_id
+                                ]
                             );
                         }
                     }
@@ -267,7 +273,11 @@ class PenilaianController extends Controller
                 if ($nilai_data !== null && $nilai_data !== '') {
                     NilaiFormatif::updateOrCreate(
                         ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
-                        ['nilai' => $nilai_data]
+                        [
+                            'nilai' => $nilai_data,
+                            'mapel_id' => $request->mapel_id,
+                            'tahun_ajaran_id' => $tahun_ajaran_id
+                        ]
                     );
                 }
             }
@@ -706,6 +716,8 @@ class PenilaianController extends Controller
         $data = array_slice($rows, 6); // Skip header
 
         $isAll = $request->tp_id === 'all';
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $tahun_ajaran_id = $tahun_ajaran_aktif ? $tahun_ajaran_aktif->id : 1;
         $tps = [];
         
         if ($isAll) {
@@ -730,7 +742,11 @@ class PenilaianController extends Controller
                         if (is_numeric($nilai)) {
                             NilaiFormatif::updateOrCreate(
                                 ['tp_id' => $tpId, 'siswa_id' => $siswa_id],
-                                ['nilai' => $nilai]
+                                [
+                                    'nilai' => $nilai,
+                                    'mapel_id' => $request->mapel_id,
+                                    'tahun_ajaran_id' => $tahun_ajaran_id
+                                ]
                             );
                         }
                     }
@@ -744,7 +760,11 @@ class PenilaianController extends Controller
                 if($siswa_id && is_numeric($nilai)) {
                     NilaiFormatif::updateOrCreate(
                         ['tp_id' => $request->tp_id, 'siswa_id' => $siswa_id],
-                        ['nilai' => $nilai]
+                        [
+                            'nilai' => $nilai,
+                            'mapel_id' => $request->mapel_id,
+                            'tahun_ajaran_id' => $tahun_ajaran_id
+                        ]
                     );
                 }
             }

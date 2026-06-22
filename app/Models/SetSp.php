@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Divisi extends Model
+class SetSp extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_divisi';
-    protected $guarded = ['id'];
+    protected $table = 'tbl_set_sp';
     public $timestamps = false;
+    protected $guarded = ['id'];
 }

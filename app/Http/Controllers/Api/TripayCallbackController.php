@@ -7,6 +7,7 @@ use App\Models\Sekolah;
 use App\Models\Transaksi;
 use App\Models\Tagihan;
 use App\Models\Siswa;
+use App\Models\LogKeuangan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -63,6 +64,18 @@ class TripayCallbackController extends Controller
 
                     // Send WA logic can be placed here
                     Log::info("SYSTEM: Pembayaran Diterima via Tripay Ref: $merchant_ref (LUNAS/CICIL)");
+
+                    // Catat ke Log Keuangan
+                    $siswa = Siswa::find($transaksi->id_siswa);
+                    $nama_siswa = $siswa ? $siswa->nama_lengkap : 'Siswa';
+                    LogKeuangan::create([
+                        'user_id'     => 0, // 0 for system
+                        'nama_user'   => 'Sistem (Tripay)',
+                        'role'        => 'sistem',
+                        'ip_address'  => $request->ip(),
+                        'device_info' => 'Tripay Callback',
+                        'aksi'        => "Pembayaran online otomatis diterima sebesar Rp " . number_format($transaksi->jumlah_bayar, 0, ',', '.') . " untuk tagihan #" . $tagihan->id . " atas nama $nama_siswa"
+                    ]);
                 }
             }
         }

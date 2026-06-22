@@ -10,6 +10,7 @@ class JenisPengeluaran extends Model
     use HasFactory;
 
     protected $table = 'tbl_jenis_pengeluaran';
+    public $timestamps = false;
 
     protected $fillable = [
         'nama_jenis',

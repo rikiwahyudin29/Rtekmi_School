@@ -1,20 +1,37 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { computed } from 'vue';
 
 const props = defineProps({
-    rapor_akhir: Array,
+    jadwal_pelajaran: Array,
+    rapor_akhir: Object,
+    formatif: Object,
+    sumatif: Object,
     kehadiran: Object,
     catatan: Object,
-    pkl: Array
+    pkl: Array,
+    siswa_id: Number,
+    semua_tahun: Array,
+    selected_ta_id: [Number, String]
 });
 
-// Calculate average
+const changeTahun = (e) => {
+    router.get(route('siswa.rapor.index'), { tahun_ajaran_id: e.target.value }, { preserveState: true });
+};
+
+// Calculate average based on available rapor_akhir
 const rataRata = computed(() => {
-    if (!props.rapor_akhir || props.rapor_akhir.length === 0) return 0;
-    const sum = props.rapor_akhir.reduce((acc, curr) => acc + Number(curr.nilai_akhir), 0);
-    return (sum / props.rapor_akhir.length).toFixed(2);
+    if (!props.rapor_akhir || Object.keys(props.rapor_akhir).length === 0) return 0;
+    let sum = 0;
+    let count = 0;
+    Object.values(props.rapor_akhir).forEach(rapor => {
+        if (rapor && rapor.nilai_akhir) {
+            sum += Number(rapor.nilai_akhir);
+            count++;
+        }
+    });
+    return count > 0 ? (sum / count).toFixed(2) : 0;
 });
 </script>
 
@@ -34,11 +51,17 @@ const rataRata = computed(() => {
                         Berikut adalah rekapitulasi nilai rapor, kehadiran, dan catatan wali kelas Anda untuk semester ini. Terus tingkatkan prestasimu!
                     </p>
                 </div>
-                <div class="relative z-10 shrink-0">
-                    <!-- Simulasi tombol cetak karena ini view siswa, kita arahkan ke route cetak admin/guru sementara (atau window.print) -->
-                    <button onclick="window.print()" class="px-6 py-3 bg-white text-indigo-700 hover:bg-gray-50 rounded-xl font-bold shadow-md flex items-center gap-2 transition-transform hover:scale-105">
+                <div class="relative z-10 flex flex-col sm:flex-row gap-3">
+                    <select @change="changeTahun" :value="selected_ta_id" class="bg-white/20 border border-white/30 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-white/50 focus:border-white focus:outline-none appearance-none font-bold placeholder-white/70">
+                        <option v-for="ta in semua_tahun" :key="ta.id" :value="ta.id" class="text-gray-900 font-normal">
+                            Semester {{ ta.semester }} - {{ ta.tahun_ajaran }} {{ ta.status === 'Aktif' ? '(Aktif)' : '' }}
+                        </option>
+                    </select>
+
+                    <!-- Link langsung ke view cetak rapor admin/guru -->
+                    <a :href="route('cetak.rapor.nilai', { id: siswa_id })" target="_blank" class="px-6 py-3 bg-white text-indigo-700 hover:bg-gray-50 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition-transform hover:scale-105">
                         <i class="fas fa-file-pdf text-red-500"></i> Download Rapor PDF
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -101,21 +124,59 @@ const rataRata = computed(() => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(rapor, idx) in rapor_akhir" :key="rapor.id" class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <td class="px-6 py-4">{{ idx + 1 }}</td>
-                                    <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">{{ rapor.mapel?.nama_mapel }}</td>
-                                    <td class="px-6 py-4 text-center">
-                                        <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-bold text-lg">
-                                            {{ rapor.nilai_akhir }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <p class="text-xs mb-2"><span class="font-bold text-green-600">Tercapai:</span> {{ rapor.deskripsi_tertinggi || 'Menunjukkan penguasaan yang baik dalam kompetensi dasar.' }}</p>
-                                        <p class="text-xs"><span class="font-bold text-red-500">Perlu Peningkatan:</span> {{ rapor.deskripsi_terendah || 'Perlu bimbingan lebih lanjut untuk meningkatkan pemahaman.' }}</p>
-                                    </td>
-                                </tr>
-                                <tr v-if="!rapor_akhir || rapor_akhir.length === 0">
-                                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">Nilai rapor belum di-generate oleh wali kelas.</td>
+                                <template v-for="(jadwal, idx) in jadwal_pelajaran" :key="jadwal.id_mapel">
+                                    <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-6 py-4">{{ idx + 1 }}</td>
+                                        <td class="px-6 py-4">
+                                            <div class="font-bold text-gray-900 dark:text-white">{{ jadwal.mapel?.nama_mapel }}</div>
+                                            <div class="text-xs text-gray-500 mt-1"><i class="fas fa-user-tie text-indigo-400 mr-1"></i> {{ jadwal.guru?.nama_lengkap || 'Guru belum diatur' }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span v-if="rapor_akhir[jadwal.id_mapel]" class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-bold text-lg">
+                                                {{ rapor_akhir[jadwal.id_mapel].nilai_akhir }}
+                                            </span>
+                                            <span v-else class="text-gray-400 italic text-xs">-</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div v-if="rapor_akhir[jadwal.id_mapel]">
+                                                <p class="text-xs mb-2"><span class="font-bold text-green-600">Tercapai:</span> {{ rapor_akhir[jadwal.id_mapel].deskripsi_tertinggi || 'Menunjukkan penguasaan yang baik dalam kompetensi dasar.' }}</p>
+                                                <p class="text-xs"><span class="font-bold text-red-500">Perlu Peningkatan:</span> {{ rapor_akhir[jadwal.id_mapel].deskripsi_terendah || 'Perlu bimbingan lebih lanjut untuk meningkatkan pemahaman.' }}</p>
+                                            </div>
+                                            <div v-else class="text-gray-400 italic text-xs">Belum dinilai</div>
+                                        </td>
+                                    </tr>
+                                    <tr class="bg-gray-50/50 dark:bg-gray-800/50 border-b dark:border-gray-700">
+                                        <td></td>
+                                        <td colspan="3" class="px-6 py-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <!-- Formatif -->
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Nilai Formatif (Per TP)</h4>
+                                                    <div class="space-y-1">
+                                                        <div v-for="f in formatif[jadwal.id_mapel]" :key="f.id" class="flex justify-between items-center text-xs bg-white dark:bg-gray-700 p-2 rounded border dark:border-gray-600">
+                                                            <span :title="f.tp_deskripsi" class="font-medium truncate mr-2">{{ f.kode_tp }}</span>
+                                                            <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ f.nilai }}</span>
+                                                        </div>
+                                                        <div v-if="!formatif[jadwal.id_mapel] || formatif[jadwal.id_mapel].length === 0" class="text-xs text-gray-400 italic">Belum ada nilai formatif.</div>
+                                                    </div>
+                                                </div>
+                                                <!-- Sumatif -->
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Nilai Sumatif</h4>
+                                                    <div class="space-y-1">
+                                                        <div v-for="s in sumatif[jadwal.id_mapel]" :key="s.id" class="flex justify-between items-center text-xs bg-white dark:bg-gray-700 p-2 rounded border dark:border-gray-600">
+                                                            <span class="font-medium">{{ s.jenis }}</span>
+                                                            <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ s.nilai }}</span>
+                                                        </div>
+                                                        <div v-if="!sumatif[jadwal.id_mapel] || sumatif[jadwal.id_mapel].length === 0" class="text-xs text-gray-400 italic">Belum ada nilai sumatif.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr v-if="!jadwal_pelajaran || jadwal_pelajaran.length === 0">
+                                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">Belum ada jadwal pelajaran untuk kelas ini.</td>
                                 </tr>
                             </tbody>
                         </table>
