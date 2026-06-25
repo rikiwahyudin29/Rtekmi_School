@@ -46,12 +46,28 @@ Route::prefix('presensi')->group(function () {
     Route::post('ajukan_izin', [PresensiApiController::class, 'ajukanIzin']);
 });
 
-// Ujian Siswa
+// Modul Akademik
+Route::prefix('akademik')->group(function () {
+    Route::get('dashboard', [\App\Http\Controllers\Api\AkademikApiController::class, 'getDashboardSummary']);
+    Route::get('materi', [\App\Http\Controllers\Api\AkademikApiController::class, 'getMateri']);
+    Route::get('tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'getTugas']);
+    Route::post('submit_tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'submitTugas']);
+});
+
+// Modul Keuangan
+Route::prefix('keuangan')->group(function () {
+    Route::get('list', [\App\Http\Controllers\Api\KeuanganApiController::class, 'getTagihan']);
+    Route::get('tagihan', [\App\Http\Controllers\Api\KeuanganApiController::class, 'getTagihan']);
+    Route::post('bayar', [\App\Http\Controllers\Api\KeuanganApiController::class, 'bayarTripay']);
+    Route::post('bayarTripay', [\App\Http\Controllers\Api\KeuanganApiController::class, 'bayarTripay']);
+});
+
+// Ujian Siswa (Sesuaikan dengan routing CI4 lama)
 Route::prefix('ujian')->group(function () {
-    Route::post('jadwal', [UjianApiController::class, 'getJadwal']);
+    Route::get('jadwal', [UjianApiController::class, 'getJadwal']);
     Route::post('download', [UjianApiController::class, 'downloadSoal']);
     Route::post('submit', [UjianApiController::class, 'submitJawaban']);
-    Route::post('waktu', [UjianApiController::class, 'cekWaktu']);
+    Route::get('cek_waktu', [UjianApiController::class, 'cekWaktu']);
 });
 
 // CBT
@@ -63,6 +79,9 @@ Route::prefix('cbt')->group(function () {
 
 // Tripay Callback
 Route::post('tripay/callback', [TripayCallbackController::class, 'handle']);
+
+// IoT Scanner Device (Sesuaikan dengan routing CI4 lama)
+Route::post('iot/scan', [\App\Http\Controllers\Admin\PresensiController::class, 'prosesScan']);
 
 // Endpoint Sementara (Jangan Dihapus)
 Route::get('/run-migrate-temp-3', function() {

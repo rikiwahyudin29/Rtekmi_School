@@ -205,7 +205,7 @@ const downloadDokumen = (tipe) => {
                                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                                     <i class="fas fa-id-card text-sky-400 text-lg"></i>
                                 </div>
-                                <input type="number" v-model="nisnForm.nisn" class="glass-input w-full pl-14 pr-5 py-4 rounded-2xl font-bold text-xl text-center tracking-[0.2em] transition-all" placeholder="0012345678" required autocomplete="off">
+                                <input type="text" inputmode="numeric" v-model="nisnForm.nisn" class="glass-input w-full pl-14 pr-5 py-4 rounded-2xl font-bold text-xl text-center tracking-[0.2em] transition-all" placeholder="0012345678" required autocomplete="off">
                             </div>
 
                             <div v-if="nisnForm.error" class="mb-5 p-3 bg-red-500/20 border border-red-500/50 text-red-200 text-sm font-bold rounded-xl text-center backdrop-blur-sm animate-fade-in">
