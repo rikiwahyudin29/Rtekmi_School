@@ -83,7 +83,7 @@ class PresensiApiController extends Controller
 
             if ($jam_sekarang > $batas_scan) {
                 return response()->json([
-                    'status' => 'error',
+                    'status' => false,
                     'message' => 'Batas waktu absen masuk telah lewat (' . $batas_scan . ').'
                 ], 400);
             }

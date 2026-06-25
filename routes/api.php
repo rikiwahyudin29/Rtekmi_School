@@ -29,21 +29,21 @@ use App\Http\Controllers\Api\TripayCallbackController;
 // Auth
 Route::post('login', [AuthApiController::class, 'login']);
 
-// Presensi Guru
-Route::prefix('guru/absen')->group(function () {
-    Route::post('status', [PresensiGuruApiController::class, 'statusAbsenHariIni']);
+// Presensi Guru (Sesuaikan dengan routing CI4 lama yang dipanggil Android)
+Route::prefix('presensi-guru')->group(function () {
+    Route::get('status', [PresensiGuruApiController::class, 'statusAbsenHariIni']);
     Route::post('submit', [PresensiGuruApiController::class, 'submitAbsen']);
-    Route::post('rekap', [PresensiGuruApiController::class, 'getRekap']);
+    Route::get('rekap', [PresensiGuruApiController::class, 'getRekap']);
     Route::post('izin', [PresensiGuruApiController::class, 'submitIzin']);
 });
 
-// Presensi Siswa
+// Presensi Siswa (Sesuaikan dengan routing CI4 lama)
 Route::prefix('presensi')->group(function () {
     Route::post('submit', [PresensiApiController::class, 'submitAbsen']);
     Route::get('setting', [PresensiApiController::class, 'getSetting']);
-    Route::post('riwayat', [PresensiApiController::class, 'getRiwayat']);
-    Route::post('rekap', [PresensiApiController::class, 'getRekap']);
-    Route::post('izin', [PresensiApiController::class, 'ajukanIzin']);
+    Route::get('riwayat', [PresensiApiController::class, 'getRiwayat']);
+    Route::get('rekap', [PresensiApiController::class, 'getRekap']);
+    Route::post('ajukan_izin', [PresensiApiController::class, 'ajukanIzin']);
 });
 
 // Ujian Siswa
