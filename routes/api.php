@@ -29,52 +29,55 @@ use App\Http\Controllers\Api\TripayCallbackController;
 // Auth
 Route::post('login', [AuthApiController::class, 'login']);
 
-// Presensi Guru (Sesuaikan dengan routing CI4 lama yang dipanggil Android)
-Route::prefix('presensi-guru')->group(function () {
-    Route::get('status', [PresensiGuruApiController::class, 'statusAbsenHariIni']);
-    Route::post('submit', [PresensiGuruApiController::class, 'submitAbsen']);
-    Route::get('rekap', [PresensiGuruApiController::class, 'getRekap']);
-    Route::post('izin', [PresensiGuruApiController::class, 'submitIzin']);
-});
+// Rute-rute yang dilindungi API Key (Mobile Android)
+Route::middleware('api.auth')->group(function () {
+    // Presensi Guru (Sesuaikan dengan routing CI4 lama yang dipanggil Android)
+    Route::prefix('presensi-guru')->group(function () {
+        Route::get('status', [PresensiGuruApiController::class, 'statusAbsenHariIni']);
+        Route::post('submit', [PresensiGuruApiController::class, 'submitAbsen']);
+        Route::get('rekap', [PresensiGuruApiController::class, 'getRekap']);
+        Route::post('izin', [PresensiGuruApiController::class, 'submitIzin']);
+    });
 
-// Presensi Siswa (Sesuaikan dengan routing CI4 lama)
-Route::prefix('presensi')->group(function () {
-    Route::post('submit', [PresensiApiController::class, 'submitAbsen']);
-    Route::get('setting', [PresensiApiController::class, 'getSetting']);
-    Route::get('riwayat', [PresensiApiController::class, 'getRiwayat']);
-    Route::get('rekap', [PresensiApiController::class, 'getRekap']);
-    Route::post('ajukan_izin', [PresensiApiController::class, 'ajukanIzin']);
-});
+    // Presensi Siswa (Sesuaikan dengan routing CI4 lama)
+    Route::prefix('presensi')->group(function () {
+        Route::post('submit', [PresensiApiController::class, 'submitAbsen']);
+        Route::get('setting', [PresensiApiController::class, 'getSetting']);
+        Route::get('riwayat', [PresensiApiController::class, 'getRiwayat']);
+        Route::get('rekap', [PresensiApiController::class, 'getRekap']);
+        Route::post('ajukan_izin', [PresensiApiController::class, 'ajukanIzin']);
+    });
 
-// Modul Akademik
-Route::prefix('akademik')->group(function () {
-    Route::get('dashboard', [\App\Http\Controllers\Api\AkademikApiController::class, 'getDashboardSummary']);
-    Route::get('materi', [\App\Http\Controllers\Api\AkademikApiController::class, 'getMateri']);
-    Route::get('tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'getTugas']);
-    Route::post('submit_tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'submitTugas']);
-});
+    // Modul Akademik
+    Route::prefix('akademik')->group(function () {
+        Route::get('dashboard', [\App\Http\Controllers\Api\AkademikApiController::class, 'getDashboardSummary']);
+        Route::get('materi', [\App\Http\Controllers\Api\AkademikApiController::class, 'getMateri']);
+        Route::get('tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'getTugas']);
+        Route::post('submit_tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'submitTugas']);
+    });
 
-// Modul Keuangan
-Route::prefix('keuangan')->group(function () {
-    Route::get('list', [\App\Http\Controllers\Api\KeuanganApiController::class, 'getTagihan']);
-    Route::get('tagihan', [\App\Http\Controllers\Api\KeuanganApiController::class, 'getTagihan']);
-    Route::post('bayar', [\App\Http\Controllers\Api\KeuanganApiController::class, 'bayarTripay']);
-    Route::post('bayarTripay', [\App\Http\Controllers\Api\KeuanganApiController::class, 'bayarTripay']);
-});
+    // Modul Keuangan
+    Route::prefix('keuangan')->group(function () {
+        Route::get('list', [\App\Http\Controllers\Api\KeuanganApiController::class, 'getTagihan']);
+        Route::get('tagihan', [\App\Http\Controllers\Api\KeuanganApiController::class, 'getTagihan']);
+        Route::post('bayar', [\App\Http\Controllers\Api\KeuanganApiController::class, 'bayarTripay']);
+        Route::post('bayarTripay', [\App\Http\Controllers\Api\KeuanganApiController::class, 'bayarTripay']);
+    });
 
-// Ujian Siswa (Sesuaikan dengan routing CI4 lama)
-Route::prefix('ujian')->group(function () {
-    Route::get('jadwal', [UjianApiController::class, 'getJadwal']);
-    Route::post('download', [UjianApiController::class, 'downloadSoal']);
-    Route::post('submit', [UjianApiController::class, 'submitJawaban']);
-    Route::get('cek_waktu', [UjianApiController::class, 'cekWaktu']);
-});
+    // Ujian Siswa (Sesuaikan dengan routing CI4 lama)
+    Route::prefix('ujian')->group(function () {
+        Route::get('jadwal', [UjianApiController::class, 'getJadwal']);
+        Route::post('download', [UjianApiController::class, 'downloadSoal']);
+        Route::post('submit', [UjianApiController::class, 'submitJawaban']);
+        Route::get('cek_waktu', [UjianApiController::class, 'cekWaktu']);
+    });
 
-// CBT
-Route::prefix('cbt')->group(function () {
-    Route::get('soal/{ujian_id}', [CbtApiController::class, 'getSoal']);
-    Route::post('jawaban', [CbtApiController::class, 'saveJawaban']);
-    Route::post('finish/{ujian_id}', [CbtApiController::class, 'finish']);
+    // CBT
+    Route::prefix('cbt')->group(function () {
+        Route::get('soal/{ujian_id}', [CbtApiController::class, 'getSoal']);
+        Route::post('jawaban', [CbtApiController::class, 'saveJawaban']);
+        Route::post('finish/{ujian_id}', [CbtApiController::class, 'finish']);
+    });
 });
 
 // Tripay Callback

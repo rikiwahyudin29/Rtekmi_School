@@ -17,8 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->append(\App\Http\Middleware\BlockDangerousFiles::class);
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
+        ]);
+
+        $middleware->alias([
+            'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
