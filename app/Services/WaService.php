@@ -13,13 +13,8 @@ class WaService
 
     public function __construct()
     {
-        $config = Sekolah::find(1);
-
-        if ($config) {
-            $this->token = $config->wa_api_token;
-            // Jika URL kosong di DB, pakai default Fonnte, jika ada pakai dari DB
-            $this->url   = !empty($config->wa_api_url) ? $config->wa_api_url : 'https://api.fonnte.com/send';
-        }
+        $this->token = env('WA_API_TOKEN', '');
+        $this->url   = env('WA_API_URL', 'https://api.fonnte.com/send');
     }
 
     public function kirim($nomor, $pesan)

@@ -27,18 +27,7 @@ const form = useForm({
     nip_kepsek: props.sekolah.nip_kepsek || '',
     sambutan_kepsek: props.sekolah.sambutan_kepsek || '',
 
-    // API
-    google_client_id: props.sekolah.google_client_id || '',
-    google_client_secret: props.sekolah.google_client_secret || '',
-    wa_api_url: props.sekolah.wa_api_url || '',
-    wa_api_token: props.sekolah.wa_api_token || '',
-    api_co_id_key: props.sekolah.api_co_id_key || '',
-    tele_bot_token: props.sekolah.tele_bot_token || '',
-    tele_chat_id: props.sekolah.tele_chat_id || '',
-    tripay_api_key: props.sekolah.tripay_api_key || '',
-    tripay_private_key: props.sekolah.tripay_private_key || '',
-    tripay_merchant_code: props.sekolah.tripay_merchant_code || '',
-    mode_transaksi: props.sekolah.mode_transaksi || 'Sandbox',
+
 
     // Files
     logo: null,
@@ -107,9 +96,7 @@ const activeTab = ref('utama');
                         <button @click="activeTab = 'kepsek'" :class="activeTab === 'kepsek' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'" class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
                             <i class="fas fa-user-tie"></i> Kepala Sekolah
                         </button>
-                        <button @click="activeTab = 'api'" :class="activeTab === 'api' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'" class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
-                            <i class="fas fa-plug"></i> Integrasi API
-                        </button>
+
                         <button @click="activeTab = 'media'" :class="activeTab === 'media' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'" class="whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
                             <i class="fas fa-images"></i> Logo & Berkas
                         </button>
@@ -205,102 +192,6 @@ const activeTab = ref('utama');
                                 </div>
                             </div>
 
-                            <!-- Tab: Integrasi API -->
-                            <div v-show="activeTab === 'api'" class="space-y-8">
-                                <!-- Tripay Payment Gateway -->
-                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-                                    <h4 class="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                        <i class="fas fa-credit-card text-primary-500"></i> Tripay Payment Gateway
-                                    </h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mode Transaksi</label>
-                                            <select v-model="form.mode_transaksi" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                                <option value="Sandbox">Sandbox (Testing)</option>
-                                                <option value="Production">Production (Live)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Merchant Code</label>
-                                            <input v-model="form.tripay_merchant_code" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key</label>
-                                            <input v-model="form.tripay_api_key" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Private Key</label>
-                                            <input v-model="form.tripay_private_key" type="password" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- WhatsApp API -->
-                                <div class="bg-green-50/50 dark:bg-green-900/10 rounded-2xl p-6 border border-green-100 dark:border-green-800/30">
-                                    <h4 class="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                        <i class="fab fa-whatsapp text-green-500"></i> WhatsApp API
-                                    </h4>
-                                    <div class="grid grid-cols-1 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp API URL</label>
-                                            <input v-model="form.wa_api_url" type="text" placeholder="Contoh: http://localhost:8000" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp API Token</label>
-                                            <input v-model="form.wa_api_token" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- API.CO.ID (Sekolah, Regional, Hari Libur) -->
-                                <div class="bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30 mb-8">
-                                    <h4 class="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                        <i class="fas fa-database text-purple-500"></i> API.CO.ID (Pusat Data Nasional)
-                                    </h4>
-                                    <div class="grid grid-cols-1 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">API Key (x-api-co-id)</label>
-                                            <input v-model="form.api_co_id_key" type="text" placeholder="Masukkan API Key dari api.co.id" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                                            <p class="text-xs text-gray-500 mt-2">Dibutuhkan untuk pencarian data Sekolah SMP/MTS Nasional, Regional, dan Hari Libur.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Telegram & Google API -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div class="bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
-                                        <h4 class="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                            <i class="fab fa-telegram text-blue-500"></i> Telegram Bot
-                                        </h4>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bot Token</label>
-                                                <input v-model="form.tele_bot_token" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Chat ID</label>
-                                                <input v-model="form.tele_chat_id" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-red-50/50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-100 dark:border-red-800/30">
-                                        <h4 class="font-bold text-lg mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                            <i class="fab fa-google text-red-500"></i> Google SSO
-                                        </h4>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client ID</label>
-                                                <input v-model="form.google_client_id" type="text" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client Secret</label>
-                                                <input v-model="form.google_client_secret" type="password" class="mt-1 block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Tab: Logo & Berkas -->
                             <div v-show="activeTab === 'media'" class="space-y-8">

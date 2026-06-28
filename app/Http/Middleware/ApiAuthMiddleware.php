@@ -18,10 +18,12 @@ class ApiAuthMiddleware
     {
         $expectedKey = env('API_SECRET_KEY');
         
-        // Jika API_SECRET_KEY belum diset di .env, loloskan sementara untuk backward compatibility
-        // Namun sebaiknya di production harus di set.
+        // Kunci API WAJIB ada di .env. Jika tidak ada, tolak semua request API demi keamanan!
         if (empty($expectedKey)) {
-            return $next($request);
+            return response()->json([
+                'status' => false,
+                'message' => 'Internal Server Error. API_SECRET_KEY belum dikonfigurasi di server.'
+            ], 500);
         }
 
         $providedKey = $request->header('X-API-KEY') ?? $request->input('api_key');

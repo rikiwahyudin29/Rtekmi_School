@@ -44,7 +44,7 @@ class HariLiburController extends Controller
     {
         try {
             $response = \Illuminate\Support\Facades\Http::withHeaders([
-                'x-api-co-id' => \App\Models\Sekolah::first()->api_co_id_key ?? ''
+                'x-api-co-id' => env('API_CO_ID_KEY', '')
             ])->timeout(10)->get('https://use.api.co.id/indonesian-holidays', [
                 'year' => date('Y')
             ]);

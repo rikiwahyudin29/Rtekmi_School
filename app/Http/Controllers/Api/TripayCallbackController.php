@@ -19,13 +19,11 @@ class TripayCallbackController extends Controller
         $data = json_decode($json, true);
 
         // Get config from DB
-        $config = Sekolah::first();
-        if (!$config || empty($config->tripay_private_key)) {
+        $privateKey = env('TRIPAY_PRIVATE_KEY');
+        if (empty($privateKey)) {
             Log::error('TripayCallback: Private key is empty');
             return response('Configuration Error', 500);
         }
-
-        $privateKey = $config->tripay_private_key;
 
         // Signature Validation
         $callbackSignature = $request->header('X-Callback-Signature');

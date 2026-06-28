@@ -94,25 +94,15 @@ class HomeController extends Controller
             return response()->json(['success' => false, 'message' => 'Siswa belum memiliki rekening Bank Mini.']);
         }
 
-        // If checking only NISN (Step 1)
-        if (empty($pin)) {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'nama_lengkap' => $siswa->nama_lengkap,
-                    'nisn' => $siswa->nisn
-                ]
-            ]);
-        }
-
-        // Check PIN (Step 2)
-        if (!password_verify($pin, $rekening->pin)) {
-             return response()->json(['success' => false, 'message' => 'PIN Keamanan salah!']);
+        // Check PIN (Wajib diisi sekaligus untuk mencegah data enumeration)
+        if (empty($pin) || !password_verify($pin, $rekening->pin)) {
+             return response()->json(['success' => false, 'message' => 'PIN Keamanan salah atau kosong!']);
         }
 
         return response()->json([
             'success' => true,
-            'saldo' => 'Rp ' . number_format($rekening->saldo, 0, ',', '.')
+            'saldo' => 'Rp ' . number_format($rekening->saldo, 0, ',', '.'),
+            'nama_lengkap' => $siswa->nama_lengkap
         ]);
     }
 }

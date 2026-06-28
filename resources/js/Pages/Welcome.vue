@@ -88,27 +88,8 @@ const goToStep = (step) => {
     errorMessage.value = '';
 };
 
-const checkNISN = async () => {
-    if (!formTabungan.value.nisn) return;
-    isLoading.value = true;
-    errorMessage.value = '';
-    try {
-        const res = await axios.post('/cek-saldo', { nisn: formTabungan.value.nisn });
-        if (res.data.success) {
-            siswaInfo.value.nama = res.data.data.nama_lengkap;
-            siswaInfo.value.nisn = res.data.data.nisn;
-            goToStep(2);
-        } else {
-            errorMessage.value = res.data.message;
-        }
-    } catch (e) {
-        errorMessage.value = "Terjadi kesalahan sistem.";
-    }
-    isLoading.value = false;
-};
-
 const checkPINAndSaldo = async () => {
-    if (!formTabungan.value.pin) return;
+    if (!formTabungan.value.nisn || !formTabungan.value.pin) return;
     isLoading.value = true;
     errorMessage.value = '';
     try {
@@ -118,6 +99,7 @@ const checkPINAndSaldo = async () => {
         });
         if (res.data.success) {
             saldoResult.value = res.data.saldo;
+            siswaInfo.value.nama = res.data.nama_lengkap;
             goToStep(3);
         } else {
             errorMessage.value = res.data.message;
@@ -128,6 +110,7 @@ const checkPINAndSaldo = async () => {
     }
     isLoading.value = false;
 };
+
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
@@ -801,41 +784,22 @@ input[type="number"] { -moz-appearance: textfield; }
 
                         <div class="p-8 min-h-[300px] relative">
                             
-                            <!-- Step 1: NISN -->
+                            <!-- Step 1: Input NISN & PIN -->
                             <div v-if="modalStep === 1" class="transition-all duration-300 text-center">
-                                <p class="text-sm text-slate-400 mb-6">Masukkan NISN untuk mengakses brankas digital.</p>
+                                <p class="text-sm text-slate-400 mb-6">Masukkan NISN dan PIN untuk mengakses brankas digital.</p>
                                 
-                                <div class="mb-6">
-                                    <input v-model="formTabungan.nisn" type="number" class="w-full text-center text-2xl font-black border-b-2 border-slate-700 focus:border-emerald-500 border-t-0 border-l-0 border-r-0 px-0 py-2 focus:ring-0 bg-transparent text-white tracking-wider placeholder-slate-700" placeholder="NISN..." required autocomplete="off">
+                                <div class="mb-4">
+                                    <input v-model="formTabungan.nisn" type="number" class="w-full text-center text-xl font-black border-b-2 border-slate-700 focus:border-emerald-500 border-t-0 border-l-0 border-r-0 px-0 py-2 focus:ring-0 bg-transparent text-white tracking-wider placeholder-slate-700" placeholder="NISN..." required autocomplete="off">
                                 </div>
-                                <div v-if="errorMessage" class="text-red-500 text-xs mb-4 font-bold bg-red-500/10 py-2 px-3 rounded-md border border-red-500/20">{{ errorMessage }}</div>
-                                
-                                <button @click="checkNISN" :disabled="isLoading" type="button" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 text-sm uppercase tracking-wider">
-                                    <span v-if="isLoading"><i class="fas fa-spinner fa-spin"></i> Memproses</span>
-                                    <span v-else>Verifikasi Identitas <i class="fas fa-fingerprint"></i></span>
-                                </button>
-                            </div>
+                                <div class="mb-6">
+                                    <input v-model="formTabungan.pin" type="password" maxlength="6" class="w-full text-center text-xl font-black border-b-2 border-slate-700 focus:border-amber-500 border-t-0 border-l-0 border-r-0 px-0 py-2 focus:ring-0 bg-transparent text-white tracking-[0.5em] placeholder-slate-700" placeholder="PIN (6 Digit)" required autocomplete="off">
+                                </div>
 
-                            <!-- Step 2: PIN -->
-                            <div v-else-if="modalStep === 2" class="transition-all duration-300 text-center">
-                                <div class="mb-6 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                                    <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">Nasabah</p>
-                                    <h4 class="text-emerald-400 font-black text-lg">{{ siswaInfo.nama }}</h4>
-                                    <p class="text-xs text-slate-400">{{ siswaInfo.nisn }}</p>
-                                </div>
-                                
-                                <p class="text-sm text-slate-400 mb-4">Masukkan 6 Digit PIN Keamanan</p>
-                                <div class="mb-6">
-                                    <input v-model="formTabungan.pin" type="password" maxlength="6" class="w-full text-center text-3xl font-black border-b-2 border-slate-700 focus:border-amber-500 border-t-0 border-l-0 border-r-0 px-0 py-2 focus:ring-0 bg-transparent text-white tracking-[1em] placeholder-slate-700" placeholder="••••••" required autocomplete="off">
-                                </div>
                                 <div v-if="errorMessage" class="text-red-500 text-xs mb-4 font-bold bg-red-500/10 py-2 px-3 rounded-md border border-red-500/20">{{ errorMessage }}</div>
                                 
-                                <button @click="checkPINAndSaldo" :disabled="isLoading || formTabungan.pin.length < 4" type="button" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-3.5 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 text-sm uppercase tracking-wider">
-                                    <span v-if="isLoading"><i class="fas fa-spinner fa-spin"></i> Mengakses</span>
+                                <button @click="checkPINAndSaldo" :disabled="isLoading || !formTabungan.nisn || formTabungan.pin.length < 4" type="button" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 text-sm uppercase tracking-wider">
+                                    <span v-if="isLoading"><i class="fas fa-spinner fa-spin"></i> Mengakses Brankas</span>
                                     <span v-else>Buka Brankas <i class="fas fa-unlock"></i></span>
-                                </button>
-                                <button @click="goToStep(1)" type="button" class="w-full mt-3 text-xs text-slate-500 hover:text-white font-bold py-2">
-                                    Bukan saya, ganti NISN
                                 </button>
                             </div>
 
@@ -844,6 +808,7 @@ input[type="number"] { -moz-appearance: textfield; }
                                 <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-emerald-500/50">
                                     <i class="fas fa-check"></i>
                                 </div>
+                                <h4 class="text-emerald-400 font-bold mb-3">{{ siswaInfo.nama }}</h4>
                                 <h4 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Saldo Tersedia</h4>
                                 <div class="text-3xl font-black text-white mb-6 p-4 bg-slate-950 rounded-2xl border border-slate-800">
                                     {{ saldoResult }}

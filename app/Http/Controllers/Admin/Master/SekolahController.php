@@ -41,18 +41,7 @@ class SekolahController extends Controller
             'nip_kepsek' => 'nullable|string|max:30',
             'sambutan_kepsek' => 'nullable|string',
 
-            // Integrasi API
-            'google_client_id' => 'nullable|string',
-            'google_client_secret' => 'nullable|string',
-            'wa_api_url' => 'nullable|string',
-            'wa_api_token' => 'nullable|string',
-            'api_co_id_key' => 'nullable|string',
-            'tele_bot_token' => 'nullable|string',
-            'tele_chat_id' => 'nullable|string|max:100',
-            'tripay_api_key' => 'nullable|string',
-            'tripay_private_key' => 'nullable|string',
-            'tripay_merchant_code' => 'nullable|string|max:50',
-            'mode_transaksi' => 'nullable|in:Sandbox,Production',
+
 
             // Images
             'logo' => 'nullable|image|max:2048',

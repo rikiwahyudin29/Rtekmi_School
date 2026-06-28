@@ -15,21 +15,10 @@ class TripayService
 
     public function __construct()
     {
-        $config = Sekolah::first();
-
-        if ($config) {
-            $this->apiKey       = $config->tripay_api_key;
-            $this->privateKey   = $config->tripay_private_key;
-            $this->merchantCode = $config->tripay_merchant_code;
-            
-            // Konversi enum 'Sandbox'/'Production' ke lowercase
-            $this->mode         = strtolower($config->mode_transaksi ?? 'sandbox'); 
-        } else {
-            $this->apiKey       = '';
-            $this->privateKey   = '';
-            $this->merchantCode = '';
-            $this->mode         = 'sandbox';
-        }
+        $this->apiKey       = env('TRIPAY_API_KEY');
+        $this->privateKey   = env('TRIPAY_PRIVATE_KEY');
+        $this->merchantCode = env('TRIPAY_MERCHANT_CODE');
+        $this->mode         = strtolower(env('TRIPAY_MODE', 'sandbox')); 
     }
 
     public function getBaseUrl()

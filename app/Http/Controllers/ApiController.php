@@ -10,8 +10,7 @@ class ApiController extends Controller
 {
     private function getApiKey()
     {
-        $sekolah = Sekolah::first();
-        return $sekolah ? $sekolah->api_co_id_key : '';
+        return env('API_CO_ID_KEY', '');
     }
 
     private function getBaseUrl()
