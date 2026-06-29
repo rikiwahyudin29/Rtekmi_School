@@ -249,7 +249,8 @@ class DashboardController extends Controller
         $totalSumatif = 0;
         if (\Illuminate\Support\Facades\Schema::hasTable('tbl_nilai_sumatif')) {
             $mapelIds = DB::table('tbl_jadwal')->where('id_guru', $guruId)->pluck('id_mapel')->unique();
-            $totalSumatif = DB::table('tbl_nilai_sumatif')->whereIn('id_mapel', $mapelIds)->count();
+            $kolomMapel = \Illuminate\Support\Facades\Schema::hasColumn('tbl_nilai_sumatif', 'id_mapel') ? 'id_mapel' : 'mapel_id';
+            $totalSumatif = DB::table('tbl_nilai_sumatif')->whereIn($kolomMapel, $mapelIds)->count();
         }
 
         // 5. Tugas Tambahan
