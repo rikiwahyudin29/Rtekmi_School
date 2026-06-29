@@ -101,6 +101,16 @@ const submit = () => {
         <div v-if="siswa && siswa.length > 0 && rapor_akhir" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col md:flex-row justify-between items-center gap-4">
                 <h3 class="font-bold text-gray-900 dark:text-white">Hasil Rapor Akhir Kelas</h3>
+                <div class="flex gap-2">
+                    <a :href="route('guru.penilaian.download_nilai_akhir_excel', {mapel_id: form.mapel_id, kelas_id: form.kelas_id})" target="_blank" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-xl text-sm px-4 py-2 text-center flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i>
+                        Download Excel
+                    </a>
+                    <a :href="route('guru.penilaian.download_nilai_akhir_pdf', {mapel_id: form.mapel_id, kelas_id: form.kelas_id})" target="_blank" class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-xl text-sm px-4 py-2 text-center flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i>
+                        Download PDF
+                    </a>
+                </div>
             </div>
             
             <div class="overflow-x-auto">

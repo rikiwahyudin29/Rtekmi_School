@@ -921,6 +921,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'halamanGenerateNilaiAkhir'])->name('halaman_generate_nilai_akhir');
         Route::post('/generate-nilai-akhir', [\App\Http\Controllers\Guru\PenilaianController::class, 'generateNilaiAkhir'])->name('store_generate_nilai');
+        Route::get('/generate-nilai-akhir/download-excel', [\App\Http\Controllers\Guru\PenilaianController::class, 'downloadNilaiAkhirExcel'])->name('download_nilai_akhir_excel');
+        Route::get('/generate-nilai-akhir/download-pdf', [\App\Http\Controllers\Guru\PenilaianController::class, 'downloadNilaiAkhirPdf'])->name('download_nilai_akhir_pdf');
     });
 
     // G. Guru PKL

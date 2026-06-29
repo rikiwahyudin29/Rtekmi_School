@@ -1003,4 +1003,216 @@ class PenilaianController extends Controller
 
         return redirect()->back()->with('success', 'Import Nilai Sikap K13 berhasil.');
     }
+
+    public function downloadNilaiAkhirExcel(Request $request)
+    {
+        $request->validate(['mapel_id' => 'required', 'kelas_id' => 'required']);
+        
+        $guru_id = Auth::user()->guru->id ?? 1;
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+        
+        $kelas = Kelas::find($request->kelas_id);
+        $mapel = Mapel::find($request->mapel_id);
+        
+        $tingkatStr = 'Fase E (Kelas 10)';
+        if ($kelas) {
+            $tingkatNum = $kelas->tingkat;
+            if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+            elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+            elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+        }
+        
+        $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+        $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)
+            ->where('guru_id', $guru_id)
+            ->where('tingkat', $tingkatStr)
+            ->get();
+        $tp_ids = $tps->pluck('id')->toArray();
+        
+        $formatifs = NilaiFormatif::whereIn('siswa_id', $siswa->pluck('id'))->whereIn('tp_id', $tp_ids)->get();
+        $sumatifs = NilaiSumatif::whereIn('siswa_id', $siswa->pluck('id'))
+            ->where('mapel_id', $request->mapel_id)
+            ->where('guru_id', $guru_id)
+            ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+            ->where('semester', $semester_int)
+            ->get();
+            
+        $rapor_akhir = RaporAkhir::where('mapel_id', $request->mapel_id)
+            ->where('guru_id', $guru_id)
+            ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+            ->where('semester', $semester_int)
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->keyBy('siswa_id');
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        $sheet->setCellValue('A1', 'DATA NILAI AKHIR - ' . ($mapel->nama_mapel ?? ''));
+        $sheet->setCellValue('A2', 'Kelas: ' . ($kelas->nama_kelas ?? ''));
+        
+        // Header
+        $sheet->setCellValue('A4', 'No');
+        $sheet->setCellValue('B4', 'NISN');
+        $sheet->setCellValue('C4', 'Nama Siswa');
+        
+        $colIndex = 4; // D
+        foreach($tps as $tp) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+            $sheet->setCellValue($colLetter.'4', 'Formatif ' . $tp->kode_tp);
+            $colIndex++;
+        }
+        
+        $colLetterSAS = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+        $sheet->setCellValue($colLetterSAS.'4', 'Sumatif SAS');
+        $colIndex++;
+        
+        $colLetterSTS = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+        $sheet->setCellValue($colLetterSTS.'4', 'Sumatif STS');
+        $colIndex++;
+        
+        $colLetterAkhir = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+        $sheet->setCellValue($colLetterAkhir.'4', 'Nilai Akhir');
+        $colIndex++;
+        
+        $colLetterDeskripsi = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+        $sheet->setCellValue($colLetterDeskripsi.'4', 'Deskripsi Capaian');
+        
+        $row = 5;
+        foreach($siswa as $index => $s) {
+            $sheet->setCellValue('A'.$row, $index + 1);
+            $sheet->setCellValue('B'.$row, $s->nisn);
+            $sheet->setCellValue('C'.$row, $s->nama_lengkap);
+            
+            $colIdx = 4;
+            foreach($tps as $tp) {
+                $f = $formatifs->where('siswa_id', $s->id)->where('tp_id', $tp->id)->first();
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+                $sheet->setCellValue($colLetter.$row, $f ? $f->nilai : '-');
+                $colIdx++;
+            }
+            
+            $sas = $sumatifs->where('siswa_id', $s->id)->where('jenis', 'SAS')->first();
+            $sts = $sumatifs->where('siswa_id', $s->id)->where('jenis', 'STS')->first();
+            
+            $colLetterSAS = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->setCellValue($colLetterSAS.$row, $sas ? $sas->nilai : '-');
+            $colIdx++;
+            
+            $colLetterSTS = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->setCellValue($colLetterSTS.$row, $sts ? $sts->nilai : '-');
+            $colIdx++;
+            
+            $akhir = $rapor_akhir->get($s->id);
+            $colLetterAkhir = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->setCellValue($colLetterAkhir.$row, $akhir ? $akhir->nilai_akhir : '-');
+            $colIdx++;
+            
+            $colLetterDeskripsi = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->setCellValue($colLetterDeskripsi.$row, $akhir ? $akhir->deskripsi_tertinggi : '-');
+            
+            $row++;
+        }
+        
+        // Formatting
+        $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+        foreach (range('A', $lastColLetter) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $styleHeader = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF2563EB']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $styleData = [
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+        ];
+        $sheet->getStyle('A4:'.$lastColLetter.'4')->applyFromArray($styleHeader);
+        if ($row > 5) {
+            $sheet->getStyle('A5:'.$lastColLetter.($row - 1))->applyFromArray($styleData);
+        }
+        
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = 'Data_Nilai_Akhir_'.$kelas->nama_kelas.'_'.$mapel->nama_mapel.'.xlsx';
+        $fileName = str_replace(' ', '_', $fileName);
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+        $writer->save($tempFile);
+        
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+    
+    public function downloadNilaiAkhirPdf(Request $request)
+    {
+        $request->validate(['mapel_id' => 'required', 'kelas_id' => 'required']);
+        
+        $guru_id = Auth::user()->guru->id ?? 1;
+        $tahun_ajaran_aktif = TahunAjaran::where('status', 'Aktif')->first();
+        $semester_int = ($tahun_ajaran_aktif && $tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+        
+        $kelas = Kelas::find($request->kelas_id);
+        $mapel = Mapel::find($request->mapel_id);
+        
+        $tingkatStr = 'Fase E (Kelas 10)';
+        if ($kelas) {
+            $tingkatNum = $kelas->tingkat;
+            if ($tingkatNum == 10) $tingkatStr = 'Fase E (Kelas 10)';
+            elseif ($tingkatNum == 11) $tingkatStr = 'Fase F (Kelas 11)';
+            elseif ($tingkatNum == 12) $tingkatStr = 'Fase F (Kelas 12)';
+        }
+        
+        $siswa = Siswa::where('kelas_id', $request->kelas_id)->orderBy('nama_lengkap', 'asc')->get();
+        $tps = TujuanPembelajaran::where('mapel_id', $request->mapel_id)
+            ->where('guru_id', $guru_id)
+            ->where('tingkat', $tingkatStr)
+            ->get();
+        $tp_ids = $tps->pluck('id')->toArray();
+        
+        $formatifs = NilaiFormatif::whereIn('siswa_id', $siswa->pluck('id'))->whereIn('tp_id', $tp_ids)->get();
+        $sumatifs = NilaiSumatif::whereIn('siswa_id', $siswa->pluck('id'))
+            ->where('mapel_id', $request->mapel_id)
+            ->where('guru_id', $guru_id)
+            ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+            ->where('semester', $semester_int)
+            ->get();
+            
+        $rapor_akhir = RaporAkhir::where('mapel_id', $request->mapel_id)
+            ->where('guru_id', $guru_id)
+            ->where('tahun_ajaran_id', $tahun_ajaran_aktif->id ?? 1)
+            ->where('semester', $semester_int)
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->keyBy('siswa_id');
+            
+        $detail_nilai = [];
+        foreach($siswa as $s) {
+            $f = $formatifs->where('siswa_id', $s->id)->keyBy('tp_id');
+            $sas = $sumatifs->where('siswa_id', $s->id)->where('jenis', 'SAS')->first();
+            $sts = $sumatifs->where('siswa_id', $s->id)->where('jenis', 'STS')->first();
+            $detail_nilai[$s->id] = [
+                'formatif' => $f,
+                'sas' => $sas ? $sas->nilai : '-',
+                'sts' => $sts ? $sts->nilai : '-'
+            ];
+        }
+
+        $data = [
+            'kelas' => $kelas,
+            'mapel' => $mapel,
+            'siswa' => $siswa,
+            'tps' => $tps,
+            'detail_nilai' => $detail_nilai,
+            'rapor_akhir' => $rapor_akhir,
+            'tahun_ajaran' => $tahun_ajaran_aktif
+        ];
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.nilai_akhir', $data)
+            ->setPaper('a4', 'landscape');
+
+        $fileName = 'Data_Nilai_Akhir_'.$kelas->nama_kelas.'_'.$mapel->nama_mapel.'.pdf';
+        $fileName = str_replace(' ', '_', $fileName);
+        
+        return $pdf->stream($fileName);
+    }
 }
