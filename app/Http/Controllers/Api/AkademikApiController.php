@@ -58,8 +58,8 @@ class AkademikApiController extends Controller
             ->where('status', 1)
             ->count();
 
-        // D. Data Ujian Berlangsung/Hari ini
-        $ujian_hari_ini = DB::table('ujian_siswa as us')
+        // D. Data Ujian Berlangsung/Hari ini (Semua Ujian yang Aktif)
+        $ujian_raw = DB::table('ujian_siswa as us')
             ->select(
                 'ju.id as id_ujian',
                 'ju.nama_ujian as nama_mapel',
@@ -67,20 +67,22 @@ class AkademikApiController extends Controller
                 'ju.waktu_selesai'
             )
             ->join('tbl_jadwal_ujian as ju', 'ju.id', '=', 'us.jadwal_id')
-            ->where('us.siswa_id', $siswa->id)
+            ->where('us.siswa_id', $siswa->id) // Sudah spesifik berdasarkan Siswa
             ->where('ju.status', 1)
             ->whereDate('ju.waktu_mulai', date('Y-m-d'))
             ->orderBy('ju.waktu_mulai', 'asc')
-            ->first();
+            ->get();
 
-        if ($ujian_hari_ini) {
-            $waktu_mulai = date('H:i', strtotime($ujian_hari_ini->waktu_mulai));
-            $waktu_selesai = date('H:i', strtotime($ujian_hari_ini->waktu_selesai));
-            $ujian_hari_ini = [
-                'id_ujian' => $ujian_hari_ini->id_ujian,
-                'nama_mapel' => $ujian_hari_ini->nama_mapel,
+        $ujian_hari_ini = [];
+        foreach ($ujian_raw as $u) {
+            $waktu_mulai = date('H:i', strtotime($u->waktu_mulai));
+            $waktu_selesai = date('H:i', strtotime($u->waktu_selesai));
+            
+            $ujian_hari_ini[] = [
+                'id_ujian' => $u->id_ujian,
+                'nama_mapel' => $u->nama_mapel,
                 'waktu' => $waktu_mulai . ' - ' . $waktu_selesai,
-                'ruang' => 'Ruang Ujian' // Default/bisa diganti relasi ruangan jika ada
+                'ruang' => 'Ruang Ujian' // Bisa disesuaikan relasinya jika perlu
             ];
         }
 
