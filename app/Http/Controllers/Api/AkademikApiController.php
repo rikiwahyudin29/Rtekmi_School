@@ -112,8 +112,8 @@ class AkademikApiController extends Controller
         // F. Format Foto Profil URL
         $foto_profil = null;
         if (!empty($siswa->foto) && $siswa->foto !== 'default.png') {
-            // Asumsi direktori foto diletakkan di public/uploads/profil_siswa
-            $foto_profil = url('uploads/profil_siswa/' . $siswa->foto);
+            // Asumsi direktori foto diletakkan di public/uploads/siswa
+            $foto_profil = url('uploads/siswa/' . $siswa->foto);
         }
 
         return response()->json([
