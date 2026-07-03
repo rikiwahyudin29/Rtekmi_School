@@ -12,9 +12,10 @@ class AkademikApiController extends Controller
     // Helper cari ID Siswa dari NISN
     private function getSiswaInfo($nisn)
     {
-        return DB::table('tbl_siswa')
-            ->select('id', 'nama_lengkap', 'kelas_id')
-            ->where('nisn', $nisn)
+        return DB::table('tbl_siswa as s')
+            ->select('s.id', 's.nama_lengkap', 's.kelas_id', 's.nisn', 's.foto', 'k.nama_kelas')
+            ->leftJoin('tbl_kelas as k', 'k.id', '=', 's.kelas_id')
+            ->where('s.nisn', $nisn)
             ->first();
     }
 
@@ -57,12 +58,77 @@ class AkademikApiController extends Controller
             ->where('status', 1)
             ->count();
 
+        // D. Data Ujian Berlangsung/Hari ini
+        $ujian_hari_ini = DB::table('ujian_siswa as us')
+            ->select(
+                'ju.id as id_ujian',
+                'ju.nama_ujian as nama_mapel',
+                'ju.waktu_mulai',
+                'ju.waktu_selesai'
+            )
+            ->join('tbl_jadwal_ujian as ju', 'ju.id', '=', 'us.jadwal_id')
+            ->where('us.siswa_id', $siswa->id)
+            ->where('ju.status', 1)
+            ->whereDate('ju.waktu_mulai', date('Y-m-d'))
+            ->orderBy('ju.waktu_mulai', 'asc')
+            ->first();
+
+        if ($ujian_hari_ini) {
+            $waktu_mulai = date('H:i', strtotime($ujian_hari_ini->waktu_mulai));
+            $waktu_selesai = date('H:i', strtotime($ujian_hari_ini->waktu_selesai));
+            $ujian_hari_ini = [
+                'id_ujian' => $ujian_hari_ini->id_ujian,
+                'nama_mapel' => $ujian_hari_ini->nama_mapel,
+                'waktu' => $waktu_mulai . ' - ' . $waktu_selesai,
+                'ruang' => 'Ruang Ujian' // Default/bisa diganti relasi ruangan jika ada
+            ];
+        }
+
+        // E. Jadwal Pelajaran Hari Ini
+        $map_hari = [1=>'Senin', 2=>'Selasa', 3=>'Rabu', 4=>'Kamis', 5=>'Jumat', 6=>'Sabtu', 7=>'Minggu'];
+        $hari_ini = $map_hari[date('N')];
+
+        $jadwal_raw = DB::table('tbl_jadwal as j')
+            ->select('m.nama_mapel', 'j.jam_mulai', 'j.jam_selesai', 'g.nama_lengkap as guru')
+            ->leftJoin('tbl_mapel as m', 'm.id', '=', 'j.id_mapel')
+            ->leftJoin('tbl_guru as g', 'g.id', '=', 'j.id_guru')
+            ->where('j.id_kelas', $siswa->kelas_id)
+            ->where('j.hari', $hari_ini)
+            ->orderBy('j.jam_mulai', 'asc')
+            ->get();
+
+        $jadwal_hari_ini = [];
+        foreach ($jadwal_raw as $j) {
+            $waktu_mulai = date('H:i', strtotime($j->jam_mulai));
+            $waktu_selesai = date('H:i', strtotime($j->jam_selesai));
+            $jadwal_hari_ini[] = [
+                'nama_mapel' => $j->nama_mapel ?? 'Mapel Tidak Diketahui',
+                'waktu' => $waktu_mulai . ' - ' . $waktu_selesai,
+                'guru' => $j->guru ?? 'Guru Belum Ditentukan',
+                'ruang' => $siswa->nama_kelas ?? 'Ruang Kelas'
+            ];
+        }
+
+        // F. Format Foto Profil URL
+        $foto_profil = null;
+        if (!empty($siswa->foto) && $siswa->foto !== 'default.png') {
+            // Asumsi direktori foto diletakkan di public/uploads/profil_siswa
+            $foto_profil = url('uploads/profil_siswa/' . $siswa->foto);
+        }
+
         return response()->json([
             'status' => true,
+            'message' => 'Data Dashboard',
             'data' => [
+                'nisn' => $siswa->nisn,
+                'nama' => $siswa->nama_lengkap,
+                'kelas' => $siswa->nama_kelas ?? 'Belum Ada Kelas',
+                'foto_profil' => $foto_profil,
                 'keuangan' => $total_tunggakan,
                 'tugas_aktif' => $tugas_aktif,
-                'poin_disiplin' => $poin_disiplin
+                'poin_disiplin' => $poin_disiplin,
+                'ujian_hari_ini' => $ujian_hari_ini,
+                'jadwal_hari_ini' => $jadwal_hari_ini
             ]
         ], 200);
     }
