@@ -346,6 +346,8 @@ class AkademikApiController extends Controller
         }
 
         return response()->json(['status' => true, 'message' => $msg], 200);
+    }
+
     // =======================================================
     // 5. API RAPORT AKADEMIK
     // =======================================================
