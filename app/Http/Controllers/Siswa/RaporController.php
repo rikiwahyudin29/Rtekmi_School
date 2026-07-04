@@ -62,12 +62,17 @@ class RaporController extends Controller
             ->get()
             ->keyBy('mapel_id');
 
-        $formatif = \App\Models\NilaiFormatif::where('siswa_id', $siswa_id)
-            ->where('tahun_ajaran_id', $selected_ta_id)
+        $formatif = \App\Models\NilaiFormatif::where('tbl_nilai_formatif.siswa_id', $siswa_id)
+            ->where(function($q) use ($selected_ta_id) {
+                $q->where('tbl_nilai_formatif.tahun_ajaran_id', $selected_ta_id)
+                  ->orWhereNull('tbl_nilai_formatif.tahun_ajaran_id');
+            })
             ->join('tbl_tujuan_pembelajaran', 'tbl_nilai_formatif.tp_id', '=', 'tbl_tujuan_pembelajaran.id')
-            ->select('tbl_nilai_formatif.*', 'tbl_tujuan_pembelajaran.kode_tp', 'tbl_tujuan_pembelajaran.deskripsi as tp_deskripsi')
+            ->select('tbl_nilai_formatif.*', 'tbl_tujuan_pembelajaran.kode_tp', 'tbl_tujuan_pembelajaran.deskripsi as tp_deskripsi', 'tbl_tujuan_pembelajaran.mapel_id as fallback_mapel_id')
             ->get()
-            ->groupBy('mapel_id');
+            ->groupBy(function($item) {
+                return $item->mapel_id ? $item->mapel_id : $item->fallback_mapel_id;
+            });
             
         $sumatif = \App\Models\NilaiSumatif::where('siswa_id', $siswa_id)
             ->where('tahun_ajaran_id', $selected_ta_id)
