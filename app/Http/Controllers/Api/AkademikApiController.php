@@ -525,4 +525,152 @@ class AkademikApiController extends Controller
             ]
         ], 200);
     }
+    // =======================================================
+    // 6. API RAPORT KURIKULUM MERDEKA
+    // =======================================================
+    public function getRaportMerdeka(Request $request)
+    {
+        $nisn = $request->input('nisn');
+        
+        $siswa = $this->getSiswaInfo($nisn);
+        if (!$siswa) {
+            return response()->json(['status' => false, 'pesan' => 'Siswa tidak ditemukan.'], 404);
+        }
+
+        $tahun_ajaran_aktif = DB::table('tbl_tahun_ajaran')->where('status', 'Aktif')->first();
+        if (!$tahun_ajaran_aktif) {
+            return response()->json(['status' => false, 'pesan' => 'Tidak ada Tahun Ajaran aktif.'], 404);
+        }
+
+        $semester_int = ($tahun_ajaran_aktif->semester === 'Genap') ? 2 : 1;
+        $tahun_ajaran_id = $tahun_ajaran_aktif->id;
+
+        $semester_nama = "Semester " . $tahun_ajaran_aktif->semester . " " . $tahun_ajaran_aktif->tahun_ajaran;
+        $deskripsi_kelas = "Rekapitulasi akademik Kelas " . ($siswa->nama_kelas ?? '-');
+
+        // Raport Akhir
+        $rapor_akhir = DB::table('tbl_rapor_akhir as ra')
+            ->select('ra.*', 'm.nama_mapel', 'g.nama_lengkap as guru')
+            ->join('tbl_mapel as m', 'm.id', '=', 'ra.mapel_id')
+            ->leftJoin('tbl_guru as g', 'g.id', '=', 'ra.guru_id')
+            ->where('ra.siswa_id', $siswa->id)
+            ->where('ra.tahun_ajaran_id', $tahun_ajaran_id)
+            ->where('ra.semester', $semester_int)
+            ->get();
+
+        $rata_rata = $rapor_akhir->avg('nilai_akhir') ?? 0;
+
+        // Peringkat & Total Siswa
+        $siswa_kelas = DB::table('tbl_siswa')->where('kelas_id', $siswa->kelas_id)->pluck('id');
+        $total_siswa = $siswa_kelas->count();
+        
+        $rata_kelas = DB::table('tbl_rapor_akhir')
+            ->select('siswa_id', DB::raw('AVG(nilai_akhir) as rata'))
+            ->whereIn('siswa_id', $siswa_kelas)
+            ->where('tahun_ajaran_id', $tahun_ajaran_id)
+            ->where('semester', $semester_int)
+            ->groupBy('siswa_id')
+            ->orderBy('rata', 'DESC')
+            ->pluck('rata', 'siswa_id')
+            ->toArray();
+            
+        $peringkat = 1;
+        $found = false;
+        foreach ($rata_kelas as $s_id => $rata) {
+            if ($s_id == $siswa->id) {
+                $found = true;
+                break;
+            }
+            $peringkat++;
+        }
+        if (!$found) $peringkat = '-';
+
+        // Kehadiran
+        $kehadiran = DB::table('tbl_rapor_kehadiran')
+            ->where('siswa_id', $siswa->id)
+            ->where('semester', $semester_int)
+            ->first();
+        
+        $persen_hadir = 100;
+        if ($kehadiran) {
+            $total_absen = ($kehadiran->sakit ?? 0) + ($kehadiran->izin ?? 0) + ($kehadiran->tanpa_keterangan ?? 0);
+            $persen_hadir = max(0, 100 - $total_absen); 
+        }
+
+        $kehadiran_status = 'Kurang';
+        if ($persen_hadir >= 90) $kehadiran_status = 'Sangat Baik';
+        elseif ($persen_hadir >= 75) $kehadiran_status = 'Baik';
+
+        // Data Formatif & Sumatif
+        $formatif_raw = DB::table('tbl_nilai_formatif as nf')
+            ->select('nf.mapel_id', 'nf.nilai', 'tp.mapel_id as fallback_mapel_id')
+            ->join('tbl_tujuan_pembelajaran as tp', 'tp.id', '=', 'nf.tp_id')
+            ->where('nf.siswa_id', $siswa->id)
+            ->where(function($q) use ($tahun_ajaran_id) {
+                $q->where('nf.tahun_ajaran_id', $tahun_ajaran_id)
+                  ->orWhereNull('nf.tahun_ajaran_id');
+            })
+            ->get();
+            
+        $sumatif_raw = DB::table('tbl_nilai_sumatif')
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_ajaran_id', $tahun_ajaran_id)
+            ->where('semester', $semester_int)
+            ->get();
+
+        $daftar_nilai = [];
+        foreach ($rapor_akhir as $ra) {
+            $mapel_id = $ra->mapel_id;
+            
+            // Rata-rata formatif
+            $f_mapel = [];
+            foreach ($formatif_raw as $f) {
+                $m_id = $f->mapel_id ?: $f->fallback_mapel_id;
+                if ($m_id == $mapel_id) {
+                    $f_mapel[] = $f->nilai;
+                }
+            }
+            $avg_formatif = count($f_mapel) > 0 ? array_sum($f_mapel) / count($f_mapel) : 0;
+
+            // Rata-rata sumatif (SAS + STS)
+            $s_mapel = $sumatif_raw->where('mapel_id', $mapel_id);
+            $sas = $s_mapel->where('jenis', 'SAS')->first()->nilai ?? 0;
+            $sts = $s_mapel->where('jenis', 'STS')->first()->nilai ?? 0;
+            $avg_sumatif = ($sas + $sts) / 2;
+            if ($sas > 0 && $sts == 0) $avg_sumatif = $sas;
+            if ($sts > 0 && $sas == 0) $avg_sumatif = $sts;
+
+            $daftar_nilai[] = [
+                'mapel' => $ra->nama_mapel,
+                'guru' => $ra->guru ?? '-',
+                'kkm' => 75,
+                'formatif' => round($avg_formatif),
+                'sumatif' => round($avg_sumatif),
+                'nilai_akhir' => round($ra->nilai_akhir),
+                'deskripsi' => $ra->deskripsi_tertinggi ?? 'Siswa menunjukkan pemahaman yang baik.'
+            ];
+        }
+
+        return response()->json([
+            'status' => true,
+            'pesan' => 'Data raport berhasil dimuat',
+            'data' => [
+                'info_akademik' => [
+                    'semester_tahun' => $semester_nama,
+                    'deskripsi_kelas' => $deskripsi_kelas
+                ],
+                'ringkasan' => [
+                    'rata_rata_nilai' => (string)round($rata_rata, 1),
+                    'trend_nilai' => '+0.0',
+                    'kehadiran_persen' => $persen_hadir,
+                    'kehadiran_status' => $kehadiran_status,
+                    'peringkat_kelas' => $peringkat,
+                    'total_siswa' => $total_siswa,
+                    'peringkat_paralel' => 0,
+                    'url_download_pdf' => url('cetak/rapor/' . $siswa->id . '/nilai')
+                ],
+                'daftar_nilai' => $daftar_nilai
+            ]
+        ], 200);
+    }
 }

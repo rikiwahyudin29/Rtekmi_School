@@ -54,6 +54,8 @@ Route::middleware('api.auth')->group(function () {
         Route::get('materi', [\App\Http\Controllers\Api\AkademikApiController::class, 'getMateri']);
         Route::get('tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'getTugas']);
         Route::post('submit_tugas', [\App\Http\Controllers\Api\AkademikApiController::class, 'submitTugas']);
+        Route::get('raport', [\App\Http\Controllers\Api\AkademikApiController::class, 'getRaportMerdeka']);
+        Route::get('raport_lama', [\App\Http\Controllers\Api\AkademikApiController::class, 'getRaport']);
     });
 
     // Modul Keuangan
