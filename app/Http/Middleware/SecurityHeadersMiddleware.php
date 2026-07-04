@@ -30,6 +30,7 @@ class SecurityHeadersMiddleware
         // Apply headers only to typical responses, ignore binary downloads etc. if any
         if (method_exists($response, 'header')) {
             $response->header('X-Content-Type-Options', 'nosniff');
+            $response->header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
             
             // Define strict CSP
             $csp = "default-src 'self'; " .
@@ -40,6 +41,8 @@ class SecurityHeadersMiddleware
                    "img-src 'self' data: https: blob:; " .
                    "connect-src 'self' https://api.fonnte.com https://*.tripay.co.id wss: ws:; " .
                    "object-src 'none'; " .
+                   "frame-ancestors 'self'; " .
+                   "form-action 'self'; " .
                    "base-uri 'self'; " .
                    "upgrade-insecure-requests;";
 
