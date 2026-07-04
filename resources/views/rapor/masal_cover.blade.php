@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Cover Masal</title>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         @page {
             size: {{ request('kertas', 'A4') }};
             margin: {{ request('margin_atas', 20) }}mm {{ request('margin_kanan', 20) }}mm {{ request('margin_bawah', 20) }}mm {{ request('margin_kiri', 20) }}mm;

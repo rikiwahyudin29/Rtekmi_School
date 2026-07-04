@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Buku Induk - {{ $siswa->nama_lengkap }}</title>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { font-family: 'Arial', sans-serif; font-size: 11pt; }
         .header { text-align: center; font-weight: bold; font-size: 16pt; margin-bottom: 20px; text-decoration: underline; }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; margin-bottom: 20px; }

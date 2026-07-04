@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Sertifikat Kompetensi - {{ $siswa->nama_lengkap }}</title>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { font-family: 'Times New Roman', Times, serif; font-size: 14pt; text-align: center; margin: 40px; border: 10px solid #ddd; padding: 40px; }
         .header { font-size: 24pt; font-weight: bold; margin-bottom: 10px; }
         .sub-header { font-size: 16pt; margin-bottom: 40px; }

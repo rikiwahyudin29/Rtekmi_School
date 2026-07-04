@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Cetak Rapor P5 - {{ $siswa->nama_lengkap }}</title>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
         .header { text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 20px; }
         table { w-full border-collapse; margin-top: 10px; width: 100%; }

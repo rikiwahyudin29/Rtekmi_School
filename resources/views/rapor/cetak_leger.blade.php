@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Cetak Leger Kelas - {{ $kelas->nama_kelas }}</title>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         body { font-family: 'Arial', sans-serif; font-size: 10pt; }
         .header { text-align: center; font-weight: bold; font-size: 14pt; margin-bottom: 20px; }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; }
