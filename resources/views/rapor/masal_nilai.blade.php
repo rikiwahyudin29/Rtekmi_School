@@ -34,12 +34,12 @@
 
         .title-center { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
 
-        .bordered { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .bordered th, .bordered td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
-        .bordered th { background-color: #f0f0f0; text-align: center; font-weight: bold; }
+        .bordered { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #000 !important; }
+        .bordered th, .bordered td { border: 1px solid #000 !important; padding: 6px 8px; vertical-align: top; word-wrap: break-word; }
+        .bordered th { background-color: #f0f0f0 !important; text-align: center; font-weight: bold; -webkit-print-color-adjust: exact; color-adjust: exact; }
 
-        .box-wrapper { border: 1px solid #000; margin-bottom: 15px; }
-        .box-title { background-color: #f0f0f0; border-bottom: 1px solid #000; padding: 4px 8px; font-weight: bold; }
+        .box-wrapper { border: 1px solid #000 !important; margin-bottom: 15px; }
+        .box-title { background-color: #f0f0f0 !important; border-bottom: 1px solid #000 !important; padding: 4px 8px; font-weight: bold; -webkit-print-color-adjust: exact; color-adjust: exact; }
         .box-content { padding: 8px; min-height: 40px; }
 
         .flex-container { display: flex; gap: 15px; margin-bottom: 15px; }

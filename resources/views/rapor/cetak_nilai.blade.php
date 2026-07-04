@@ -30,17 +30,17 @@
 
         .title-center { text-align: center; font-size: 16px; font-weight: bold; margin: 20px 0; }
 
-        table.bordered { width: 100%; border-collapse: collapse; margin-bottom: 15px; page-break-inside: auto; }
+        table.bordered { width: 100%; border-collapse: collapse; margin-bottom: 15px; page-break-inside: auto; border: 1px solid #000 !important; }
         table.bordered tr { page-break-inside: avoid; page-break-after: auto; }
-        table.bordered th, table.bordered td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
-        table.bordered th { font-weight: bold; text-align: center; background-color: #f9f9f9; }
+        table.bordered th, table.bordered td { border: 1px solid #000 !important; padding: 6px 8px; vertical-align: top; word-wrap: break-word; }
+        table.bordered th { font-weight: bold; text-align: center; background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
 
         .flex-container { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 15px; page-break-inside: avoid; }
         .flex-item { width: 48%; }
         
-        .box-title { text-align: center; font-weight: bold; background-color: #f9f9f9; border-bottom: 1px solid #000; padding: 5px; }
+        .box-title { text-align: center; font-weight: bold; background-color: #f9f9f9 !important; border-bottom: 1px solid #000 !important; padding: 5px; -webkit-print-color-adjust: exact; color-adjust: exact; }
         .box-content { min-height: 60px; padding: 8px; }
-        .box-wrapper { border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid; }
+        .box-wrapper { border: 1px solid #000 !important; margin-bottom: 15px; page-break-inside: avoid; }
 
         .signature-table { width: 100%; margin-top: 30px; page-break-inside: avoid; }
         .signature-table td { text-align: center; vertical-align: top; }
