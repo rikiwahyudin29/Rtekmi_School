@@ -229,6 +229,7 @@ class AkademikApiController extends Controller
                 'judul' => $m->judul,
                 'deskripsi' => $m->deskripsi, // Full deskripsi
                 'link_youtube' => $m->link_youtube,
+                'file_materi' => $m->file_materi ? url('uploads/materi/' . $m->file_materi) : null,
                 'ukuran_file' => $ukuran_file,
                 'ukuran' => $ukuran_file ?: '-', // Keep for backward compatibility
                 'tanggal' => date('d M Y', strtotime($m->created_at))
