@@ -239,6 +239,8 @@ class AkademikApiController extends Controller
             ->select(
                 'tt.id as id_tugas', 
                 'tt.judul',
+                'tt.deskripsi',
+                'tt.file_pendukung',
                 'tt.deadline',
                 'mapel.nama_mapel', 
                 'kumpul.id as id_kumpul', 
@@ -262,6 +264,8 @@ class AkademikApiController extends Controller
                 'id_tugas' => $t->id_tugas,
                 'mapel' => $t->nama_mapel,
                 'judul' => $t->judul,
+                'deskripsi' => $t->deskripsi,
+                'file_pendukung' => $t->file_pendukung ? url('uploads/tugas/' . $t->file_pendukung) : null,
                 'deadline' => date('d M Y, H:i', strtotime($t->deadline)),
             ];
 
