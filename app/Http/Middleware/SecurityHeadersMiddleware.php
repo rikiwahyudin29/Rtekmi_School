@@ -29,9 +29,6 @@ class SecurityHeadersMiddleware
 
         // Apply headers only to typical responses, ignore binary downloads etc. if any
         if (method_exists($response, 'header')) {
-            $response->header('X-Content-Type-Options', 'nosniff');
-            $response->header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-            
             // Define strict CSP
             $csp = "default-src 'self'; " .
                    "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'strict-dynamic' 'unsafe-inline'; " .
