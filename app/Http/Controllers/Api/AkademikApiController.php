@@ -651,6 +651,8 @@ class AkademikApiController extends Controller
             ];
         }
 
+        $hash_cetak = md5($siswa->id . env('API_SECRET_KEY') . 'raport');
+
         return response()->json([
             'status' => true,
             'pesan' => 'Data raport berhasil dimuat',
@@ -667,7 +669,7 @@ class AkademikApiController extends Controller
                     'peringkat_kelas' => $peringkat,
                     'total_siswa' => $total_siswa,
                     'peringkat_paralel' => 0,
-                    'url_download_pdf' => url('cetak/rapor/' . $siswa->id . '/nilai')
+                    'url_download_pdf' => url('api-cetak/rapor/' . $siswa->id . '/' . $hash_cetak)
                 ],
                 'daftar_nilai' => $daftar_nilai
             ]

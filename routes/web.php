@@ -149,6 +149,9 @@ Route::get('/clear-all', function() {
     return 'Caches cleared! Please go back and hard refresh (Ctrl+F5).';
 });
 
+// Rute Cetak Rapor Khusus API (Public with Hash)
+Route::get('/api-cetak/rapor/{id}/{hash}', [\App\Http\Controllers\Admin\CetakRaporController::class, 'cetakNilaiApi'])->name('api.cetak.rapor');
+
 Route::get('/recreate-tbl-formatif', function() {
     try {
         \Illuminate\Support\Facades\DB::statement('DROP TABLE IF EXISTS tbl_nilai_formatif');

@@ -35,6 +35,20 @@ class CetakRaporController extends Controller
 
     /**
      * Cetak Halaman Nilai Rapor (Kurikulum Merdeka)
+    /**
+     * Cetak Nilai via API (tanpa login, verifikasi hash)
+     */
+    public function cetakNilaiApi($id, $hash)
+    {
+        $expectedHash = md5($id . env('API_SECRET_KEY') . 'raport');
+        if ($hash !== $expectedHash) {
+            abort(403, 'Akses ditolak. Link tidak valid atau kedaluwarsa.');
+        }
+        return $this->cetakNilai($id);
+    }
+
+    /**
+     * Menampilkan halaman cetak rapor nilai
      */
     public function cetakNilai($id)
     {
