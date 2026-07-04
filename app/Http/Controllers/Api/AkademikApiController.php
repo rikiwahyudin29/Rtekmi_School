@@ -188,7 +188,7 @@ class AkademikApiController extends Controller
 
         // Ambil materi sesuai kelas siswa
         $materi_raw = DB::table('tbl_materi as tm')
-            ->select('tm.id as id_materi', 'tm.file_materi', 'tm.judul', 'tm.deskripsi', 'tm.created_at', 'mapel.nama_mapel')
+            ->select('tm.id as id_materi', 'tm.file_materi', 'tm.link_youtube', 'tm.judul', 'tm.deskripsi', 'tm.created_at', 'mapel.nama_mapel')
             ->join('tbl_mapel as mapel', 'mapel.id', '=', 'tm.mapel_id')
             ->where('tm.kelas_id', $kelas_id)
             ->orderBy('mapel.nama_mapel', 'ASC')
@@ -198,15 +198,39 @@ class AkademikApiController extends Controller
         $grouped = [];
         foreach ($materi_raw as $m) {
             $ext = pathinfo($m->file_materi, PATHINFO_EXTENSION);
+            
+            $jenis_file = 'File';
+            if ($m->link_youtube) {
+                $jenis_file = 'Youtube';
+            } elseif (in_array(strtolower($ext), ['pdf'])) {
+                $jenis_file = 'PDF';
+            } elseif (in_array(strtolower($ext), ['doc', 'docx'])) {
+                $jenis_file = 'Word';
+            } elseif (in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $jenis_file = 'Foto';
+            }
+
+            $ukuran_file = '';
+            if (!$m->link_youtube && $m->file_materi) {
+                $filePath = public_path('uploads/materi/' . $m->file_materi);
+                if (file_exists($filePath)) {
+                    $bytes = filesize($filePath);
+                    $ukuran_file = number_format($bytes / 1048576, 2) . ' MB';
+                }
+            }
+
             if (!isset($grouped[$m->nama_mapel])) {
                 $grouped[$m->nama_mapel] = [];
             }
             $grouped[$m->nama_mapel][] = [
                 'id_materi' => 'M' . $m->id_materi,
                 'tipe' => strtoupper($ext) ?: 'FILE',
+                'jenis_file' => $jenis_file,
                 'judul' => $m->judul,
-                'deskripsi' => substr($m->deskripsi, 0, 50) . '...',
-                'ukuran' => '-', // Tidak bisa mendapatkan ukuran file secara langsung tanpa mengecek storage
+                'deskripsi' => $m->deskripsi, // Full deskripsi
+                'link_youtube' => $m->link_youtube,
+                'ukuran_file' => $ukuran_file,
+                'ukuran' => $ukuran_file ?: '-', // Keep for backward compatibility
                 'tanggal' => date('d M Y', strtotime($m->created_at))
             ];
         }
