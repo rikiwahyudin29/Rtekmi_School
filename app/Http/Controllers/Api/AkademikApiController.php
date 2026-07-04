@@ -157,6 +157,8 @@ class AkademikApiController extends Controller
                 'nisn' => $siswa->nisn,
                 'nama' => $siswa->nama_lengkap,
                 'kelas' => $siswa->nama_kelas ?? 'Belum Ada Kelas',
+                'tahun_ajaran' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->tahun_ajaran : 'Belum Ada',
+                'semester' => $tahun_ajaran_aktif ? $tahun_ajaran_aktif->semester : 'Belum Ada',
                 'foto_profil' => $foto_profil,
                 'keuangan' => $total_tunggakan,
                 'tugas_aktif' => $tugas_aktif,
