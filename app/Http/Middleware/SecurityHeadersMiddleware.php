@@ -30,18 +30,18 @@ class SecurityHeadersMiddleware
         // Apply headers only to typical responses, ignore binary downloads etc. if any
         if (method_exists($response, 'header')) {
             $response->header('X-Content-Type-Options', 'nosniff');
-            $response->header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
             
             // Define strict CSP
             $csp = "default-src 'self'; " .
-                   "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'strict-dynamic'; " .
+                   "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'strict-dynamic' 'unsafe-inline'; " .
                    // Included 'unsafe-inline' for styles because Vue/Inertia often injects dynamic styles which might break without it
                    "style-src 'self' 'nonce-{$nonce}' 'unsafe-inline' https://fonts.bunny.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
                    "font-src 'self' https://fonts.bunny.net https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; " .
                    "img-src 'self' data: https: blob:; " .
                    "connect-src 'self' https://api.fonnte.com https://*.tripay.co.id wss: ws:; " .
                    "object-src 'none'; " .
-                   "base-uri 'self';";
+                   "base-uri 'self'; " .
+                   "upgrade-insecure-requests;";
 
             $response->header('Content-Security-Policy', $csp);
         }
