@@ -123,7 +123,7 @@
                         <div class="title-center">LAPORAN HASIL BELAJAR</div>
 
                         <!-- TABEL NILai -->
-                        <table class="bordered">
+                        <table class="bordered" border="1" cellspacing="0" cellpadding="5" style="border: 1px solid #000;">
                             <thead>
                                 <tr>
                                     <th style="width: 5%;">No</th>
@@ -164,7 +164,7 @@
                         </table>
 
                         <!-- PRAKTIK KERJA LAPANGAN (PKL) -->
-                        <table class="bordered">
+                        <table class="bordered" border="1" cellspacing="0" cellpadding="5" style="border: 1px solid #000;">
                             <thead>
                                 <tr>
                                     <th style="width: 5%;">No</th>
@@ -194,7 +194,7 @@
                         </table>
 
                         <!-- EKSTRAKURIKULER -->
-                        <table class="bordered">
+                        <table class="bordered" border="1" cellspacing="0" cellpadding="5" style="border: 1px solid #000;">
                             <thead>
                                 <tr>
                                     <th style="width: 5%;">No</th>
@@ -229,7 +229,7 @@
                         <!-- KEHADIRAN & CATATAN -->
                         <div class="flex-container">
                             <div class="flex-item" style="width: 40%;">
-                                <table class="bordered" style="margin-bottom: 0; height: 100%;">
+                                <table class="bordered" border="1" cellspacing="0" cellpadding="5" style="margin-bottom: 0; height: 100%; border: 1px solid #000;">
                                     <thead>
                                         <tr>
                                             <th colspan="3">Ketidakhadiran</th>
