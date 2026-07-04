@@ -19,7 +19,7 @@
         
         <!-- SEO for Google Site Name -->
         <meta property="og:site_name" content="{{ $site_name }}">
-        <script type="application/ld+json">
+        <script type="application/ld+json" nonce="{{ $cspNonce ?? '' }}">
         {
           "@@context": "https://schema.org",
           "@@type": "WebSite",
@@ -31,14 +31,14 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        @routes
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.8/dist/sweetalert2.all.min.js" integrity="sha256-n6d5qVn4n72B6/4H+D9u1H1/s55G955sL1+xJ5Z+X+s=" crossorigin="anonymous"></script>
+        @routes(nonce: $cspNonce ?? '')
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
     </head>
