@@ -244,7 +244,9 @@ class AkademikApiController extends Controller
                 'tt.deadline',
                 'mapel.nama_mapel', 
                 'kumpul.id as id_kumpul', 
-                'kumpul.nilai'
+                'kumpul.nilai',
+                'kumpul.komentar_guru',
+                'kumpul.file_jawaban'
             )
             ->join('tbl_mapel as mapel', 'mapel.id', '=', 'tt.mapel_id')
             ->leftJoin('tbl_tugas_kumpul as kumpul', function ($join) use ($siswa) {
@@ -271,6 +273,9 @@ class AkademikApiController extends Controller
 
             if ($t->id_kumpul) {
                 $formatted_tugas['status'] = $t->nilai !== null ? 'Dinilai' : 'Menunggu Nilai';
+                $formatted_tugas['nilai'] = (string)$t->nilai; // API expects string according to user's example
+                $formatted_tugas['komentar_guru'] = $t->komentar_guru;
+                $formatted_tugas['file_jawaban'] = $t->file_jawaban ? url('uploads/tugas_siswa/' . $t->file_jawaban) : null;
                 $selesai[] = $formatted_tugas;
             } else {
                 $formatted_tugas['status'] = 'Belum Selesai';
