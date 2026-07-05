@@ -241,4 +241,106 @@ class PresensiApiController extends Controller
             return response()->json(['status' => false, 'message' => 'Server Error: ' . $e->getMessage()], 500);
         }
     }
+
+    // ==========================================
+    // 8. API SUMMARY (Statistik Kehadiran)
+    // ==========================================
+    public function getSummary(Request $request)
+    {
+        $nisn = $request->input('nisn');
+        $id_siswa = $this->getRealSiswaID($nisn);
+
+        if (!$id_siswa) {
+            return response()->json(['status' => 'error', 'message' => 'Siswa tidak ditemukan.'], 404);
+        }
+
+        $absen = DB::table('tbl_presensi')
+            ->where('user_id', $id_siswa)
+            ->where('role', 'siswa')
+            ->get();
+
+        $hadir = 0; $sakit = 0; $izin = 0; $alfa = 0; $terlambat = 0;
+        foreach ($absen as $a) {
+            $st = strtolower(trim($a->status_kehadiran));
+            if ($st == 'hadir') $hadir++;
+            elseif ($st == 'terlambat') { $terlambat++; $hadir++; }
+            elseif ($st == 'sakit') $sakit++;
+            elseif ($st == 'izin') $izin++;
+            elseif ($st == 'alfa' || $st == 'alpha') $alfa++;
+        }
+
+        $total_days = $hadir + $sakit + $izin + $alfa;
+        $total_percentage = $total_days > 0 ? round(($hadir / $total_days) * 100) : 100;
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total_percentage' => $total_percentage,
+                'hadir' => $hadir,
+                'alfa' => $alfa,
+                'sakit' => $sakit,
+                'terlambat' => $terlambat
+            ]
+        ], 200);
+    }
+
+    // ==========================================
+    // 9. API LOCATION SETTING
+    // ==========================================
+    public function getLocationSetting()
+    {
+        $setting = DB::table('tbl_jam_sekolah')->where('id', 1)->first();
+        if ($setting) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'school_latitude' => (float) $setting->latitude,
+                    'school_longitude' => (float) $setting->longitude,
+                    'radius_meters' => (int) $setting->radius
+                ]
+            ], 200);
+        }
+        return response()->json(['status' => 'error', 'message' => 'Setting belum diatur'], 404);
+    }
+
+    // ==========================================
+    // 10. API TODAY STATUS
+    // ==========================================
+    public function getTodayStatus(Request $request)
+    {
+        $nisn = $request->input('nisn');
+        $id_siswa = $this->getRealSiswaID($nisn);
+
+        if (!$id_siswa) {
+            return response()->json(['status' => 'error', 'message' => 'Siswa tidak ditemukan.'], 404);
+        }
+
+        $hari_ini = date('Y-m-d');
+        $cek = DB::table('tbl_presensi')
+            ->where(['user_id' => $id_siswa, 'role' => 'siswa', 'tanggal' => $hari_ini])
+            ->first();
+
+        if (!$cek) {
+            $status = 'Belum Absen';
+            $button_text = 'Absen Masuk';
+        } else {
+            if (empty($cek->jam_pulang) || $cek->jam_pulang == '00:00:00') {
+                $status = 'Sudah Masuk';
+                $button_text = 'Absen Pulang';
+            } else {
+                $status = 'Selesai Absen';
+                $button_text = 'Selesai';
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'status_hari_ini' => $status,
+                'button_text' => $button_text,
+                'jam_masuk' => $cek->jam_masuk ?? null,
+                'jam_pulang' => $cek->jam_pulang ?? null
+            ]
+        ], 200);
+    }
 }

@@ -43,12 +43,18 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('presensi')->group(function () {
         Route::post('submit', [PresensiApiController::class, 'submitAbsen']);
         Route::get('setting', [PresensiApiController::class, 'getSetting']);
+        Route::get('summary', [PresensiApiController::class, 'getSummary']);
+        Route::get('today-status', [PresensiApiController::class, 'getTodayStatus']);
+
         Route::get('riwayat', [PresensiApiController::class, 'getRiwayat']);
         Route::get('rekap', [PresensiApiController::class, 'getRekap']);
-        Route::post('ajukan_izin', [PresensiApiController::class, 'ajukanIzin']);
+        Route::post('izin', [PresensiApiController::class, 'ajukanIzin']);
     });
 
-    // Modul Akademik
+    // Pengaturan
+    Route::get('settings/location', [PresensiApiController::class, 'getLocationSetting']);
+
+    // Akademik (Jadwal, Materi, Tugas, Raport, Ujian CBT)
     Route::prefix('akademik')->group(function () {
         Route::get('dashboard', [\App\Http\Controllers\Api\AkademikApiController::class, 'getDashboardSummary']);
         Route::get('materi', [\App\Http\Controllers\Api\AkademikApiController::class, 'getMateri']);
