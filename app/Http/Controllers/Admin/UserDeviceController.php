@@ -27,9 +27,23 @@ class UserDeviceController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // Hapus query allLocations dari sini karena dipindah ke method locations()
+
         return Inertia::render('Admin/Users/Devices', [
             'devices' => $devices,
             'filters' => $request->only('search', 'per_page')
+        ]);
+    }
+
+    public function locations()
+    {
+        $allLocations = UserDevice::with('user:id,nama_lengkap,role,username')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get(['id', 'user_id', 'device_name', 'last_ip', 'latitude', 'longitude', 'last_login_at']);
+
+        return Inertia::render('Admin/Users/Locations', [
+            'locations' => $allLocations
         ]);
     }
 

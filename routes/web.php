@@ -582,6 +582,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('admins', AdminController::class);
         
         // Manajemen Device (User Devices)
+        Route::get('user-devices/locations', [\App\Http\Controllers\Admin\UserDeviceController::class, 'locations'])->name('user-devices.locations');
         Route::resource('user-devices', \App\Http\Controllers\Admin\UserDeviceController::class)->only(['index', 'destroy']);
 
         // CBT (Computer Based Test) Group
