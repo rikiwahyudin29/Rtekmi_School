@@ -19,11 +19,14 @@ class KeuanganApiController extends Controller
         $this->log = $log;
     }
 
-    private function getSiswaInfo($nisn)
+    private function getSiswaInfo()
     {
+        $user = auth('sanctum')->user();
+        if (!$user) return null;
+
         return DB::table('tbl_siswa')
             ->select('id', 'nama_lengkap', 'nis', 'no_hp_siswa')
-            ->where('nisn', $nisn)
+            ->where('user_id', $user->id)
             ->first();
     }
 
@@ -32,8 +35,7 @@ class KeuanganApiController extends Controller
     // ==========================================
     public function getTagihan(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
         if (!$siswa) {
             return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan'], 404);
         }

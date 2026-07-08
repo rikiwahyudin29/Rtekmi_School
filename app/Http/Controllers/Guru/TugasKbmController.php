@@ -73,7 +73,7 @@ class TugasKbmController extends Controller
             'kelas_id'       => $request->kelas_id,
             'mapel_id'       => $request->mapel_id,
             'judul'          => $request->judul,
-            'deskripsi'      => $request->deskripsi,
+            'deskripsi'      => \App\Helpers\SecurityHelper::cleanRichText($request->deskripsi),
             'deadline'       => $request->deadline,
             'file_pendukung' => $namaFile,
             'status'         => 1,

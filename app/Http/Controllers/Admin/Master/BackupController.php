@@ -123,7 +123,16 @@ class BackupController extends Controller
 
         \Illuminate\Support\Facades\DB::statement("SET FOREIGN_KEY_CHECKS=0;");
 
+        $validTablesObj = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
+        $validTables = [];
+        foreach ($validTablesObj as $t) {
+            $validTables[] = array_values((array)$t)[0];
+        }
+
         foreach ($tables as $table) {
+            if (!in_array($table, $validTables)) {
+                continue; // Skip invalid tables to prevent SQL Injection
+            }
             if ($table == 'users') {
                 \Illuminate\Support\Facades\DB::statement("DELETE FROM `$table` WHERE role != 'admin'");
             } else if ($table == 'migrations' || $table == 'password_reset_tokens') {

@@ -9,13 +9,16 @@ use Illuminate\Support\Facades\File;
 
 class AkademikApiController extends Controller
 {
-    // Helper cari ID Siswa dari NISN
-    private function getSiswaInfo($nisn)
+    // Helper cari ID Siswa dari Token Login (Anti-IDOR)
+    private function getSiswaInfo()
     {
+        $user = auth('sanctum')->user();
+        if (!$user) return null;
+
         return DB::table('tbl_siswa as s')
             ->select('s.id', 's.nama_lengkap', 's.kelas_id', 's.nisn', 's.foto', 'k.nama_kelas')
             ->leftJoin('tbl_kelas as k', 'k.id', '=', 's.kelas_id')
-            ->where('s.nisn', $nisn)
+            ->where('s.user_id', $user->id)
             ->first();
     }
 
@@ -24,8 +27,7 @@ class AkademikApiController extends Controller
     // =======================================================
     public function getDashboardSummary(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
 
         if (!$siswa) {
             return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
@@ -178,9 +180,8 @@ class AkademikApiController extends Controller
     // =======================================================
     public function getMateri(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $siswa = $this->getSiswaInfo($nisn);
-        $kelas_id = $request->input('kelas') ?? ($siswa ? $siswa->kelas_id : null);
+        $siswa = $this->getSiswaInfo();
+        $kelas_id = $siswa ? $siswa->kelas_id : null;
 
         if (!$kelas_id) {
             return response()->json(['status' => false, 'message' => 'Kelas tidak valid.'], 404);
@@ -252,8 +253,7 @@ class AkademikApiController extends Controller
     // =======================================================
     public function getTugas(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
 
         if (!$siswa) {
             return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
@@ -322,19 +322,22 @@ class AkademikApiController extends Controller
     // =======================================================
     public function submitTugas(Request $request)
     {
-        $nisn     = $request->input('nisn');
         $tugas_id = $request->input('tugas_id');
         $catatan  = $request->input('catatan_siswa');
 
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
         if (!$siswa) {
             return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
         }
 
-        // Cek Deadline
+        // Cek Deadline & Kepemilikan (BOLA Protection)
         $tugasInfo = DB::table('tbl_tugas')->where('id', $tugas_id)->first();
         if (!$tugasInfo) {
             return response()->json(['status' => false, 'message' => 'Tugas tidak valid.'], 404);
+        }
+
+        if ($tugasInfo->kelas_id != $siswa->kelas_id) {
+            return response()->json(['status' => false, 'message' => 'Tugas ini bukan untuk kelas Anda!'], 403);
         }
 
         $sekarang = date('Y-m-d H:i:s');
@@ -347,10 +350,16 @@ class AkademikApiController extends Controller
 
         $namaFile = $cek ? $cek->file_jawaban : null;
 
-        // Handle File Upload dari Android (Multipart)
+        // Handle File Upload dari Android (Multipart) - RCE Protection
         if ($request->hasFile('file_jawaban') && $request->file('file_jawaban')->isValid()) {
             $file = $request->file('file_jawaban');
             
+            // Validasi Ekstensi File
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+            if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExtensions)) {
+                return response()->json(['status' => false, 'message' => 'Format file tidak diizinkan.'], 400);
+            }
+
             // Hapus file lama jika ada agar server tidak penuh
             if ($cek && !empty($cek->file_jawaban)) {
                 $oldPath = public_path('uploads/tugas_siswa/' . $cek->file_jawaban);
@@ -360,7 +369,7 @@ class AkademikApiController extends Controller
             }
             
             // Simpan file baru
-            $namaFile = $file->hashName(); // Menghasilkan nama acak + ekstensi
+            $namaFile = $file->hashName(); // Menghasilkan nama acak + ekstensi untuk mencegah Path Traversal
             $file->move(public_path('uploads/tugas_siswa'), $namaFile);
         }
 
@@ -389,10 +398,9 @@ class AkademikApiController extends Controller
     // =======================================================
     public function getRaport(Request $request)
     {
-        $nisn = $request->input('nisn');
         $semester_req = $request->input('semester'); // optional
         
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
         if (!$siswa) {
             return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
         }
@@ -530,9 +538,7 @@ class AkademikApiController extends Controller
     // =======================================================
     public function getRaportMerdeka(Request $request)
     {
-        $nisn = $request->input('nisn');
-        
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
         if (!$siswa) {
             return response()->json(['status' => false, 'pesan' => 'Siswa tidak ditemukan.'], 404);
         }
@@ -651,7 +657,7 @@ class AkademikApiController extends Controller
             ];
         }
 
-        $hash_cetak = md5($siswa->id . env('API_SECRET_KEY') . 'raport');
+        $hash_cetak = \Illuminate\Support\Facades\URL::signedRoute('cetak.rapor.signed', ['id' => $siswa->id]);
 
         return response()->json([
             'status' => true,
@@ -669,7 +675,7 @@ class AkademikApiController extends Controller
                     'peringkat_kelas' => $peringkat,
                     'total_siswa' => $total_siswa,
                     'peringkat_paralel' => 0,
-                    'url_download_pdf' => url('api-cetak/rapor/' . $siswa->id . '/' . $hash_cetak)
+                    'url_download_pdf' => $hash_cetak
                 ],
                 'daftar_nilai' => $daftar_nilai
             ]

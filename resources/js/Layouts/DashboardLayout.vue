@@ -156,10 +156,11 @@ const menuItems = computed(() => {
                 { name: 'Integrasi Dapodik', icon: 'fas fa-sync', route: 'admin.master.dapodik.index', active: route().current('admin.master.dapodik.*') },
                 { name: 'Backup Database', icon: 'fas fa-database', route: 'admin.master.backup.index', active: route().current('admin.master.backup.*') },
             ]},
-            { name: 'Manajemen Pengguna', icon: 'fas fa-users-cog', route: '#', active: route().current('admin.guru.*') || route().current('admin.siswa.*') || route().current('admin.roles.*'), children: [
+            { name: 'Manajemen Pengguna', icon: 'fas fa-users-cog', route: '#', active: route().current('admin.guru.*') || route().current('admin.siswa.*') || route().current('admin.roles.*') || route().current('admin.user-devices.*'), children: [
                 { name: 'Data Guru', icon: 'fas fa-user-tie', route: 'admin.guru.index', active: route().current('admin.guru.*') },
                 { name: 'Data Siswa', icon: 'fas fa-user-graduate', route: 'admin.siswa.index', active: route().current('admin.siswa.*') },
                 { name: 'Hak Akses', icon: 'fas fa-user-lock', route: 'admin.roles.index', active: route().current('admin.roles.*') },
+                { name: 'Manajemen Device', icon: 'fas fa-mobile-alt', route: 'admin.user-devices.index', active: route().current('admin.user-devices.*') },
             ]}
         );
     }

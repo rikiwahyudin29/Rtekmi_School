@@ -12,12 +12,12 @@ class PresensiApiController extends Controller
     // ==========================================
     // 1. CARI ID SISWA
     // ==========================================
-    private function getRealSiswaID($nisn)
+    private function getRealSiswaID()
     {
-        $siswa = DB::table('tbl_siswa')->where('nisn', $nisn)->first();
-        if (!$siswa && Schema::hasColumn('tbl_siswa', 'nis')) {
-            $siswa = DB::table('tbl_siswa')->where('nis', $nisn)->first();
-        }
+        $user = auth('sanctum')->user();
+        if (!$user) return null;
+
+        $siswa = DB::table('tbl_siswa')->where('user_id', $user->id)->first();
         if ($siswa) return $siswa->id;
         return null;
     }
@@ -42,16 +42,15 @@ class PresensiApiController extends Controller
     // ==========================================
     public function submitAbsen(Request $request)
     {
-        $nisn      = $request->input('nisn');
         $lat_user  = $request->input('latitude');
         $long_user = $request->input('longitude');
         $qr_token  = $request->input('qr_token'); // Menangkap hasil scan QR dari Android
 
-        if (empty($nisn) || empty($lat_user) || empty($long_user) || empty($qr_token)) {
+        if (empty($lat_user) || empty($long_user) || empty($qr_token)) {
             return response()->json(['status' => false, 'message' => 'Data tidak lengkap. Pastikan GPS & QR terbaca.'], 400);
         }
 
-        $id_siswa = $this->getRealSiswaID($nisn);
+        $id_siswa = $this->getRealSiswaID();
         if (!$id_siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
 
         $setting = DB::table('tbl_jam_sekolah')->where('id', 1)->first();
@@ -140,10 +139,7 @@ class PresensiApiController extends Controller
     // ==========================================
     public function getRiwayat(Request $request)
     {
-        $nisn = $request->input('nisn');
-        if (!$nisn) return response()->json(['status' => false, 'message' => 'NISN wajib dikirim'], 400);
-
-        $id_siswa = $this->getRealSiswaID($nisn);
+        $id_siswa = $this->getRealSiswaID();
         if (!$id_siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan'], 404);
 
         $riwayat = DB::table('tbl_presensi')
@@ -161,9 +157,8 @@ class PresensiApiController extends Controller
     // ==========================================
     public function getRekap(Request $request)
     {
-        $nisn = $request->input('nisn');
         $bulan = $request->input('bulan') ?? date('Y-m');
-        $id_siswa = $this->getRealSiswaID($nisn);
+        $id_siswa = $this->getRealSiswaID();
 
         if (!$id_siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
 
@@ -196,21 +191,33 @@ class PresensiApiController extends Controller
     public function ajukanIzin(Request $request)
     {
         try {
-            $nisn = $request->input('nisn');
             $tgl  = $request->input('tanggal');
             $st   = $request->input('status');
             $ket  = $request->input('keterangan');
-            $foto_base64 = $request->input('file_bukti');
 
-            $id_siswa = $this->getRealSiswaID($nisn);
+            $id_siswa = $this->getRealSiswaID();
             if (!$id_siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
 
             $cek = DB::table('tbl_presensi')->where(['user_id' => $id_siswa, 'tanggal' => $tgl])->count();
             if ($cek > 0) return response()->json(['status' => false, 'message' => 'Sudah ada data presensi pada tanggal tersebut.'], 400);
 
             $nama_file = '';
-            if (!empty($foto_base64)) {
-                $nama_file = 'izin_' . date('Ymd_His') . '_' . $id_siswa . '.jpg';
+            // Gunakan file upload jika dikirim
+            if ($request->hasFile('file_bukti') && $request->file('file_bukti')->isValid()) {
+                $file = $request->file('file_bukti');
+                
+                // Validasi ekstensi
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+                if (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExtensions)) {
+                    return response()->json(['status' => false, 'message' => 'Format file tidak diizinkan.'], 400);
+                }
+
+                $nama_file = $file->hashName();
+                $file->move(public_path('uploads/surat_izin'), $nama_file);
+            } else if ($request->input('file_bukti')) { // fallback untuk base64
+                $foto_base64 = $request->input('file_bukti');
+                // Hasilkan nama file hash
+                $nama_file = md5(uniqid(rand(), true)) . '.jpg';
                 $path = public_path('uploads/surat_izin/');
                 if (!is_dir($path)) {
                     @mkdir($path, 0777, true);
@@ -247,8 +254,7 @@ class PresensiApiController extends Controller
     // ==========================================
     public function getSummary(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $id_siswa = $this->getRealSiswaID($nisn);
+        $id_siswa = $this->getRealSiswaID();
 
         if (!$id_siswa) {
             return response()->json(['status' => 'error', 'message' => 'Siswa tidak ditemukan.'], 404);
@@ -308,8 +314,7 @@ class PresensiApiController extends Controller
     // ==========================================
     public function getTodayStatus(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $id_siswa = $this->getRealSiswaID($nisn);
+        $id_siswa = $this->getRealSiswaID();
 
         if (!$id_siswa) {
             return response()->json(['status' => 'error', 'message' => 'Siswa tidak ditemukan.'], 404);

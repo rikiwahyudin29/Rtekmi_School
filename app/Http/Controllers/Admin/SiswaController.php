@@ -255,9 +255,16 @@ class SiswaController extends Controller
             $file = fopen('php://output', 'w');
             fputcsv($file, ['NISN', 'NIS', 'NamaLengkap', 'JenisKelamin', 'TempatLahir', 'TanggalLahir', 'Agama', 'Kelas', 'Alamat', 'NoHP', 'Email', 'NamaAyah', 'NamaIbu', 'NoHPOrtu', 'StatusSiswa']);
             
+            $sanitize = function($value) {
+                if (is_string($value) && preg_match('/^[=\-+@]/', $value)) {
+                    return "'" . $value;
+                }
+                return $value;
+            };
+
             $siswa = Siswa::with('kelas')->get();
             foreach ($siswa as $s) {
-                fputcsv($file, [
+                fputcsv($file, array_map($sanitize, [
                     $s->nisn,
                     $s->nis,
                     $s->nama_lengkap,
@@ -273,7 +280,7 @@ class SiswaController extends Controller
                     $s->nama_ibu,
                     $s->no_hp_ortu,
                     $s->status_siswa,
-                ]);
+                ]));
             }
             fclose($file);
         };

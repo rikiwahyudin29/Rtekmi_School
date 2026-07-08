@@ -29,8 +29,8 @@ use App\Http\Controllers\Api\TripayCallbackController;
 // Auth
 Route::post('login', [AuthApiController::class, 'login']);
 
-// Rute-rute yang dilindungi API Key (Mobile Android)
-Route::middleware('api.auth')->group(function () {
+// Rute-rute yang dilindungi Sanctum Token (Mobile Android)
+Route::middleware('auth:sanctum')->group(function () {
     // Presensi Guru (Sesuaikan dengan routing CI4 lama yang dipanggil Android)
     Route::prefix('presensi-guru')->group(function () {
         Route::get('status', [PresensiGuruApiController::class, 'statusAbsenHariIni']);
@@ -92,17 +92,6 @@ Route::middleware('api.auth')->group(function () {
 Route::post('tripay/callback', [TripayCallbackController::class, 'handle']);
 
 // IoT Scanner Device (Sesuaikan dengan routing CI4 lama)
-Route::post('iot/scan', [\App\Http\Controllers\Admin\PresensiController::class, 'prosesScan']);
+Route::post('iot/scan', [\App\Http\Controllers\Admin\PresensiController::class, 'prosesScan'])->middleware('iot.api_key');
 
-// Endpoint Sementara (Jangan Dihapus)
-Route::get('/run-migrate-temp-3', function() {
-    try {
-        Artisan::call('migrate', [
-            '--path' => 'database/migrations/2026_06_21_110000_create_tbl_konseling_table.php',
-            '--force' => true
-        ]);
-        return "Migration Konseling executed successfully: <br>" . nl2br(Artisan::output());
-    } catch (\Exception $e) {
-        return "Error: " . $e->getMessage();
-    }
-});
+

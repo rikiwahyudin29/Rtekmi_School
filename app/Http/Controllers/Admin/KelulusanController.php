@@ -530,7 +530,13 @@ class KelulusanController extends Controller
             ]);
         }
 
-        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" . urlencode(route('surat.verifikasi', $tokenValidasi));
+        $qrCodeUrl = route('surat.verifikasi', $tokenValidasi);
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(100),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrUrl = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
 
         $jurusanSiswa = $siswa->kelas->id_jurusan;
         $nilaiMentah = Mapel::leftJoin('tbl_nilai_siswa as n', function($join) use ($siswaId) {
@@ -779,7 +785,13 @@ class KelulusanController extends Controller
             ]);
         }
 
-        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" . urlencode(route('surat.verifikasi', $tokenValidasi));
+        $qrCodeUrl = route('surat.verifikasi', $tokenValidasi);
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(100),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrUrl = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
 
         $jurusanSiswa = $siswa->kelas->id_jurusan;
         $nilaiMentah = Mapel::leftJoin('tbl_nilai_siswa as n', function($join) use ($siswaId) {

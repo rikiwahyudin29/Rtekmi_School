@@ -34,16 +34,19 @@ class KelulusanController extends Controller
     public function cek(Request $request)
     {
         $request->validate([
-            'nisn' => 'required|string'
+            'nisn' => 'required|string',
+            'tanggal_lahir' => 'required|date'
         ]);
 
         $nisn = trim($request->input('nisn'));
+        $tanggal_lahir = $request->input('tanggal_lahir');
 
-        // Cari siswa di kelas XII
+        // Cari siswa di kelas XII berdasarkan NISN dan Tanggal Lahir
         $siswa = DB::table('tbl_siswa')
             ->select('tbl_siswa.id', 'tbl_siswa.nama_lengkap', 'tbl_siswa.nisn', 'tbl_kelas.nama_kelas')
             ->join('tbl_kelas', 'tbl_kelas.id', '=', 'tbl_siswa.kelas_id')
             ->where('tbl_siswa.nisn', $nisn)
+            ->where('tbl_siswa.tanggal_lahir', $tanggal_lahir)
             ->where(function($query) {
                 $query->where('tbl_kelas.nama_kelas', 'like', '%XII%')
                       ->orWhere('tbl_kelas.nama_kelas', 'like', '%12%');
@@ -60,7 +63,7 @@ class KelulusanController extends Controller
         } else {
             return response()->json([
                 'status' => 'error',
-                'message' => 'NISN tidak terdaftar sebagai Siswa Kelas XII.'
+                'message' => 'Data tidak ditemukan! Pastikan NISN dan Tanggal Lahir sesuai.'
             ], 404);
         }
     }

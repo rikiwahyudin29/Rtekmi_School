@@ -128,7 +128,13 @@ class SuratKeluarController extends Controller
         }
 
         $sekolah = Sekolah::find(1);
-        $qr_link = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode(route('surat.verifikasi', $surat->token_validasi));
+        $qrCodeUrl = route('surat.verifikasi', $surat->token_validasi);
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(150),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qr_link = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
         return view('surat.cetak', compact('surat', 'sekolah', 'qr_link'));
     }
 
@@ -163,7 +169,13 @@ class SuratKeluarController extends Controller
         }
 
         $sekolah = Sekolah::find(1);
-        $qr_link = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode(route('surat.verifikasi', $surat->token_validasi));
+        $qrCodeUrl = route('surat.verifikasi', $surat->token_validasi);
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(150),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qr_link = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
         return view('surat.cetak', compact('surat', 'sekolah', 'qr_link'));
     }
 

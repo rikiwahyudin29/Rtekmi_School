@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'iot.api_key' => \App\Http\Middleware\IotApiKeyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

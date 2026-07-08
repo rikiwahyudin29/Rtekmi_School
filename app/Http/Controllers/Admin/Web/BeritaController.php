@@ -34,6 +34,7 @@ class BeritaController extends Controller
         ]);
 
         $data = $request->only(['judul', 'isi']);
+        $data['isi'] = \App\Helpers\SecurityHelper::cleanRichText($data['isi']);
         $data['slug'] = Str::slug($request->judul) . '-' . time();
         $data['penulis'] = auth()->user()->nama ?? 'Admin';
         $data['is_published'] = $request->input('is_published', true);
@@ -70,6 +71,7 @@ class BeritaController extends Controller
         ]);
 
         $data = $request->only(['judul', 'isi']);
+        $data['isi'] = \App\Helpers\SecurityHelper::cleanRichText($data['isi']);
         $data['is_published'] = $request->input('is_published', true);
 
         // Update slug only if title changes significantly (optional, maybe keep old slug to preserve SEO)

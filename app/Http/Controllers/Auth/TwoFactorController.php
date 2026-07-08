@@ -31,7 +31,12 @@ class TwoFactorController extends Controller
             $secret
         );
 
-        $qrImage = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=" . urlencode($qrCodeUrl);
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(200),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrImage = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qrCodeUrl));
 
         return Inertia::render('Auth/Setup2FA', [
             'qr_image' => $qrImage,

@@ -26,6 +26,7 @@ let timerInterval = null;
 // Form & Data logic
 const nisnForm = ref({
     nisn: '',
+    tanggal_lahir: '',
     processing: false,
     error: ''
 });
@@ -59,8 +60,8 @@ onUnmounted(() => {
 });
 
 const prosesLogin = async () => {
-    if (!nisnForm.value.nisn) {
-        nisnForm.value.error = 'Mohon masukkan NISN Anda!';
+    if (!nisnForm.value.nisn || !nisnForm.value.tanggal_lahir) {
+        nisnForm.value.error = 'Mohon masukkan NISN dan Tanggal Lahir Anda!';
         return;
     }
     
@@ -68,7 +69,10 @@ const prosesLogin = async () => {
     nisnForm.value.error = '';
 
     try {
-        const response = await axios.post(route('kelulusan.cek'), { nisn: nisnForm.value.nisn });
+        const response = await axios.post(route('kelulusan.cek'), { 
+            nisn: nisnForm.value.nisn,
+            tanggal_lahir: nisnForm.value.tanggal_lahir
+        });
         if(response.data.status === 'success') {
             siswaData.value = response.data.data;
             
@@ -105,6 +109,7 @@ const getHasilAkhir = async () => {
 
 const kembaliAwal = () => {
     nisnForm.value.nisn = '';
+    nisnForm.value.tanggal_lahir = '';
     nisnForm.value.error = '';
     currentStep.value = 'login';
 };
@@ -201,11 +206,18 @@ const downloadDokumen = (tipe) => {
                         </div>
                         
                         <form @submit.prevent="prosesLogin">
-                            <div class="mb-6 relative">
+                            <div class="mb-4 relative">
                                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                                     <i class="fas fa-id-card text-sky-400 text-lg"></i>
                                 </div>
-                                <input type="text" inputmode="numeric" v-model="nisnForm.nisn" class="glass-input w-full pl-14 pr-5 py-4 rounded-2xl font-bold text-xl text-center tracking-[0.2em] transition-all" placeholder="0012345678" required autocomplete="off">
+                                <input type="text" inputmode="numeric" v-model="nisnForm.nisn" class="glass-input w-full pl-14 pr-5 py-4 rounded-2xl font-bold text-xl tracking-[0.2em] transition-all" placeholder="NISN (Misal: 0012345678)" required autocomplete="off">
+                            </div>
+
+                            <div class="mb-6 relative">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                    <i class="fas fa-calendar text-sky-400 text-lg"></i>
+                                </div>
+                                <input type="date" v-model="nisnForm.tanggal_lahir" class="glass-input w-full pl-14 pr-5 py-4 rounded-2xl font-bold text-lg transition-all" required title="Tanggal Lahir">
                             </div>
 
                             <div v-if="nisnForm.error" class="mb-5 p-3 bg-red-500/20 border border-red-500/50 text-red-200 text-sm font-bold rounded-xl text-center backdrop-blur-sm animate-fade-in">

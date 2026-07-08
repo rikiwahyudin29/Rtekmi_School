@@ -57,13 +57,8 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Check password (Hashed or Plain text fallback like CI4)
+        // Check password (Hashed only to prevent Broken Authentication)
         $verify_pass = \Illuminate\Support\Facades\Hash::check($password, $user->password);
-        if (!$verify_pass && $password === $user->password) {
-            $verify_pass = true;
-            // Optionally, we could hash the plain password here to migrate it automatically
-            // $user->update(['password' => \Illuminate\Support\Facades\Hash::make($password)]);
-        }
 
         if (!$verify_pass) {
             RateLimiter::hit($this->throttleKey());

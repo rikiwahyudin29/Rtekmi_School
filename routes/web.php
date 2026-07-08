@@ -333,7 +333,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('perkembangan-nilai', [\App\Http\Controllers\Admin\PerkembanganNilaiController::class, 'index'])->name('admin.perkembangan-nilai.index');
 
     // Guru Group
-    Route::prefix('guru')->name('guru.')->group(function () {
+    Route::prefix('guru')->name('guru.')->middleware('role:guru')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\GuruController::class, 'dashboard'])->name('dashboard');
         // KBM & Penilaian
         Route::get('jadwal-mengajar', [\App\Http\Controllers\Guru\JadwalMengajarController::class, 'index'])->name('jadwal-mengajar.index');
@@ -398,7 +398,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // --- BK AREA ---
-    Route::prefix('bk')->name('bk.')->group(function () {
+    Route::prefix('bk')->name('bk.')->middleware('role:bk,admin')->group(function () {
         // Pelanggaran / Buku Kasus
         Route::get('pelanggaran/pdf', [\App\Http\Controllers\Bk\PelanggaranController::class, 'exportPdf'])->name('pelanggaran.pdf');
         Route::get('pelanggaran/rekap', [\App\Http\Controllers\Bk\PelanggaranController::class, 'rekapSiswa'])->name('pelanggaran.rekap');
@@ -421,7 +421,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Admin Group
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         
         // Admin Master Group
         Route::prefix('master')->name('master.')->group(function () {
@@ -580,6 +580,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Admins user management
         Route::resource('admins', AdminController::class);
+        
+        // Manajemen Device (User Devices)
+        Route::resource('user-devices', \App\Http\Controllers\Admin\UserDeviceController::class)->only(['index', 'destroy']);
 
         // CBT (Computer Based Test) Group
         Route::prefix('cbt')->name('cbt.')->group(function () {

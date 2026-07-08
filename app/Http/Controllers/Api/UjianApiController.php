@@ -11,12 +11,15 @@ use App\Models\UjianSiswa;
 
 class UjianApiController extends Controller
 {
-    // Helper untuk cari ID Siswa (Dikirim dari HP)
-    private function getSiswaInfo($nisn)
+    // Helper untuk cari ID Siswa dari token
+    private function getSiswaInfo()
     {
+        $user = auth('sanctum')->user();
+        if (!$user) return null;
+        
         return DB::table('tbl_siswa')
             ->select('id', 'kelas_id')
-            ->where('nisn', $nisn)
+            ->where('user_id', $user->id)
             ->first();
     }
 
@@ -25,8 +28,7 @@ class UjianApiController extends Controller
     // ==========================================
     public function getJadwal(Request $request)
     {
-        $nisn = $request->input('nisn');
-        $siswa = $this->getSiswaInfo($nisn);
+        $siswa = $this->getSiswaInfo();
 
         if (!$siswa) {
             return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
@@ -67,15 +69,14 @@ class UjianApiController extends Controller
     public function downloadSoal(Request $request)
     {
         try {
-            $nisn      = $request->input('nisn');
             $id_jadwal = $request->input('id_jadwal');
             $token     = strtoupper((string)($request->input('token', '')));
 
-            if (empty($nisn) || empty($id_jadwal)) {
-                return response()->json(['status' => false, 'message' => 'NISN atau ID Jadwal kosong.'], 400);
+            if (empty($id_jadwal)) {
+                return response()->json(['status' => false, 'message' => 'ID Jadwal kosong.'], 400);
             }
 
-            $siswa = $this->getSiswaInfo($nisn);
+            $siswa = $this->getSiswaInfo();
             if (!$siswa) return response()->json(['status' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
 
             $jadwal = DB::table('tbl_jadwal_ujian')->where('id', $id_jadwal)->first();

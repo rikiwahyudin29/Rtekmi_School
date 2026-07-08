@@ -439,9 +439,12 @@ class PklController extends Controller
         }
 
         $qr_url = route('surat.verifikasi', $d->token_sertifikat);
-        $qr_api = "https://api.qrserver.com/v1/create-qr-code/?size=100x100&margin=0&data=" . urlencode($qr_url);
-        $dataQr = @file_get_contents($qr_api);
-        $qrBase64 = $dataQr ? 'data:image/png;base64,' . base64_encode($dataQr) : '';
+        $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+            new \BaconQrCode\Renderer\RendererStyle\RendererStyle(100),
+            new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+        );
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($writer->writeString($qr_url));
 
         // Hitung total baris untuk styling
         $total_baris = 9 + count($keterampilan);
