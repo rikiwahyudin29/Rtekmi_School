@@ -1,14 +1,17 @@
 <template>
     <DashboardLayout>
-        <template #header>
-            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-200 leading-tight">
-                Manajemen Device & Lokasi Pengguna
-            </h2>
-        </template>
+        <div class="py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col h-[calc(100vh-10rem)]">
+                
+                <!-- Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 shrink-0 gap-4">
+                    <div>
+                        <h2 class="font-bold text-2xl text-gray-900 dark:text-white tracking-tight">Manajemen Device</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Kelola perangkat dan akses login pengguna aplikasi.</p>
+                    </div>
+                </div>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-xl sm:rounded-lg">
+                <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-700">
                     <div class="p-6 text-slate-900 dark:text-slate-100">
                         
                         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
