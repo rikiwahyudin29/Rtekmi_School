@@ -115,7 +115,7 @@ class AuthApiController extends Controller
         // Tarik data spesifik siswa jika rolenya adalah siswa
         $detailSiswa = null;
         if ($user->role === 'siswa') {
-            $detailSiswa = DB::table('tbl_siswa')->where('id_user', $user->id)->first();
+            $detailSiswa = DB::table('tbl_siswa')->where('user_id', $user->id)->first();
         }
 
         // Generate Sanctum Token
