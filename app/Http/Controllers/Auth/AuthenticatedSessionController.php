@@ -35,6 +35,46 @@ class AuthenticatedSessionController extends Controller
         // 1. Validasi Kredensial & Ambil User
         $user = $request->authenticate();
 
+        // 2. Cek Status Aktif
+        if (isset($user->active) && $user->active == 0) {
+            return back()->withErrors(['login_id' => 'Akun dinonaktifkan. Silakan hubungi admin.']);
+        }
+
+        // 3. Cek Device Binding (Batas Perangkat)
+        if ($user->role !== 'admin') {
+            $device_id = $request->cookie('web_device_id');
+            if (!$device_id) {
+                $device_id = \Illuminate\Support\Str::uuid()->toString();
+                \Illuminate\Support\Facades\Cookie::queue('web_device_id', $device_id, 60 * 24 * 365 * 10);
+            }
+
+            $deviceCount = \App\Models\UserDevice::where('user_id', $user->id)->count();
+            $existingDevice = \App\Models\UserDevice::where('user_id', $user->id)
+                ->where('device_id', $device_id)->first();
+
+            $maxDevice = ($user->role === 'siswa') ? 1 : 2; // Siswa 1, Guru 2
+
+            if ($existingDevice) {
+                $existingDevice->update([
+                    'last_login_at' => now(),
+                    'last_ip' => $request->ip(),
+                    'device_name' => 'Web: ' . \Illuminate\Support\Str::limit($request->header('User-Agent'), 50),
+                ]);
+            } else {
+                if ($deviceCount >= $maxDevice) {
+                    return back()->withErrors(['login_id' => 'Gagal: Akun sudah terikat di perangkat lain. Hubungi Admin untuk reset.']);
+                } else {
+                    \App\Models\UserDevice::create([
+                        'user_id' => $user->id,
+                        'device_id' => $device_id,
+                        'device_name' => 'Web: ' . \Illuminate\Support\Str::limit($request->header('User-Agent'), 50),
+                        'last_ip' => $request->ip(),
+                        'last_login_at' => now(),
+                    ]);
+                }
+            }
+        }
+
         $roles = $user->roles->pluck('role_key')->toArray();
         if (empty($roles)) {
             if ($user->role === 'siswa') {

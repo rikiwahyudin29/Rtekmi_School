@@ -656,9 +656,8 @@ class AkademikApiController extends Controller
                 'deskripsi' => $ra->deskripsi_tertinggi ?? 'Siswa menunjukkan pemahaman yang baik.'
             ];
         }
-
-        $hash_cetak = \Illuminate\Support\Facades\URL::signedRoute('cetak.rapor.signed', ['id' => $siswa->id]);
-
+        $hash = md5($siswa->id . env('API_SECRET_KEY') . 'raport');
+        $hash_cetak = route('api.cetak.rapor', ['id' => $siswa->id, 'hash' => $hash]);
         return response()->json([
             'status' => true,
             'pesan' => 'Data raport berhasil dimuat',
