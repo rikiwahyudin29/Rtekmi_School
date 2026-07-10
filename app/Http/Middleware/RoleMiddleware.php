@@ -33,7 +33,18 @@ class RoleMiddleware
         }
 
         if (!in_array($activeRole, $roles)) {
-            abort(403, 'Akses ditolak. Anda tidak memiliki izin ke halaman ini.');
+            // Cek juga dari relasi roles (tugas tambahan)
+            $hasAccess = false;
+            if ($request->user()) {
+                $userRoles = $request->user()->roles()->pluck('role_key')->toArray();
+                if (count(array_intersect($userRoles, $roles)) > 0) {
+                    $hasAccess = true;
+                }
+            }
+            
+            if (!$hasAccess) {
+                abort(403, 'Akses ditolak. Anda tidak memiliki izin ke halaman ini.');
+            }
         }
 
         return $next($request);

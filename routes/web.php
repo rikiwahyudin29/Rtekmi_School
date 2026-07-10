@@ -244,7 +244,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // I. Admin Keuangan
-    Route::prefix('admin/keuangan')->name('admin.keuangan.')->group(function () {
+    Route::prefix('admin/keuangan')->name('admin.keuangan.')->middleware('role:admin,bendahara,keuangan')->group(function () {
         Route::get('dashboard', [\App\Http\Controllers\Admin\Keuangan\DashboardController::class, 'index'])->name('dashboard');
         
         // Tabungan / Bank Mini
@@ -252,6 +252,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('tabungan/buka-rekening', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'store'])->name('tabungan.store');
         Route::get('tabungan/detail/{id}', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'show'])->name('tabungan.show');
         Route::post('tabungan/transaksi', [\App\Http\Controllers\Admin\Keuangan\TabunganController::class, 'prosesTransaksi'])->name('tabungan.transaksi');
+        
+        // Pos Bayar
+        Route::resource('pos', \App\Http\Controllers\Admin\Keuangan\PosBayarController::class)->except(['create', 'edit', 'show']);
+        
+        // Jenis Bayar
+        Route::resource('jenis', \App\Http\Controllers\Admin\Keuangan\JenisBayarController::class)->except(['create', 'edit', 'show']);
+        
+        // Tagihan
+        Route::get('tagihan/kelola/{id_jenis}', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'kelola'])->name('tagihan.kelola');
+        Route::post('tagihan/generate', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'generate'])->name('tagihan.generate');
+        Route::post('tagihan/update-nominal', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'updateNominal'])->name('tagihan.update_nominal');
+        
+        // Pembayaran
+        Route::get('pembayaran', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::get('pembayaran/siswa/{id_siswa}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'transaksi'])->name('pembayaran.transaksi');
+        Route::post('pembayaran/proses', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'prosesBayar'])->name('pembayaran.proses_bayar');
+        Route::post('pembayaran/batal', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'batal'])->name('pembayaran.batal');
+        Route::get('pembayaran/cetak-thermal/{id}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'cetakThermal'])->name('pembayaran.cetak_thermal');
+        Route::get('pembayaran/cetak-invoice/{id}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'cetakInvoice'])->name('pembayaran.cetak_invoice');
+        
+        // Pengeluaran
+        Route::get('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'index'])->name('pengeluaran.index');
+        Route::post('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'store'])->name('pengeluaran.store');
+        Route::delete('pengeluaran/{id}', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'destroy'])->name('pengeluaran.destroy');
+        Route::post('pengeluaran/divisi', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'storeDivisi'])->name('pengeluaran.store_divisi');
+        Route::post('pengeluaran/jenis', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'storeJenis'])->name('pengeluaran.store_jenis');
+
+        // Laporan
+        Route::get('laporan', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('laporan/cetak-transaksi', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'cetakTransaksi'])->name('laporan.cetak_transaksi');
+        Route::get('laporan/cetak-tunggakan', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'cetakTunggakan'])->name('laporan.cetak_tunggakan');
+        Route::get('laporan/export', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'exportExcel'])->name('laporan.export');
+
+        // Log
+        Route::get('log-aktivitas', [\App\Http\Controllers\Admin\Keuangan\LogKeuanganController::class, 'index'])->name('log.index');
+
+        // Notif Tagihan
+        Route::get('notif-tagihan', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'index'])->name('notif.index');
+        Route::post('notif-tagihan/kirim', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'kirimMassal'])->name('notif.kirim');
     });
 
     // Admin PKL
@@ -638,47 +677,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/jadwal-ujian/{id}/jawaban/{ujian_id}', [\App\Http\Controllers\Admin\CBT\DetailJadwalController::class, 'update_jawaban'])->name('jadwal-ujian.update_jawaban');
             Route::resource('jadwal-ujian', \App\Http\Controllers\Admin\CBT\JadwalUjianController::class);
         });
-        // Keuangan Group
-        Route::prefix('keuangan')->name('keuangan.')->group(function () {
-            // Pos Bayar
-            Route::resource('pos', \App\Http\Controllers\Admin\Keuangan\PosBayarController::class)->except(['create', 'edit', 'show']);
-            
-            // Jenis Bayar
-            Route::resource('jenis', \App\Http\Controllers\Admin\Keuangan\JenisBayarController::class)->except(['create', 'edit', 'show']);
-            
-            // Tagihan
-            Route::get('tagihan/kelola/{id_jenis}', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'kelola'])->name('tagihan.kelola');
-            Route::post('tagihan/generate', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'generate'])->name('tagihan.generate');
-            Route::post('tagihan/update-nominal', [\App\Http\Controllers\Admin\Keuangan\TagihanController::class, 'updateNominal'])->name('tagihan.update_nominal');
-            
-            // Pembayaran
-            Route::get('pembayaran', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'index'])->name('pembayaran.index');
-            Route::get('pembayaran/siswa/{id_siswa}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'transaksi'])->name('pembayaran.transaksi');
-            Route::post('pembayaran/proses', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'prosesBayar'])->name('pembayaran.proses_bayar');
-            Route::post('pembayaran/batal', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'batal'])->name('pembayaran.batal');
-            Route::get('pembayaran/cetak-thermal/{id}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'cetakThermal'])->name('pembayaran.cetak_thermal');
-            Route::get('pembayaran/cetak-invoice/{id}', [\App\Http\Controllers\Admin\Keuangan\PembayaranController::class, 'cetakInvoice'])->name('pembayaran.cetak_invoice');
-            
-            // Pengeluaran
-            Route::get('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'index'])->name('pengeluaran.index');
-            Route::post('pengeluaran', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'store'])->name('pengeluaran.store');
-            Route::delete('pengeluaran/{id}', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'destroy'])->name('pengeluaran.destroy');
-            Route::post('pengeluaran/divisi', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'storeDivisi'])->name('pengeluaran.store_divisi');
-            Route::post('pengeluaran/jenis', [\App\Http\Controllers\Admin\Keuangan\PengeluaranController::class, 'storeJenis'])->name('pengeluaran.store_jenis');
-
-            // Laporan
-            Route::get('laporan', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'index'])->name('laporan.index');
-            Route::get('laporan/cetak-transaksi', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'cetakTransaksi'])->name('laporan.cetak_transaksi');
-            Route::get('laporan/cetak-tunggakan', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'cetakTunggakan'])->name('laporan.cetak_tunggakan');
-            Route::get('laporan/export', [\App\Http\Controllers\Admin\Keuangan\LaporanController::class, 'exportExcel'])->name('laporan.export');
-
-            // Log
-            Route::get('log-aktivitas', [\App\Http\Controllers\Admin\Keuangan\LogKeuanganController::class, 'index'])->name('log.index');
-
-            // Notif Tagihan
-            Route::get('notif-tagihan', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'index'])->name('notif.index');
-            Route::post('notif-tagihan/kirim', [\App\Http\Controllers\Admin\Keuangan\NotifTagihanController::class, 'kirimMassal'])->name('notif.kirim');
-        });
+        // Keuangan group dipindah ke atas (baris 247)
 
         // ==========================================
         // WAKASEK KESISWAAN
