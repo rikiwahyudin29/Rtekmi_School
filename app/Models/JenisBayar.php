@@ -16,7 +16,9 @@ class JenisBayar extends Model
         'id_tahun_ajaran',
         'tipe_bayar',
         'nominal_default',
+        'nominal_putri_default',
         'is_per_jurusan',
+        'is_beda_gender',
     ];
 
     public function posBayar()

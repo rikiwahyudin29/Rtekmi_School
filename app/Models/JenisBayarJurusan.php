@@ -15,6 +15,7 @@ class JenisBayarJurusan extends Model
         'id_jenis_bayar',
         'id_jurusan',
         'nominal',
+        'nominal_putri',
     ];
 
     public function jenisBayar()
