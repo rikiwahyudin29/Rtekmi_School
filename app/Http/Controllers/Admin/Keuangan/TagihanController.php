@@ -60,9 +60,11 @@ class TagihanController extends Controller
 
         // Siapkan map tarif jurusan jika is_per_jurusan
         $tarifJurusan = [];
+        $tarifJurusanPutri = [];
         if ($jenis->is_per_jurusan) {
             foreach ($jenis->jenisBayarJurusan as $jbj) {
                 $tarifJurusan[$jbj->id_jurusan] = $jbj->nominal;
+                $tarifJurusanPutri[$jbj->id_jurusan] = $jbj->nominal_putri;
             }
         }
 
@@ -71,11 +73,21 @@ class TagihanController extends Controller
 
         foreach ($siswa as $s) {
             // Tentukan tarif untuk siswa ini
+            $isPerempuan = in_array(strtolower($s->jk ?? $s->jenis_kelamin ?? 'l'), ['p', 'perempuan', 'wanita']);
+            
             $nominal_tagihan = $jenis->nominal_default;
+            if ($jenis->is_beda_gender && $isPerempuan) {
+                $nominal_tagihan = $jenis->nominal_putri_default;
+            }
+
             if ($jenis->is_per_jurusan) {
                 // Ambil dari jurusan yang nyantol di siswa atau nyantol di kelas
                 $jurId = $s->jurusan_id ?? $s->kelas->id_jurusan ?? null;
                 $nominal_tagihan = $tarifJurusan[$jurId] ?? 0;
+                
+                if ($jenis->is_beda_gender && $isPerempuan) {
+                    $nominal_tagihan = $tarifJurusanPutri[$jurId] ?? 0;
+                }
             }
 
             if ($jenis->tipe_bayar == 'BEBAS') {

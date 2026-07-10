@@ -38,11 +38,16 @@ class JenisBayarController extends Controller
             'id_tahun_ajaran' => 'required|integer',
             'tipe_bayar'      => 'required|in:BULANAN,BEBAS',
             'is_per_jurusan'  => 'boolean',
+            'is_beda_gender'  => 'boolean',
         ]);
 
         $nominal_default = 0;
+        $nominal_putri_default = 0;
         if (!$request->is_per_jurusan) {
             $nominal_default = str_replace('.', '', $request->nominal_default ?? 0);
+            if ($request->is_beda_gender) {
+                $nominal_putri_default = str_replace('.', '', $request->nominal_putri_default ?? 0);
+            }
         }
 
         // Cek duplikasi
@@ -59,15 +64,22 @@ class JenisBayarController extends Controller
             'id_tahun_ajaran' => $request->id_tahun_ajaran,
             'tipe_bayar'      => $request->tipe_bayar,
             'is_per_jurusan'  => $request->is_per_jurusan ? 1 : 0,
-            'nominal_default' => $nominal_default
+            'is_beda_gender'  => $request->is_beda_gender ? 1 : 0,
+            'nominal_default' => $nominal_default,
+            'nominal_putri_default' => $nominal_putri_default
         ]);
 
         if ($request->is_per_jurusan && $request->has('nominal_jurusan')) {
             foreach ($request->nominal_jurusan as $id_jur => $nom) {
+                $nom_putri = 0;
+                if ($request->is_beda_gender && $request->has('nominal_jurusan_putri')) {
+                    $nom_putri = str_replace('.', '', $request->nominal_jurusan_putri[$id_jur] ?? 0);
+                }
                 JenisBayarJurusan::create([
                     'id_jenis_bayar' => $jenis->id,
                     'id_jurusan' => $id_jur,
-                    'nominal' => str_replace('.', '', $nom ?? 0)
+                    'nominal' => str_replace('.', '', $nom ?? 0),
+                    'nominal_putri' => $nom_putri
                 ]);
             }
         }
@@ -82,11 +94,16 @@ class JenisBayarController extends Controller
             'id_tahun_ajaran' => 'required|integer',
             'tipe_bayar'      => 'required|in:BULANAN,BEBAS',
             'is_per_jurusan'  => 'boolean',
+            'is_beda_gender'  => 'boolean',
         ]);
 
         $nominal_default = 0;
+        $nominal_putri_default = 0;
         if (!$request->is_per_jurusan) {
             $nominal_default = str_replace('.', '', $request->nominal_default ?? 0);
+            if ($request->is_beda_gender) {
+                $nominal_putri_default = str_replace('.', '', $request->nominal_putri_default ?? 0);
+            }
         }
 
         $jenis = JenisBayar::findOrFail($id);
@@ -107,17 +124,24 @@ class JenisBayarController extends Controller
             'id_tahun_ajaran' => $request->id_tahun_ajaran,
             'tipe_bayar'      => $request->tipe_bayar,
             'is_per_jurusan'  => $request->is_per_jurusan ? 1 : 0,
-            'nominal_default' => $nominal_default
+            'is_beda_gender'  => $request->is_beda_gender ? 1 : 0,
+            'nominal_default' => $nominal_default,
+            'nominal_putri_default' => $nominal_putri_default
         ]);
 
         // Re-sync jurusan nominals
         JenisBayarJurusan::where('id_jenis_bayar', $jenis->id)->delete();
         if ($request->is_per_jurusan && $request->has('nominal_jurusan')) {
             foreach ($request->nominal_jurusan as $id_jur => $nom) {
+                $nom_putri = 0;
+                if ($request->is_beda_gender && $request->has('nominal_jurusan_putri')) {
+                    $nom_putri = str_replace('.', '', $request->nominal_jurusan_putri[$id_jur] ?? 0);
+                }
                 JenisBayarJurusan::create([
                     'id_jenis_bayar' => $jenis->id,
                     'id_jurusan' => $id_jur,
-                    'nominal' => str_replace('.', '', $nom ?? 0)
+                    'nominal' => str_replace('.', '', $nom ?? 0),
+                    'nominal_putri' => $nom_putri
                 ]);
             }
         }

@@ -20,8 +20,11 @@ const form = useForm({
     id_tahun_ajaran: '',
     tipe_bayar: 'BULANAN',
     nominal_default: '',
+    nominal_putri_default: '',
     is_per_jurusan: false,
+    is_beda_gender: false,
     nominal_jurusan: {},
+    nominal_jurusan_putri: {},
 });
 
 const formatRupiah = (number) => {
@@ -32,25 +35,33 @@ const formatRupiah = (number) => {
     }).format(number);
 };
 
-const handleNominalInput = (e) => {
+const handleNominalInput = (e, targetField = 'nominal_default') => {
     // Remove non-numeric characters
     let value = e.target.value.replace(/\D/g, '');
     if (value) {
         // Format with thousand separator
         e.target.value = new Intl.NumberFormat('id-ID').format(value);
-        form.nominal_default = e.target.value;
+        form[targetField] = e.target.value;
     } else {
-        form.nominal_default = '';
+        form[targetField] = '';
     }
 };
 
-const handleNominalJurusanInput = (e, id_jur) => {
+const handleNominalJurusanInput = (e, id_jur, isPutri = false) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value) {
         e.target.value = new Intl.NumberFormat('id-ID').format(value);
-        form.nominal_jurusan[id_jur] = e.target.value;
+        if (isPutri) {
+            form.nominal_jurusan_putri[id_jur] = e.target.value;
+        } else {
+            form.nominal_jurusan[id_jur] = e.target.value;
+        }
     } else {
-        form.nominal_jurusan[id_jur] = '';
+        if (isPutri) {
+            form.nominal_jurusan_putri[id_jur] = '';
+        } else {
+            form.nominal_jurusan[id_jur] = '';
+        }
     }
 };
 
@@ -59,9 +70,12 @@ const openModal = () => {
     form.reset();
     form.tipe_bayar = 'BULANAN';
     form.is_per_jurusan = false;
+    form.is_beda_gender = false;
     form.nominal_jurusan = {};
+    form.nominal_jurusan_putri = {};
     props.jurusan.forEach(j => {
         form.nominal_jurusan[j.id] = '';
+        form.nominal_jurusan_putri[j.id] = '';
     });
     isModalOpen.value = true;
 };
@@ -73,17 +87,22 @@ const editData = (data) => {
     form.id_tahun_ajaran = data.id_tahun_ajaran;
     form.tipe_bayar = data.tipe_bayar;
     form.is_per_jurusan = data.is_per_jurusan == 1;
+    form.is_beda_gender = data.is_beda_gender == 1;
     form.nominal_default = new Intl.NumberFormat('id-ID').format(data.nominal_default);
+    form.nominal_putri_default = new Intl.NumberFormat('id-ID').format(data.nominal_putri_default || 0);
     
     form.nominal_jurusan = {};
+    form.nominal_jurusan_putri = {};
     if (form.is_per_jurusan && data.jenis_bayar_jurusan) {
         props.jurusan.forEach(j => {
             const found = data.jenis_bayar_jurusan.find(x => x.id_jurusan == j.id);
             form.nominal_jurusan[j.id] = found ? new Intl.NumberFormat('id-ID').format(found.nominal) : '';
+            form.nominal_jurusan_putri[j.id] = found ? new Intl.NumberFormat('id-ID').format(found.nominal_putri || 0) : '';
         });
     } else {
         props.jurusan.forEach(j => {
             form.nominal_jurusan[j.id] = '';
+            form.nominal_jurusan_putri[j.id] = '';
         });
     }
     isModalOpen.value = true;
@@ -176,11 +195,14 @@ const hapus = (id) => {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <div v-if="j.is_per_jurusan" class="text-sm font-medium text-amber-600 dark:text-amber-400 cursor-help" :title="j.jenis_bayar_jurusan?.map(x => x.jurusan?.nama_jurusan + ': Rp ' + formatRupiah(x.nominal)).join('\n')">
-                                            <i class="fas fa-layer-group mr-1"></i> Beda per Jurusan
+                                        <div v-if="j.is_per_jurusan" class="text-sm font-medium text-amber-600 dark:text-amber-400 cursor-help" :title="j.jenis_bayar_jurusan?.map(x => x.jurusan?.nama_jurusan + ': Rp ' + formatRupiah(x.nominal) + (j.is_beda_gender ? ' (P: Rp ' + formatRupiah(x.nominal_putri) + ')' : '')).join('\n')">
+                                            <i class="fas fa-layer-group mr-1"></i> Beda per Jurusan <span v-if="j.is_beda_gender">& L/P</span>
                                         </div>
                                         <div v-else class="font-bold text-gray-900 dark:text-white">
                                             {{ formatRupiah(j.nominal_default) }}
+                                            <div v-if="j.is_beda_gender" class="text-xs text-pink-500 font-normal mt-0.5">
+                                                P: {{ formatRupiah(j.nominal_putri_default) }}
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center">
@@ -265,25 +287,51 @@ const hapus = (id) => {
                             </label>
                         </div>
                     </div>
+
+                    <div class="flex items-center pb-2 border-b border-gray-100">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="form.is_beda_gender" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-700">Tarif Beda Laki-laki & Perempuan?</span>
+                        </label>
+                    </div>
                     
-                    <div v-if="!form.is_per_jurusan">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tarif Sama Rata (Rp) <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2 text-gray-500 font-bold">Rp</span>
-                            <input type="text" v-model="form.nominal_default" @input="handleNominalInput" :required="!form.is_per_jurusan" placeholder="0" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-sm font-bold text-gray-900">
+                    <div v-if="!form.is_per_jurusan" class="grid" :class="form.is_beda_gender ? 'grid-cols-2 gap-4' : 'grid-cols-1'">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tarif {{ form.is_beda_gender ? 'Laki-laki' : 'Sama Rata' }} (Rp) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-500 font-bold">Rp</span>
+                                <input type="text" v-model="form.nominal_default" @input="e => handleNominalInput(e, 'nominal_default')" :required="!form.is_per_jurusan" placeholder="0" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-sm font-bold text-gray-900">
+                            </div>
+                            <div v-if="form.errors.nominal_default" class="text-red-500 text-xs mt-1">{{ form.errors.nominal_default }}</div>
                         </div>
-                        <div v-if="form.errors.nominal_default" class="text-red-500 text-xs mt-1">{{ form.errors.nominal_default }}</div>
+                        <div v-if="form.is_beda_gender">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tarif Perempuan (Rp) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-500 font-bold">Rp</span>
+                                <input type="text" v-model="form.nominal_putri_default" @input="e => handleNominalInput(e, 'nominal_putri_default')" :required="!form.is_per_jurusan && form.is_beda_gender" placeholder="0" class="w-full pl-10 pr-4 py-2 border border-pink-300 rounded-xl focus:ring-pink-500 focus:border-pink-500 text-sm font-bold text-gray-900">
+                            </div>
+                            <div v-if="form.errors.nominal_putri_default" class="text-red-500 text-xs mt-1">{{ form.errors.nominal_putri_default }}</div>
+                        </div>
                     </div>
                     
                     <div v-if="form.is_per_jurusan" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
-                        <label class="block text-sm font-medium text-gray-700 border-b pb-2">Tarif Per Jurusan <span class="text-red-500">*</span></label>
+                        <div class="flex border-b pb-2">
+                            <div class="w-1/3 text-sm font-medium text-gray-700">Jurusan <span class="text-red-500">*</span></div>
+                            <div :class="form.is_beda_gender ? 'w-1/3' : 'w-2/3'" class="text-sm font-medium text-gray-700 text-center">Tarif {{ form.is_beda_gender ? 'Laki-laki' : '' }}</div>
+                            <div v-if="form.is_beda_gender" class="w-1/3 text-sm font-medium text-pink-600 text-center">Tarif Perempuan</div>
+                        </div>
                         <div v-for="j in jurusan" :key="j.id" class="flex items-center gap-3">
-                            <div class="w-1/2 text-sm font-medium text-gray-700 truncate" :title="j.nama_jurusan">
+                            <div class="w-1/3 text-sm font-medium text-gray-700 truncate" :title="j.nama_jurusan">
                                 {{ j.nama_jurusan }}
                             </div>
-                            <div class="w-1/2 relative">
+                            <div class="relative" :class="form.is_beda_gender ? 'w-1/3' : 'w-2/3'">
                                 <span class="absolute left-3 top-2 text-gray-500 font-bold text-xs">Rp</span>
-                                <input type="text" v-model="form.nominal_jurusan[j.id]" @input="handleNominalJurusanInput($event, j.id)" required placeholder="0" class="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 text-sm font-bold text-gray-900">
+                                <input type="text" v-model="form.nominal_jurusan[j.id]" @input="handleNominalJurusanInput($event, j.id, false)" required placeholder="0" class="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 text-sm font-bold text-gray-900">
+                            </div>
+                            <div v-if="form.is_beda_gender" class="w-1/3 relative">
+                                <span class="absolute left-3 top-2 text-pink-500 font-bold text-xs">Rp</span>
+                                <input type="text" v-model="form.nominal_jurusan_putri[j.id]" @input="handleNominalJurusanInput($event, j.id, true)" required placeholder="0" class="w-full pl-9 pr-3 py-1.5 border border-pink-300 rounded-lg focus:ring-pink-500 focus:border-pink-500 text-sm font-bold text-gray-900">
                             </div>
                         </div>
                     </div>
