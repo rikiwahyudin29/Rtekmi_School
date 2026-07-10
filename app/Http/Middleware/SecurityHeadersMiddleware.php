@@ -33,7 +33,7 @@ class SecurityHeadersMiddleware
             $csp = "default-src 'self'; " .
                    "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'strict-dynamic' 'unsafe-inline'; " .
                    // Included 'unsafe-inline' for styles because Vue/Inertia often injects dynamic styles which might break without it
-                   "style-src 'self' 'nonce-{$nonce}' 'unsafe-inline' https://fonts.bunny.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
+                   "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
                    "font-src 'self' https://fonts.bunny.net https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; " .
                    "img-src 'self' data: https: blob:; " .
                    "connect-src 'self' https://api.fonnte.com https://*.tripay.co.id wss: ws:; " .
