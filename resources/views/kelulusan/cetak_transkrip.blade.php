@@ -117,16 +117,16 @@
                 </tfoot>
             </table>
 
-            <div class="hindari-terpotong" style="margin-top: 15px;">
+            <div class="hindari-terpotong" style="margin-top: 40px;">
                 <table style="width: 100%; border: none;">
                     <tr>
-                        <td style="width: 50%; vertical-align: top;">
+                        <td style="width: 40%; vertical-align: top; padding-top: 15px;">
                             <table style="width: 100%; border: none; font-size: 10pt;">
                                 <tr><td style="width: 180px; font-weight: bold;">Nilai Prestasi Rata-rata</td><td style="width: 15px;">:</td><td style="font-weight: bold;">{{ number_format($rata_prestasi, 2) }}</td></tr>
-                                <tr><td style="font-weight: bold;">Kriteria Ketuntasan Minimal</td><td>:</td><td style="font-weight: bold;">70</td></tr>
+
                             </table>
                         </td>
-                        <td style="width: 50%; padding-left: 20px; font-size: 10pt; vertical-align: top;">
+                        <td style="width: 60%; padding-left: 20px; font-size: 10pt; vertical-align: top;">
                             {{ $sekolah->kabupaten ?? 'Subang' }}, {{ $setting->tgl_pengumuman ? \Carbon\Carbon::parse($setting->tgl_pengumuman)->locale('id')->isoFormat('D MMMM Y') : \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}<br>
                             
                                 @if(request()->has('ttd_manual') && request('ttd_manual') == 1)
