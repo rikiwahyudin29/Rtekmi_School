@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>SKL - CETAK SEMUA</title>
-    <style>
+    <style nonce="{{ $cspNonce ?? '' }}">
         /* CSS LAYOUT UMUM */
         body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.25; margin: 0; padding: 20px; }
         .kop-surat { width: 100%; margin-bottom: 10px; text-align: center; }
@@ -45,9 +45,9 @@
         }
     </style>
 </head>
-<body onload="window.print()">
+<body>
     <div class="no-print">
-        <button class="btn-print" onclick="window.print()">🖨️ CETAK DOKUMEN SEKARANG</button>
+        <button class="btn-print" id="btnPrint">🖨️ CETAK DOKUMEN SEKARANG</button>
         <p style="margin-top:5px; font-size:10pt; color:#666;">Pilih Kertas <b>Legal / F4</b> di pengaturan printer Anda.</p>
     </div>
 
@@ -181,5 +181,9 @@
             @endif
         </div>
     @endforeach
+    <script nonce="{{ $cspNonce ?? '' }}">
+        window.onload = function() { window.print(); };
+        document.getElementById('btnPrint').addEventListener('click', function() { window.print(); });
+    </script>
 </body>
 </html>
