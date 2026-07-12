@@ -123,7 +123,6 @@
 import { ref } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import Swal from 'sweetalert2';
 
 const props = defineProps({
     devices: Object,
@@ -146,7 +145,7 @@ const fetchData = () => {
 };
 
 const resetDevice = (id) => {
-    Swal.fire({
+    window.Swal.fire({
         title: 'Reset Perangkat?',
         text: "Perangkat ini akan dihapus. Pengguna harus login ulang di perangkat baru dan akan terikat dengan perangkat tersebut.",
         icon: 'warning',
@@ -159,7 +158,7 @@ const resetDevice = (id) => {
         if (result.isConfirmed) {
             router.delete(route('admin.user-devices.destroy', id), {
                 onSuccess: () => {
-                    Swal.fire('Berhasil!', 'Perangkat telah direset.', 'success');
+                    window.Swal.fire('Berhasil!', 'Perangkat telah direset.', 'success');
                 }
             });
         }
@@ -168,7 +167,7 @@ const resetDevice = (id) => {
 
 const editMaxDevice = (user) => {
     const currentMax = user.max_device ?? (user.role === 'siswa' ? 1 : 2);
-    Swal.fire({
+    window.Swal.fire({
         title: 'Atur Batas Perangkat',
         text: `Berapa maksimal perangkat untuk ${user.nama_lengkap}?`,
         input: 'number',
@@ -189,7 +188,7 @@ const editMaxDevice = (user) => {
             }, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    Swal.fire('Tersimpan!', 'Batas perangkat berhasil diperbarui.', 'success');
+                    window.Swal.fire('Tersimpan!', 'Batas perangkat berhasil diperbarui.', 'success');
                 }
             });
         }
