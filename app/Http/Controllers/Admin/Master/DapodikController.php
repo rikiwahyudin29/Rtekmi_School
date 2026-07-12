@@ -69,18 +69,115 @@ class DapodikController extends Controller
                 $data = $dapodikService->get('getGtk');
                 $count = count($data);
                 // Lakukan insert/update tbl_guru berdasarkan nuptk/nik
+                foreach ($data as $gtk) {
+                    \App\Models\Guru::updateOrCreate(
+                        ['dapodik_id' => $gtk['ptk_id'] ?? null], // Kunci utama pencarian (ID Dapodik)
+                        [
+                            'nama_lengkap' => $gtk['nama'] ?? '-',
+                            'nik' => $gtk['nik'] ?? null,
+                            'nuptk' => $gtk['nuptk'] ?? null,
+                            'jk' => isset($gtk['jenis_kelamin']) && $gtk['jenis_kelamin'] == 'P' ? 'P' : 'L',
+                            'jenis_kelamin' => isset($gtk['jenis_kelamin']) && $gtk['jenis_kelamin'] == 'P' ? 'P' : 'L',
+                            'tempat_lahir' => $gtk['tempat_lahir'] ?? null,
+                            'tanggal_lahir' => $gtk['tanggal_lahir'] ?? null,
+                            'tgl_lahir' => $gtk['tanggal_lahir'] ?? null,
+                            'alamat' => $gtk['alamat_jalan'] ?? null,
+                            'no_hp' => $gtk['no_hp'] ?? null,
+                            'email' => $gtk['email'] ?? null,
+                            'status_kepegawaian' => $gtk['status_kepegawaian_id_str'] ?? null,
+                            // Set default jika belum ada
+                            'status_guru' => 'GTY', 
+                        ]
+                    );
+                }
             } elseif ($type == 'siswa') {
                 $data = $dapodikService->get('getPesertaDidik');
                 $count = count($data);
                 // Lakukan insert/update tbl_siswa berdasarkan nisn/nik
+                foreach ($data as $pd) {
+                    \App\Models\Siswa::updateOrCreate(
+                        ['dapodik_id' => $pd['peserta_didik_id'] ?? null],
+                        [
+                            'nama_lengkap' => $pd['nama'] ?? '-',
+                            'nisn' => $pd['nisn'] ?? '-',
+                            'nik' => $pd['nik'] ?? null,
+                            'jk' => isset($pd['jenis_kelamin']) && $pd['jenis_kelamin'] == 'P' ? 'P' : 'L',
+                            'jenis_kelamin' => isset($pd['jenis_kelamin']) && $pd['jenis_kelamin'] == 'P' ? 'P' : 'L',
+                            'tempat_lahir' => $pd['tempat_lahir'] ?? null,
+                            'tanggal_lahir' => $pd['tanggal_lahir'] ?? null,
+                            'tgl_lahir' => $pd['tanggal_lahir'] ?? null,
+                            'agama' => $pd['agama_id_str'] ?? null,
+                            'alamat' => $pd['alamat_jalan'] ?? null,
+                            'nama_ayah' => $pd['nama_ayah'] ?? null,
+                            'nama_ibu' => $pd['nama_ibu_kandung'] ?? null,
+                            'nama_wali' => $pd['nama_wali'] ?? null,
+                            'no_hp_siswa' => $pd['nomor_telepon_seluler'] ?? null,
+                            'email_siswa' => $pd['email'] ?? null,
+                            'rombel_id_dapodik' => $pd['rombongan_belajar_id'] ?? null,
+                            'status_siswa' => 'Aktif',
+                        ]
+                    );
+                }
             } elseif ($type == 'rombel') {
                 $data = $dapodikService->get('getRombonganBelajar');
                 $count = count($data);
-                // Lakukan sinkronisasi tbl_kelas
+                
+                // Sinkronisasi Jurusan dan Kelas (Rombel)
+                foreach ($data as $rombel) {
+                    $jurusanId = null;
+                    if (!empty($rombel['jurusan_sp_id']) || !empty($rombel['jurusan_id_str'])) {
+                        $namaJurusan = $rombel['jurusan_id_str'] ?? 'Umum';
+                        $jurusan = \App\Models\Jurusan::updateOrCreate(
+                            ['dapodik_id' => $rombel['jurusan_sp_id'] ?? $namaJurusan],
+                            [
+                                'kode_jurusan' => substr($namaJurusan, 0, 10),
+                                'nama_jurusan' => $namaJurusan,
+                            ]
+                        );
+                        $jurusanId = $jurusan->id;
+                    }
+
+                    \App\Models\Kelas::updateOrCreate(
+                        ['dapodik_id' => $rombel['rombongan_belajar_id'] ?? null],
+                        [
+                            'nama_kelas' => $rombel['nama'] ?? '-',
+                            'tingkat' => $rombel['tingkat_pendidikan_id'] ?? null,
+                            'id_jurusan' => $jurusanId,
+                        ]
+                    );
+                }
+                
+                // Karena tombol di UI menjadi satu (Tarik Rombel & Mapel), kita tarik juga mapel di sini
+                try {
+                    $dataMapel = $dapodikService->get('getMataPelajaran');
+                    $count += count($dataMapel);
+                    foreach ($dataMapel as $mapel) {
+                        \App\Models\Mapel::updateOrCreate(
+                            ['dapodik_id' => $mapel['mata_pelajaran_id'] ?? null],
+                            [
+                                'nama_mapel' => $mapel['nama'] ?? '-',
+                                'kode_mapel' => $mapel['kode_mata_pelajaran'] ?? null,
+                                'kelompok' => $mapel['kelompok'] ?? 'A',
+                            ]
+                        );
+                    }
+                } catch (\Exception $e) {
+                    // Abaikan jika mapel gagal agar rombel tetap sukses
+                }
+
             } elseif ($type == 'mapel') {
                 $data = $dapodikService->get('getMataPelajaran');
                 $count = count($data);
-                // Lakukan sinkronisasi tbl_mapel
+                foreach ($data as $mapel) {
+                    \App\Models\Mapel::updateOrCreate(
+                        ['dapodik_id' => $mapel['mata_pelajaran_id'] ?? null],
+                        [
+                            'nama_mapel' => $mapel['nama'] ?? '-',
+                            'kode_mapel' => $mapel['kode_mata_pelajaran'] ?? null,
+                            'kelompok' => $mapel['kelompok'] ?? 'A',
+                        ]
+                    );
+                }
             }
 
             return redirect()->back()->with('success', "Proses Tarik Data $type selesai! Berhasil mengambil $count baris data dari Dapodik.");
