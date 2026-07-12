@@ -11,12 +11,18 @@ class PresensiGuruApiController extends Controller
 {
     private function getRealGuruID($id_user_login)
     {
-        $kolom_user = Schema::hasColumn('tbl_guru', 'id_user') ? 'id_user' : 'user_id';
-        if (Schema::hasColumn('tbl_guru', $kolom_user)) {
-            $guru = DB::table('tbl_guru')->where($kolom_user, $id_user_login)->first();
+        // Prioritaskan user_id (standar Laravel) lalu id_user (legacy CI4)
+        if (Schema::hasColumn('tbl_guru', 'user_id')) {
+            $guru = DB::table('tbl_guru')->where('user_id', $id_user_login)->first();
             if ($guru) return $guru->id;
         }
         
+        if (Schema::hasColumn('tbl_guru', 'id_user')) {
+            $guru = DB::table('tbl_guru')->where('id_user', $id_user_login)->first();
+            if ($guru) return $guru->id;
+        }
+        
+        // Fallback bahaya: hanya jika tidak ada sama sekali relasi yang valid
         $guru_direct = DB::table('tbl_guru')->where('id', $id_user_login)->first();
         if ($guru_direct) return $guru_direct->id;
         

@@ -118,6 +118,20 @@ class AuthApiController extends Controller
             $detailSiswa = DB::table('tbl_siswa')->where('user_id', $user->id)->first();
         }
 
+        // Tarik data spesifik guru jika rolenya adalah guru atau kepsek
+        $detailGuru = null;
+        if (in_array($user->role, ['guru', 'kepsek'])) {
+            $detailGuru = DB::table('tbl_guru')->where('user_id', $user->id)->first();
+            // Fallback jika user_id belum ter-mapping dengan benar
+            if (!$detailGuru && Schema::hasColumn('tbl_guru', 'id_user')) {
+                $detailGuru = DB::table('tbl_guru')->where('id_user', $user->id)->first();
+            }
+            if (!$detailGuru) {
+                // Fallback pencocokan nama
+                $detailGuru = DB::table('tbl_guru')->where('nama_guru', 'LIKE', '%' . $user->nama_lengkap . '%')->first();
+            }
+        }
+
         // Generate Sanctum Token
         // Hapus token lama dari perangkat ini (opsional, agar tidak menumpuk)
         $user->tokens()->where('name', $device_id)->delete();
@@ -131,7 +145,8 @@ class AuthApiController extends Controller
             'nama_lengkap' => $user->nama_lengkap,
             'role'         => $user->role,
             'token'        => $token,
-            'detail_siswa' => $detailSiswa
+            'detail_siswa' => $detailSiswa,
+            'detail_guru'  => $detailGuru
         ];
 
         return response()->json([
