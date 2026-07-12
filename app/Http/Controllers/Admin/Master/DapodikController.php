@@ -70,11 +70,33 @@ class DapodikController extends Controller
                 $count = count($data);
                 // Lakukan insert/update tbl_guru berdasarkan nuptk/nik
                 foreach ($data as $gtk) {
+                    $nik = $gtk['nik'] ?? null;
+                    $userId = null;
+                    if ($nik) {
+                        $user = \App\Models\User::firstOrNew(['username' => $nik]);
+                        $user->nama_lengkap = $gtk['nama'] ?? '-';
+                        $user->role = 'guru';
+                        if (!$user->exists) {
+                            $user->password = \Illuminate\Support\Facades\Hash::make($nik);
+                        }
+                        $user->save();
+                        $userId = $user->id;
+
+                        // Pastikan role 'guru' ditambahkan di tabel user_roles
+                        $roleId = \App\Models\Role::where('role_key', 'guru')->value('id');
+                        if ($roleId) {
+                            \Illuminate\Support\Facades\DB::table('user_roles')->updateOrInsert(
+                                ['user_id' => $userId, 'role_id' => $roleId]
+                            );
+                        }
+                    }
+
                     \App\Models\Guru::updateOrCreate(
                         ['dapodik_id' => $gtk['ptk_id'] ?? null], // Kunci utama pencarian (ID Dapodik)
                         [
+                            'user_id' => $userId,
                             'nama_lengkap' => $gtk['nama'] ?? '-',
-                            'nik' => $gtk['nik'] ?? null,
+                            'nik' => $nik,
                             'nuptk' => $gtk['nuptk'] ?? null,
                             'jk' => isset($gtk['jenis_kelamin']) && $gtk['jenis_kelamin'] == 'P' ? 'P' : 'L',
                             'jenis_kelamin' => isset($gtk['jenis_kelamin']) && $gtk['jenis_kelamin'] == 'P' ? 'P' : 'L',
@@ -95,11 +117,33 @@ class DapodikController extends Controller
                 $count = count($data);
                 // Lakukan insert/update tbl_siswa berdasarkan nisn/nik
                 foreach ($data as $pd) {
+                    $nisn = $pd['nisn'] ?? null;
+                    $userId = null;
+                    if ($nisn) {
+                        $user = \App\Models\User::firstOrNew(['username' => $nisn]);
+                        $user->nama_lengkap = $pd['nama'] ?? '-';
+                        $user->role = 'siswa';
+                        if (!$user->exists) {
+                            $user->password = \Illuminate\Support\Facades\Hash::make($nisn);
+                        }
+                        $user->save();
+                        $userId = $user->id;
+
+                        // Pastikan role 'siswa' ditambahkan di tabel user_roles
+                        $roleId = \App\Models\Role::where('role_key', 'siswa')->value('id');
+                        if ($roleId) {
+                            \Illuminate\Support\Facades\DB::table('user_roles')->updateOrInsert(
+                                ['user_id' => $userId, 'role_id' => $roleId]
+                            );
+                        }
+                    }
+
                     \App\Models\Siswa::updateOrCreate(
                         ['dapodik_id' => $pd['peserta_didik_id'] ?? null],
                         [
+                            'user_id' => $userId,
                             'nama_lengkap' => $pd['nama'] ?? '-',
-                            'nisn' => $pd['nisn'] ?? '-',
+                            'nisn' => $nisn ?? '-',
                             'nik' => $pd['nik'] ?? null,
                             'jk' => isset($pd['jenis_kelamin']) && $pd['jenis_kelamin'] == 'P' ? 'P' : 'L',
                             'jenis_kelamin' => isset($pd['jenis_kelamin']) && $pd['jenis_kelamin'] == 'P' ? 'P' : 'L',
