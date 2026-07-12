@@ -31,6 +31,18 @@ class AdminSeeder extends Seeder
 
         // Assign Role Administrator dan Superadmin
         $roleIds = \App\Models\Role::whereIn('role_key', ['admin', 'superadmin'])->pluck('id');
-        $admin->roles()->sync($roleIds);
+        
+        // Hapus role lama jika ada
+        \Illuminate\Support\Facades\DB::table('user_roles')->where('user_id', $admin->id)->delete();
+        
+        // Masukkan role baru secara manual untuk memastikan masuk ke database
+        foreach ($roleIds as $roleId) {
+            \Illuminate\Support\Facades\DB::table('user_roles')->insert([
+                'user_id' => $admin->id,
+                'role_id' => $roleId
+            ]);
+        }
+        
+        $this->command->info("Akun admin berhasil dibuat dan diberikan role admin & superadmin!");
     }
 }
