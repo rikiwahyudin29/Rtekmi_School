@@ -138,10 +138,17 @@ class DapodikController extends Controller
                         }
                     }
 
+                    // Cari ID kelas lokal (tbl_kelas.id) berdasarkan rombongan_belajar_id dari Dapodik
+                    $kelasId = null;
+                    if (!empty($pd['rombongan_belajar_id'])) {
+                        $kelasId = \App\Models\Kelas::where('dapodik_id', $pd['rombongan_belajar_id'])->value('id');
+                    }
+
                     \App\Models\Siswa::updateOrCreate(
                         ['dapodik_id' => $pd['peserta_didik_id'] ?? null],
                         [
                             'user_id' => $userId,
+                            'kelas_id' => $kelasId,
                             'nama_lengkap' => $pd['nama'] ?? '-',
                             'nisn' => $nisn ?? '-',
                             'nik' => $pd['nik'] ?? null,
