@@ -52,7 +52,7 @@ class AuthenticatedSessionController extends Controller
             $existingDevice = \App\Models\UserDevice::where('user_id', $user->id)
                 ->where('device_id', $device_id)->first();
 
-            $maxDevice = ($user->role === 'siswa') ? 1 : 2; // Siswa 1, Guru 2
+            $maxDevice = $user->max_device ?? (($user->role === 'siswa') ? 1 : 2); // Cek max_device dari db, default Siswa 1, Guru 2
 
             if ($existingDevice) {
                 $existingDevice->update([

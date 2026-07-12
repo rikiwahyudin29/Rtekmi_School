@@ -622,6 +622,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Manajemen Device (User Devices)
         Route::get('user-devices/locations', [\App\Http\Controllers\Admin\UserDeviceController::class, 'locations'])->name('user-devices.locations');
+        Route::post('user-devices/set-max', [\App\Http\Controllers\Admin\UserDeviceController::class, 'setMax'])->name('user-devices.set-max');
         Route::resource('user-devices', \App\Http\Controllers\Admin\UserDeviceController::class)->only(['index', 'destroy']);
 
         // CBT (Computer Based Test) Group

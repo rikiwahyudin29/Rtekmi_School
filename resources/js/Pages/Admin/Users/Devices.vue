@@ -61,6 +61,10 @@
                                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                                 {{ device.user?.role?.toUpperCase() || '-' }}
                                             </span>
+                                            <div class="mt-2 text-xs text-slate-500 cursor-pointer hover:text-indigo-500 flex items-center gap-1" @click="editMaxDevice(device.user)" v-if="device.user && device.user.role !== 'admin'">
+                                                <i class="fas fa-mobile-alt"></i> Max: {{ device.user.max_device ?? (device.user.role === 'siswa' ? 1 : 2) }}
+                                                <i class="fas fa-edit ml-1"></i>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4">
                                             {{ device.device_name || 'Mobile Device' }}
@@ -119,6 +123,7 @@
 import { ref } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     devices: Object,
@@ -141,7 +146,7 @@ const fetchData = () => {
 };
 
 const resetDevice = (id) => {
-    window.Swal.fire({
+    Swal.fire({
         title: 'Reset Perangkat?',
         text: "Perangkat ini akan dihapus. Pengguna harus login ulang di perangkat baru dan akan terikat dengan perangkat tersebut.",
         icon: 'warning',
@@ -154,7 +159,37 @@ const resetDevice = (id) => {
         if (result.isConfirmed) {
             router.delete(route('admin.user-devices.destroy', id), {
                 onSuccess: () => {
-                    window.Swal.fire('Berhasil!', 'Perangkat telah direset.', 'success');
+                    Swal.fire('Berhasil!', 'Perangkat telah direset.', 'success');
+                }
+            });
+        }
+    });
+};
+
+const editMaxDevice = (user) => {
+    const currentMax = user.max_device ?? (user.role === 'siswa' ? 1 : 2);
+    Swal.fire({
+        title: 'Atur Batas Perangkat',
+        text: `Berapa maksimal perangkat untuk ${user.nama_lengkap}?`,
+        input: 'number',
+        inputValue: currentMax,
+        showCancelButton: true,
+        confirmButtonText: 'Simpan',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+            if (!value || value < 1) {
+                return 'Harus lebih dari 0!'
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.post(route('admin.user-devices.set-max'), {
+                user_id: user.id,
+                max_device: result.value
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire('Tersimpan!', 'Batas perangkat berhasil diperbarui.', 'success');
                 }
             });
         }

@@ -60,4 +60,18 @@ class UserDeviceController extends Controller
 
         return redirect()->back()->with('message', '✅ Perangkat berhasil dihapus / di-reset.');
     }
+
+    public function setMax(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:tbl_users,id',
+            'max_device' => 'required|integer|min:1',
+        ]);
+
+        $user = \App\Models\User::findOrFail($request->user_id);
+        $user->max_device = $request->max_device;
+        $user->save();
+
+        return redirect()->back()->with('message', '✅ Batas perangkat berhasil diperbarui.');
+    }
 }
