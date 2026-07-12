@@ -29,7 +29,7 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first();
+        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first() ?: (object)[];
         $tema = \Illuminate\Support\Facades\DB::table('tbl_pengaturan')->where('kunci', 'tema_warna')->first();
 
         $user = $request->user();

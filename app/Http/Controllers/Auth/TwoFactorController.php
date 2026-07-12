@@ -22,7 +22,7 @@ class TwoFactorController extends Controller
         $secret = $google2fa->generateSecretKey();
         $request->session()->put('setup_secret', $secret);
 
-        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first();
+        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first() ?: (object)[];
 
         // Configure QR Code URL
         $qrCodeUrl = $google2fa->getQRCodeUrl(
@@ -51,7 +51,7 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
 
-        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first();
+        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first() ?: (object)[];
 
         return Inertia::render('Auth/Verify2FA', [
             'web' => $web

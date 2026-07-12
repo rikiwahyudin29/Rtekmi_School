@@ -18,7 +18,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
-        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first();
+        $web = \Illuminate\Support\Facades\DB::table('tbl_sekolah')->first() ?: (object)[];
 
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
