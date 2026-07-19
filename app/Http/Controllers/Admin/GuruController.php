@@ -74,6 +74,7 @@ class GuruController extends Controller
                 'email'        => $userEmail,
                 'nama_lengkap' => $validated['nama_lengkap'],
                 'nomor_wa'     => $validated['nomor_wa'] ?? null,
+                'role'         => 'guru',
             ]);
 
             // Assign Guru Role
@@ -304,6 +305,7 @@ class GuruController extends Controller
                     'email'        => $userEmail,
                     'nama_lengkap' => $guru->nama_lengkap,
                     'nomor_wa'     => $guru->nomor_wa ?? null,
+                    'role'         => 'guru',
                 ]);
             }
             
@@ -426,6 +428,7 @@ class GuruController extends Controller
                     'email'        => $nik . '@sekolah.id',
                     'nama_lengkap' => $nama,
                     'nomor_wa'     => $data[6] ?? null,
+                    'role'         => 'guru',
                 ]);
 
                 if ($roleGuru) {
